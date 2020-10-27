@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Microsoft YaHei:300,300italic,400,400italic,700,700italic|Cinzel Decorative:300,300italic,400,400italic,700,700italic|Times New Roman:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yjlab.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="本文主要参考文章为 Users and groups, ArchWiki 。 新安装的 Linux 默认采用超级权限用户登录，也就是 root，长时间用 root 账户登录或是在 SSH 服务器上公开它是十分不安全的。Linux/Unix 是完全意义上的多用户多任务操作系统，所以推荐的做法是为大多数任务创建和使用非特权账户，而仅使用 root 账户进行系统管理。 用户 (Users) 和组 (Gr">
+<meta name="keywords" content="Linux,Command-line">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Users and Groups">
+<meta property="og:url" content="http://yjlab.xyz/2018/11/17/users-and-groups/index.html">
+<meta property="og:site_name" content="Yanjiu Lab">
+<meta property="og:description" content="本文主要参考文章为 Users and groups, ArchWiki 。 新安装的 Linux 默认采用超级权限用户登录，也就是 root，长时间用 root 账户登录或是在 SSH 服务器上公开它是十分不安全的。Linux/Unix 是完全意义上的多用户多任务操作系统，所以推荐的做法是为大多数任务创建和使用非特权账户，而仅使用 root 账户进行系统管理。 用户 (Users) 和组 (Gr">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-10-21T03:34:31.885Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Users and Groups">
+<meta name="twitter:description" content="本文主要参考文章为 Users and groups, ArchWiki 。 新安装的 Linux 默认采用超级权限用户登录，也就是 root，长时间用 root 账户登录或是在 SSH 服务器上公开它是十分不安全的。Linux/Unix 是完全意义上的多用户多任务操作系统，所以推荐的做法是为大多数任务创建和使用非特权账户，而仅使用 root 账户进行系统管理。 用户 (Users) 和组 (Gr">
+
+<link rel="canonical" href="http://yjlab.xyz/2018/11/17/users-and-groups/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Users and Groups | Yanjiu Lab</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yanjiu Lab</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Learning then grokking</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        
+            
+  <li class="menu-item menu-item-notes">
+
+    <a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记</a>
+
+  </li>
+
+
+      
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yjlab.xyz/2018/11/17/users-and-groups/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Yanjiu Li">
+      <meta itemprop="description" content="演绎一场技术溯源的盛宴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yanjiu Lab">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Users and Groups
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-11-17 20:12:13" itemprop="dateCreated datePublished" datetime="2018-11-17T20:12:13+08:00">2018-11-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-10-21 11:34:31" itemprop="dateModified" datetime="2020-10-21T11:34:31+08:00">2020-10-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OS/" itemprop="url" rel="index"><span itemprop="name">OS</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OS/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>6.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>6 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文主要参考文章为 <a href="https://wiki.archlinux.org/index.php/Users_and_groups" target="_blank" rel="noopener">Users and groups, ArchWiki</a> 。</p>
+<p>新安装的 Linux 默认采用超级权限用户登录，也就是 <code>root</code>，长时间用 root 账户登录或是在 SSH 服务器上公开它是十分不安全的。Linux/Unix 是完全意义上的<strong>多用户多任务</strong>操作系统，所以推荐的做法是<strong>为大多数任务创建和使用非特权账户，而仅使用 root 账户进行系统管理</strong>。</p>
+<p>用户 (Users) 和组 (Groups) 是一种 GNU/Linux 系统对文件、目录和外设访问控制 (access control) 的机制 (mechanism)，管理员可以微调组成员和权限，以授权和拒绝用户或服务对系统资源的访问。Linux 默认提供了相当简单粗暴的访问控制机制，所以，每一个 Linuxer 都应当十分熟悉用户和组的概念。:p</p>
+<a id="more"></a>
+<h2 id="概览"><a class="markdownIt-Anchor" href="#概览"></a> 概览</h2>
+<p>用户就是计算机为每个使用者创建的名称，这个名称是一个人获得使用计算机的权限。当然，一个人 (individual)可以有多个账户/用户 (account/user)，只要名字不同即可。但有一些名字是保留的，不可以使用，例如 <code>root</code>。</p>
+<p>多个用户 (users) 可以组合在一起形成组 (group)，一个组可以包含多个用户，一个用户也可以属于多个组，这是很自然的，因为人在社交中也在不同的场合中扮演不同的角色。</p>
+<h2 id="权限和所属"><a class="markdownIt-Anchor" href="#权限和所属"></a> 权限和所属</h2>
+<blockquote class="blockquote-center">
+            <i class="fa fa-quote-left"></i>
+            <p>In Unix Everything is a file.<br>
+Unix 中一切皆文件。</p>
+
+            <i class="fa fa-quote-right"></i>
+          </blockquote>
+<p>这是很有趣的哲学，意味着**文件 (file)**这一模型，提供了对所有 I/O 资源访问的抽象，包括文档、目录、磁盘、CD-ROM、调制解调器、键盘、打印机、显示器和终端等等，甚至也包括了进程、网络之间的通信。所有文件都通过一致的 API 以提供访问，因此只用同一套简单的命令，就可以读写磁盘、键盘、文档以及网络设备。</p>
+<p>GNU/Linux 系统中的每一个文件都从属一个用户（属主）和一个用户组（属组），这称为 <strong>ownership</strong> 机制。另外，还有三种类型的<strong>访问权限 (access permissions)</strong>：读（read）、写（write）、运行（execute）。**我们可以针对文件的属主、属组、而设置相应的访问权限。**用 <code>ls</code> 命令长格式看看吧：</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ ls -l /boot/</span><br><span class="line">total <span class="number">136492</span></span><br><span class="line">-rw-r--r-- <span class="number">1</span> root root  <span class="number">1537997</span> <span class="number">10</span>月 <span class="number">23</span> <span class="number">22</span>:<span class="number">44</span> abi<span class="number">-4.15</span><span class="number">.0</span><span class="number">-39</span>-generic</span><br><span class="line">-rw-r--r-- <span class="number">1</span> root root   <span class="number">217018</span> <span class="number">10</span>月 <span class="number">23</span> <span class="number">22</span>:<span class="number">44</span> config<span class="number">-4.15</span><span class="number">.0</span><span class="number">-39</span>-generic</span><br><span class="line">drwx------ <span class="number">3</span> root root    <span class="number">16384</span> <span class="number">1</span>月   <span class="number">1</span>  <span class="number">1970</span> efi</span><br><span class="line">drwxr-xr-x <span class="number">6</span> root root     <span class="number">4096</span> <span class="number">11</span>月 <span class="number">15</span> <span class="number">15</span>:<span class="number">37</span> grub</span><br><span class="line">-rw-r--r-- <span class="number">1</span> root root <span class="number">55501463</span> <span class="number">11</span>月 <span class="number">14</span> <span class="number">14</span>:<span class="number">16</span> initrd.img<span class="number">-4.15</span><span class="number">.0</span><span class="number">-39</span>-generic</span><br><span class="line">-rw-r--r-- <span class="number">1</span> root root   <span class="number">182704</span> <span class="number">1</span>月  <span class="number">28</span>  <span class="number">2016</span> memtest86+.bin</span><br><span class="line">-rw-r--r-- <span class="number">1</span> root root   <span class="number">184380</span> <span class="number">1</span>月  <span class="number">28</span>  <span class="number">2016</span> memtest86+.elf</span><br><span class="line">-rw-r--r-- <span class="number">1</span> root root   <span class="number">184840</span> <span class="number">1</span>月  <span class="number">28</span>  <span class="number">2016</span> memtest86+_multiboot.bin</span><br><span class="line">-rw-r--r-- <span class="number">1</span> root root        <span class="number">0</span> <span class="number">10</span>月 <span class="number">23</span> <span class="number">22</span>:<span class="number">44</span> retpoline<span class="number">-4.15</span><span class="number">.0</span><span class="number">-39</span>-generic</span><br><span class="line">-rw------- <span class="number">1</span> root root  <span class="number">4047147</span> <span class="number">10</span>月 <span class="number">23</span> <span class="number">22</span>:<span class="number">44</span> System.map<span class="number">-4.15</span><span class="number">.0</span><span class="number">-39</span>-generic</span><br><span class="line">-rw------- <span class="number">1</span> root root  <span class="number">8277752</span> <span class="number">10</span>月 <span class="number">23</span> <span class="number">22</span>:<span class="number">59</span> vmlinuz<span class="number">-4.15</span><span class="number">.0</span><span class="number">-39</span>-generic</span><br></pre></td></tr></table></figure>
+<ul>
+<li>第 1 列：文件访问权限
+<ul>
+<li>文件类型（1）：目录为 <code>d</code>，文件为 <code>-</code>。</li>
+<li>属主权限（3）</li>
+<li>属组用户权限（3）</li>
+<li>其他用户权限（3）</li>
+</ul>
+</li>
+<li>第 3 列：属主</li>
+<li>第 4 列：属组</li>
+</ul>
+<p>查看用户的属主、属组以及访问权限可以通过 <code>stat</code> 命令。例如：</p>
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ stat -<span class="keyword">c</span> <span class="symbol">%U</span> /media/liyj/Shared</span><br><span class="line">liyj</span><br><span class="line">➜  ~ stat -<span class="keyword">c</span> <span class="symbol">%G</span> /media/liyj/Shared</span><br><span class="line">liyj</span><br><span class="line">➜  ~ stat -<span class="keyword">c</span> <span class="symbol">%A</span> /media/liyj/Shared</span><br><span class="line">drwxrwxrwx</span><br></pre></td></tr></table></figure>
+<div class="note info">
+            <p>stat - display file or file system status<br>stat 是用来显示文件（默认行为）或文件系统的命令，较常使用的有：</p><ul><li>直接使用 <code>stat FILE ...</code> 显示文件状态，输出使用较为详细的默认格式。</li><li>通过 <code>-c</code> 参数可以指定 format 从而改变 (<strong>c</strong>hange) 文件状态输出格式，format 参数见 manual 手册。</li><li>通过 <code>-f</code> 参数可以显示文件系统的状态。</li></ul><p>详细用法请查阅 manual 手册。</p>
+          </div>
+<p>其中 rwx 分别代表了 可读，可写，可执行，有相应权限则写明字母，若无相应权限，则用 <code>-</code> 代替。如上述 <code>grub</code> 目录 root 用户有读、写、执行权限，而 root 组所有用户以及其他用户，均只有读、执行权限。</p>
+<p>通过 find 命令可以查找属于某个用户或某个组的文件</p>
+<ul>
+<li>find / -grup <em>groupname</em></li>
+<li>find / -group <em>groupnumber</em></li>
+<li>find / -user <em>user</em></li>
+</ul>
+<p>文件的属主、属组可以通过 <code>chown</code> 命令更改。文件的权限可以通过 <code>chmod</code> 命令修改。</p>
+<p>详情参见：<code>chown(1)</code>、<code>chmod(1)</code>、<a href="https://www.linux.com/learn/understanding-Linux-file-permissions" target="_blank" rel="noopener">Linux 文件权限</a>。</p>
+<h2 id="信息存储"><a class="markdownIt-Anchor" href="#信息存储"></a> 信息存储</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/etc/passwd</code></td>
+<td>User account information</td>
+<td>用户账户信息</td>
+</tr>
+<tr>
+<td><code>/etc/shadow</code></td>
+<td>Secure user account information</td>
+<td>用户账户安全信息</td>
+</tr>
+<tr>
+<td><code>/etc/group</code></td>
+<td>Defines the groups to which users belong</td>
+<td>群组账户信息</td>
+</tr>
+<tr>
+<td><code>/etc/gshadow</code></td>
+<td>Contains the shadowed information for group accounts</td>
+<td>群组账户安全信息</td>
+</tr>
+<tr>
+<td><code>/etc/sudoers</code></td>
+<td>List of who can run what by sudo</td>
+<td>可以运行 sudo 的用户</td>
+</tr>
+<tr>
+<td><code>/home/*</code></td>
+<td>Home directories</td>
+<td>家目录</td>
+</tr>
+</tbody>
+</table>
+<h3 id="用户信息存储"><a class="markdownIt-Anchor" href="#用户信息存储"></a> 用户信息存储</h3>
+<p>本地用户信息存储在 <code>/etc/passwd</code> 文件中，一行代表一个用户，每行分七个部分，用英文冒号“:”分开：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">account</span><span class="selector-pseudo">:password</span><span class="selector-pseudo">:UID</span><span class="selector-pseudo">:GID</span><span class="selector-pseudo">:GECOS</span><span class="selector-pseudo">:directory</span><span class="selector-pseudo">:shell</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>account</code> 是用户名，需要遵循标准 *Nix 命名准则。</li>
+<li><code>password</code> 是用户密码。</li>
+</ul>
+<div class="note warning">
+            <p><code>/etc/passwd</code> 对所有人可读，存储密码（无论是否通过哈希运算等方式加密）是不安全的，因此在 password 字段，用一个占位符 <code>x</code> 代替，加密过的密码储存在 <code>/etc/shadow</code> 文件，该文件对普通用户限制访问，shadow 这个名字也表示了密码被阴影笼罩住了。:p</p>
+          </div>
+<ul>
+<li><code>UID</code> 是用户ID，在 Arch 中，第一个非 root 用户的默认 UID 是 1000，后续创建的用户 UID 也应大于1000。</li>
+<li><code>GID</code> 是用户首要组的 ID，组的 ID 在 <code>/etc/group</code> 文件中。</li>
+<li><code>GECOS</code> 是可选的注释字段，通常记录用户全名。</li>
+<li><code>directory</code> 用于登录命令设置 <code>$HOME</code> 环境变量。</li>
+<li><code>shell</code> 是用户默认登录的shell，通常是Bash。</li>
+</ul>
+<h3 id="群组信息存储"><a class="markdownIt-Anchor" href="#群组信息存储"></a> 群组信息存储</h3>
+<p>本地群组信息存储在 <code>/etc/group</code> 文件中，一行代表一个群组，每行分四个部分，用英文冒号“:”分开：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">group</span><span class="selector-pseudo">:password</span><span class="selector-pseudo">:GID</span><span class="selector-pseudo">:user_list</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>group</code> 是群组名称。</li>
+<li><code>password</code> 是群组密码，同用户安全信息机制相同，加密过的密码储存在 <code>/etc/gshadow</code> 文件中。</li>
+<li><code>GID</code> 是群组 ID，是一个整数。</li>
+<li><code>user_list</code> 是群组中的用户成员，用逗号分割，群组可能是该用户的首要组，也可能是附加组；若此项为空，则表示该群组成员仅有一个，且用户名同组名相同。</li>
+</ul>
+<h2 id="用户管理"><a class="markdownIt-Anchor" href="#用户管理"></a> 用户管理</h2>
+<ul>
+<li>使用 <code>who</code> 或 <code>users</code> 命令，可以查看目前已登陆的用户。</li>
+<li>以 root 执行 <code>passwd -Sa</code>，可以查看系统上的用户。</li>
+</ul>
+<h3 id="useradd-创建用户"><a class="markdownIt-Anchor" href="#useradd-创建用户"></a> <code>useradd</code> 创建用户</h3>
+<figure class="highlight vala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># useradd -m -g initial_group -G additional_groups -s login_shell username</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>-m/--create-home</code>：创建用户家目录 <code>/home/username</code>。</li>
+<li><code>-g/--gid</code>：设置用户初始组的名称或数字 ID。<strong>如果设置此项，则组必须存在；如果不设置此项，将会根据<code>/etc/login.defs</code> 中的 <code>USERGROUPS_ENAB</code> 变量设置，默认行为是创建与用户名相同的组名，GID 等于 UID。</strong></li>
+<li><code>-G/--groups</code>：该用户要加入的其他组列表，用逗号分割，不加空格。<strong>如果不设置，用户只加入初始组。</strong></li>
+<li><code>-s/--shell</code>：用户默认登录 shell 的路径。默认为 sh 或 bash。有时候需要禁止某些用户执行登录动作，例如用来执行系统服务的用户。将 shell 设置成 <code>/usr/bin/nologin</code> 就可以禁止用户登录。</li>
+</ul>
+<div class="note warning">
+            <p>为了确保能够登录，shell 路径应当在 <code>/etc/shells</code> 列表中，否则 <code>pam_shell</code> 将会拒绝登录。也不要使用 <code>/usr/bin/bash</code> 来代替 <code>/bin/bash</code>，除非已经在 <code>/etc/shells</code> 中合理配置。</p><p>新创建的用户记得用 <code>passwd username</code> 来设置密码。</p>
+          </div>
+<h4 id="示例添加登录用户"><a class="markdownIt-Anchor" href="#示例添加登录用户"></a> 示例：添加登录用户</h4>
+<p>使用如下命令创建一个登录用户 test1，并设置密码。为该用户：创建用户目录 test1；默认创建同名群组 test1；默认不添加附加组；使用默认 shell。</p>
+<figure class="highlight vala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># useradd -m test1 </span></span><br><span class="line"><span class="meta"># passwd test1</span></span><br></pre></td></tr></table></figure>
+<p>查看创建的用户，验证以上参数的结果：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">~ cat /etc/passwd | grep test1</span><br><span class="line">test1:x:1001:1001::/home/test1:/bin/sh</span><br><span class="line">~ cat /etc<span class="built_in">/group </span>| grep test1</span><br><span class="line">test1:x:1001:</span><br><span class="line">~ ls /home</span><br><span class="line">liyj  test1</span><br></pre></td></tr></table></figure>
+<h4 id="示例添加系统用户"><a class="markdownIt-Anchor" href="#示例添加系统用户"></a> 示例：添加系统用户</h4>
+<p>不同的系统用户可以为进程、守护进程提供更安全的管控目录及文件的访问。使用如下命令创建一个<strong>非登录，无 home 目录的系统用户。（可以加入 -U 参数创建一个和用户名相同的群组，并自动将用户加入它）</strong></p>
+<figure class="highlight vala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># useradd -r -s /usr/bin/nologin username</span></span><br></pre></td></tr></table></figure>
+<h3 id="usermod-更改用户信息"><a class="markdownIt-Anchor" href="#usermod-更改用户信息"></a> <code>usermod</code> 更改用户信息</h3>
+<table>
+<thead>
+<tr>
+<th>作用</th>
+<th>命令</th>
+<th>注释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>更改用户登录名称</td>
+<td><code># usermod -l newname oldname</code></td>
+<td>仅更改用户名字，不更改主目录名称，更不更改同步创建的组名</td>
+</tr>
+<tr>
+<td>更改用户主目录</td>
+<td><code># usermod -d /my/new/home -m username</code></td>
+<td>自动创建新目录，并移动内容。</td>
+</tr>
+<tr>
+<td>将用户加入群组</td>
+<td><code># usermod -aG additional_groups username</code></td>
+<td>支持加入多个群组，用逗号分隔。<strong>如果省略 <code>-a</code> 参数，该用户会离开没有列在群组的其它群组。</strong></td>
+</tr>
+<tr>
+<td>设置注释</td>
+<td><code># usermod -c &quot;Comment&quot; username</code></td>
+<td>也可以使用 <code># chfn username</code> 启动交互式模式设置。</td>
+</tr>
+<tr>
+<td>改变用户登录 shell</td>
+<td><code># usermod -s /bin/bash username</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>更具体内容，请参阅 <code>man usermod</code>。</p>
+<h3 id="userdel-删除用户"><a class="markdownIt-Anchor" href="#userdel-删除用户"></a> <code>userdel</code> 删除用户</h3>
+<figure class="highlight vala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># userdel -r username</span></span><br></pre></td></tr></table></figure>
+<h2 id="群组管理"><a class="markdownIt-Anchor" href="#群组管理"></a> 群组管理</h2>
+<ul>
+<li>使用 <code>groups user</code> 查看用户群组关系，如果 user 省略，默认查看当前用户的群组关系。另外，通过 <code>id user</code> 可以看到更详细的信息，如 UID 和 GID。</li>
+<li>列出系统上所有群组：<code>cat /etc/group</code></li>
+</ul>
+<h3 id="增删群组"><a class="markdownIt-Anchor" href="#增删群组"></a> 增删群组</h3>
+<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># groupadd group # 创建新的组</span><br><span class="line"># groupdel group # 删除用户组</span><br></pre></td></tr></table></figure>
+<h3 id="gpasswd-增删群组成员"><a class="markdownIt-Anchor" href="#gpasswd-增删群组成员"></a> <code>gpasswd</code> 增删群组成员</h3>
+<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># gpasswd -a user group # 将用户添加到组</span><br><span class="line"># gpasswd -d user group # 将用户从组中移除</span><br></pre></td></tr></table></figure>
+<h3 id="groupmod-更改信息"><a class="markdownIt-Anchor" href="#groupmod-更改信息"></a> <code>groupmod</code> 更改信息</h3>
+<p>更改用户所属的组名，不变更GID：</p>
+<figure class="highlight vala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># groupmod -n newname oldname</span></span><br></pre></td></tr></table></figure>
+<h2 id="交互式脚本"><a class="markdownIt-Anchor" href="#交互式脚本"></a> 交互式脚本</h2>
+<p>除了上述的命令，还有一些以交互方式执行的脚本，这些脚本后台调用上述命令，更加易用。这些脚本的命名方式采用<strong>动作＋对象</strong>，而不是<strong>对象＋动作</strong>，这些脚本包括：</p>
+<ul>
+<li><code>adduser</code>, <code>addgroup</code> - add a user or group to the system
+<ul>
+<li>Add a normal user</li>
+<li>Add a system user</li>
+<li>Add a user group</li>
+<li>Add a system group</li>
+<li>Add an existing user to an existing group</li>
+</ul>
+</li>
+<li><code>deluser</code>, <code>delgroup</code> - remove a user or group from the system
+<ul>
+<li>Remove a normal user</li>
+<li>Remove a group</li>
+<li>Remove a user from a specific group</li>
+</ul>
+</li>
+</ul>
+<p>例如：使用 <code>adduser</code> 可以以交互的方式执行 <code>useradd</code>, <code>chfn</code> 和 <code>passwd</code>。</p>
+<p>更多的使用方式查阅手册。</p>
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<ol>
+<li>Unix 系统中一切皆文件。</li>
+<li>访问权限 (permission) 说的是文件 (files) 和用户 (users) 之间的联系。
+<ul>
+<li>通过 <code>chown</code> 改变文件的属主和属组。</li>
+<li>通过 <code>chmod</code> 改变文件对于属主用户，属组用户以及其他用户的访问权限。</li>
+</ul>
+</li>
+<li>成员关系 (ownership) 说的是用户 (users) 和 群组 (groups) 之间的联系。一个用户可以属于多个群组，一个群组也可以包含多个用户。</li>
+<li>用户和群组信息存储在 <code>/etc/{passwd, group}</code> 中，其中的加密信息以影子文件的形式存储在 <code>/etc/{shadow, gshadow}</code> 中。</li>
+<li>用户和群组的管理可以用<strong>基础命令</strong>来管理，基础命令命名方式为<strong>对象＋动作</strong>，例如：
+<ul>
+<li>useradd, groupadd</li>
+<li>usermod, groupmod</li>
+<li>userdel, groupdel</li>
+</ul>
+</li>
+<li>为用户添加密码使用 <code>passwd</code>，为群组增减成员使用 <code>gpasswd</code>。</li>
+<li>用户和群组的管理还可以用<strong>构建于基础命令上的脚本</strong>来管理，脚本的命名方式为<strong>动作＋对象</strong>，例如：
+<ul>
+<li>adduser, addgroup</li>
+<li>deluser, delgroup</li>
+</ul>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/wechatpay.png" alt="Yanjiu Li 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/alipay.jpeg" alt="Yanjiu Li 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"><i class="fa fa-tag"></i> Linux</a>
+              <a href="/tags/Command-line/" rel="tag"><i class="fa fa-tag"></i> Command-line</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/10/31/sdn-mininet/" rel="prev" title="Mininet Basics">
+      <i class="fa fa-chevron-left"></i> Mininet Basics
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/12/19/network-architecture-and-standardization/" rel="next" title="网络体系架构和标准">
+      网络体系架构和标准 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80MTAzMS8xNzU1Ng=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概览"><span class="nav-number">1.</span> <span class="nav-text"> 概览</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#权限和所属"><span class="nav-number">2.</span> <span class="nav-text"> 权限和所属</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#信息存储"><span class="nav-number">3.</span> <span class="nav-text"> 信息存储</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#用户信息存储"><span class="nav-number">3.1.</span> <span class="nav-text"> 用户信息存储</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#群组信息存储"><span class="nav-number">3.2.</span> <span class="nav-text"> 群组信息存储</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#用户管理"><span class="nav-number">4.</span> <span class="nav-text"> 用户管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#useradd-创建用户"><span class="nav-number">4.1.</span> <span class="nav-text"> useradd 创建用户</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#示例添加登录用户"><span class="nav-number">4.1.1.</span> <span class="nav-text"> 示例：添加登录用户</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#示例添加系统用户"><span class="nav-number">4.1.2.</span> <span class="nav-text"> 示例：添加系统用户</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#usermod-更改用户信息"><span class="nav-number">4.2.</span> <span class="nav-text"> usermod 更改用户信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#userdel-删除用户"><span class="nav-number">4.3.</span> <span class="nav-text"> userdel 删除用户</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#群组管理"><span class="nav-number">5.</span> <span class="nav-text"> 群组管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#增删群组"><span class="nav-number">5.1.</span> <span class="nav-text"> 增删群组</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#gpasswd-增删群组成员"><span class="nav-number">5.2.</span> <span class="nav-text"> gpasswd 增删群组成员</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#groupmod-更改信息"><span class="nav-number">5.3.</span> <span class="nav-text"> groupmod 更改信息</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#交互式脚本"><span class="nav-number">6.</span> <span class="nav-text"> 交互式脚本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">7.</span> <span class="nav-text"> 总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yanjiu Li"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Yanjiu Li</p>
+  <div class="site-description" itemprop="description">演绎一场技术溯源的盛宴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">97</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yanjiulab" title="GitHub → https://github.com/yanjiulab" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:liyanjiu@outlook.com" title="E-Mail → mailto:liyanjiu@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Worth Reading
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP" title="http://pages.cs.wisc.edu/~remzi/OSTEP" rel="noopener" target="_blank">OSTEP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" title="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" rel="noopener" target="_blank">OSTEP-Chinese</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.apuebook.com/about3e.html" title="http://www.apuebook.com/about3e.html" rel="noopener" target="_blank">APUE</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" title="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" rel="noopener" target="_blank">UNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" title="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" rel="noopener" target="_blank">IUNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.yinwang.org/" title="http://www.yinwang.org/" rel="noopener" target="_blank">当然我在扯淡</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yanjiu Li</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">204k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:05</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

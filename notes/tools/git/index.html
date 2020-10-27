@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Microsoft YaHei:300,300italic,400,400italic,700,700italic|Cinzel Decorative:300,300italic,400,400italic,700,700italic|Times New Roman:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yjlab.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="本文基于 Git 官方参考书籍              Pro Git            总结提炼而成，详细的实例和用法请参见原书籍。本文同样也不是 Pro Git 的中文翻译，如果想阅读中文版，可以选择              Pro Git 中文版            命令|解释 git config|配置 git 参数，包含系统级、用户级和仓库级三种等级。 git diff|显示当">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Git">
+<meta property="og:url" content="http://yjlab.xyz/notes/tools/git/index.html">
+<meta property="og:site_name" content="Yanjiu Lab">
+<meta property="og:description" content="本文基于 Git 官方参考书籍              Pro Git            总结提炼而成，详细的实例和用法请参见原书籍。本文同样也不是 Pro Git 的中文翻译，如果想阅读中文版，可以选择              Pro Git 中文版            命令|解释 git config|配置 git 参数，包含系统级、用户级和仓库级三种等级。 git diff|显示当">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yjlab.xyz/notes/tools/git/index/local.png">
+<meta property="og:image" content="http://yjlab.xyz/notes/tools/git/index/centralized.png">
+<meta property="og:image" content="http://yjlab.xyz/notes/tools/git/index/distributed.png">
+<meta property="og:image" content="http://yjlab.xyz/notes/tools/git/index/areas.png">
+<meta property="og:updated_time" content="2020-10-21T03:34:31.769Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Git">
+<meta name="twitter:description" content="本文基于 Git 官方参考书籍              Pro Git            总结提炼而成，详细的实例和用法请参见原书籍。本文同样也不是 Pro Git 的中文翻译，如果想阅读中文版，可以选择              Pro Git 中文版            命令|解释 git config|配置 git 参数，包含系统级、用户级和仓库级三种等级。 git diff|显示当">
+<meta name="twitter:image" content="http://yjlab.xyz/notes/tools/git/index/local.png">
+
+<link rel="canonical" href="http://yjlab.xyz/notes/tools/git/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : false,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Git | Yanjiu Lab
+</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yanjiu Lab</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Learning then grokking</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        
+            
+  <li class="menu-item menu-item-notes">
+
+    <a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记</a>
+
+  </li>
+
+
+      
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+  
+
+      
+
+        
+        <ul id="sub-menu" class="sub-menu menu">
+          
+            
+          
+          
+            
+                
+  <li class="menu-item menu-item-algorithm">
+
+    <a href="/notes/algorithm/" rel="section"><i class="fa fa-rocket fa-fw"></i>Algorithm</a>
+
+  </li>
+
+
+          
+            
+                
+  <li class="menu-item menu-item-programming">
+
+    <a href="/notes/programming/" rel="section"><i class="fa fa-star fa-fw"></i>Programming</a>
+
+  </li>
+
+
+          
+              
+  <li class="menu-item menu-item-networking">
+
+    <a href="/notes/networking/" rel="section"><i class="fa fa-cloud fa-fw"></i>Networking</a>
+
+  </li>
+
+
+          
+          
+            
+                
+  <li class="menu-item menu-item-operating-system">
+
+    <a href="/notes/os/" rel="section"><i class="fab fa-linux fa-fw"></i>Operating System</a>
+
+  </li>
+
+
+          
+              
+  <li class="menu-item menu-item-database">
+
+    <a href="/notes/database/" rel="section"><i class="fa fa-database fa-fw"></i>Database</a>
+
+  </li>
+
+
+          
+          
+              
+  <li class="menu-item menu-item-cloud-computing">
+
+    <a href="/notes/cloud/" rel="section"><i class="fab fa-mixcloud fa-fw"></i>Cloud Computing</a>
+
+  </li>
+
+
+          
+          
+            
+                
+  <li class="menu-item menu-item-tools">
+
+    <a href="/notes/tools/" rel="section"><i class="fa fa-tools fa-fw"></i>Tools</a>
+
+  </li>
+
+
+        </ul>
+        
+
+        
+
+                
+                
+
+                
+                
+
+                
+                
+
+                
+
+                    
+                    <ul id="sub-menu-2" class="sub-menu menu">
+                      
+                        
+  <li class="menu-item menu-item-git">
+
+    <a href="/notes/tools/git/" rel="section"><i class="fa fa-code-branch fa-fw"></i>Git</a>
+
+  </li>
+
+
+                        
+  <li class="menu-item menu-item-vim">
+
+    <a href="/notes/tools/vim/" rel="section"><i class="fa fa-edit fa-fw"></i>Vim</a>
+
+  </li>
+
+
+                        
+  <li class="menu-item menu-item-vs-code">
+
+    <a href="/notes/tools/vscode/" rel="section"><i class="fa fa-edit fa-fw"></i>VS Code</a>
+
+  </li>
+
+
+                        
+  <li class="menu-item menu-item-idea">
+
+    <a href="/notes/tools/idea/" rel="section"><i class="fa fa-cube fa-fw"></i>IDEA</a>
+
+  </li>
+
+
+                    </ul>
+                    
+                
+        
+      
+  
+
+          <div class="content page posts-expand">
+            
+
+    
+    
+    
+    <div class="post-block" lang="zh-CN">
+      <header class="post-header">
+
+<h1 class="post-title" itemprop="name headline">Git
+</h1>
+
+<div class="post-meta">
+  
+  <ul class="breadcrumb">
+          
+            <li><a href="/notes/">NOTES</a></li>
+            <li><a href="/notes/tools/">TOOLS</a></li>
+          <li>GIT</li>
+        
+  </ul>
+
+</div>
+
+</header>
+
+      
+      
+      
+      <div class="post-body">
+          <p>本文基于 Git 官方参考书籍 <a class="btn" href="https://git-scm.com/book/en/v2/" target="_blank" rel="noopener">
+            <i class="fa fa-book fa-fw fa-lg"></i>Pro Git
+          </a> 总结提炼而成，详细的实例和用法请参见原书籍。本文同样也不是 Pro Git 的中文翻译，如果想阅读中文版，可以选择 <a class="btn" href="https://gitee.com/progit/" target="_blank" rel="noopener">
+            <i class="fa fa-home fa-fw fa-lg"></i>Pro Git 中文版
+          </a></p>
+<p>命令|解释<br>
+git config|配置 git 参数，包含系统级、用户级和仓库级三种等级。<br>
+git diff|显示当前工作树中还未提交的更改</p>
+<h1 id="git-简介"><a class="markdownIt-Anchor" href="#git-简介"></a> Git 简介</h1>
+<h2 id="版本控制系统-vcs"><a class="markdownIt-Anchor" href="#版本控制系统-vcs"></a> 版本控制系统 (VCS)</h2>
+<p>版本控制系统大致可以分为三种：</p>
+<ul>
+<li>本地版本控制系统 (Local Version Control Systems, LVCS)</li>
+<li>集中式版本控制系统 (Centralized Version Control Systems, CVCS)</li>
+<li>分布式版本控制系统 (Distributed Version Control System, DVCS)</li>
+</ul>
+<div class="tabs" id="vcs"><ul class="nav-tabs"><li class="tab active"><a href="#vcs-1">本地版本控制系统</a></li><li class="tab"><a href="#vcs-2">集中式版本控制系统</a></li><li class="tab"><a href="#vcs-3">分布式版本控制系统</a></li></ul><div class="tab-content"><div class="tab-pane active" id="vcs-1"><p><img src="index/local.png" alt="local"></p></div><div class="tab-pane" id="vcs-2"><p><img src="index/centralized.png" alt="centralized"></p></div><div class="tab-pane" id="vcs-3"><p><img src="index/distributed.png" alt="distributed"></p></div></div></div>
+<h2 id="git-特性"><a class="markdownIt-Anchor" href="#git-特性"></a> Git 特性</h2>
+<ul>
+<li>直接记录快照，而非差异比较</li>
+<li>近乎所有操作都是本地执行</li>
+<li>Git 保证完整性 (使用 SHA-1 hash 计算校验和)</li>
+<li>Git 一般只添加数据</li>
+</ul>
+<h2 id="工作区域和文件状态"><a class="markdownIt-Anchor" href="#工作区域和文件状态"></a> 工作区域和文件状态</h2>
+<p>Git 仓库的文件有三种状态：</p>
+<ol>
+<li>已修改 (modified) 表示修改了某个文件，但还没有提交保存；</li>
+<li>已暂存 (staged) 表示把已修改的文件放在下次提交时要保存的清单中；</li>
+<li>已提交 (committed) 表示该文件已经被安全地保存在本地数据库中了。</li>
+</ol>
+<p>由此我们看到 Git 管理项目时，文件流转的三个工作区域为：</p>
+<ol>
+<li>工作目录 (Working Directory)</li>
+<li>暂存区域 (Staging Area)</li>
+<li>Git 仓库 (<code>.git</code> directory or Repository)</li>
+</ol>
+<p><img src="index/areas.png" alt="areas"></p>
+<p><strong>从项目中取出某个版本的所有文件和目录，用以开始后续工作的叫做工作目录</strong>。这些文件实际上都是从 Git 目录中的压缩对象数据库中提取出来的，工作目录也是我们可以看到的目录，接下来就可以在工作目录中对这些文件进行编辑。</p>
+<p><strong>所谓的暂存区域只不过是个简单的文件</strong>，一般都放在 .git 目录中。在 Git 中也把这个文件叫做<strong>索引文件 (index)</strong>。</p>
+<p><strong>Git 仓库是用来保存元数据和对象数据库的地方</strong>，该目录非常重要。每次克隆镜像仓库的时候，实际拷贝的就是这个目录里面的数据。</p>
+<h2 id="git-配置"><a class="markdownIt-Anchor" href="#git-配置"></a> Git 配置</h2>
+<p>Git 自带一个 <code>git config</code> 的工具来帮助设置控制 Git 外观和行为的配置变量。这些变量存储在三个不同的位置，因此具有三种级别，<strong>每一个级别会覆盖上一级别的配置。</strong></p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>作用域</th>
+<th>命令行参数参数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/etc/gitconfig</code></td>
+<td>系统上每一个用户及他们仓库的通用配置</td>
+<td><code>git config --system</code></td>
+</tr>
+<tr>
+<td><code>~/.gitconfig</code> 或 <code>~/.config/git/config</code></td>
+<td>当前用户配置</td>
+<td><code>git config --global</code></td>
+</tr>
+<tr>
+<td><code>.git/config</code></td>
+<td>当前仓库配置</td>
+<td><code>git config [--local]</code></td>
+</tr>
+</tbody>
+</table>
+<p>当安装完 Git 应该做的第一件事就是设置你的<strong>用户名称</strong>与<strong>邮件地址</strong>。 这样做很重要，因为每一个 Git 的提交都会使用这些信息，并且它会写入到你的每一次提交中，不可更改：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git config --global user.name <span class="string">"John Doe"</span></span><br><span class="line">git config --global user.email johndoe@example.com</span><br></pre></td></tr></table></figure>
+<p>如果想要检查你的配置，可以使用 <code>git config --list</code> 命令来列出所有 Git 当时能找到的配置。或者通过 <code>git config &lt;key&gt;</code> 来检查某一项配置，如 <code>git config user.email</code>。</p>
+<div class="note info">
+            <p>如果使用了 <code>--global</code> 选项，那么该命令只需要运行一次，因为之后无论你在该系统上做任何事情， Git 都会使用那些信息。<strong>当你想针对特定项目使用不同的用户名称与邮件地址时，可以在那个项目目录下运行没有 <code>--global</code> 选项的命令来配置。</strong></p>
+          </div>
+<h2 id="获取帮助"><a class="markdownIt-Anchor" href="#获取帮助"></a> 获取帮助</h2>
+<p>若你使用 Git 时需要获取帮助，有三种方法可以找到 Git 命令的使用手册：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">help</span> &lt;verb&gt;</span><br><span class="line">git &lt;verb&gt; --<span class="built_in">help</span></span><br><span class="line">man git-&lt;verb&gt;</span><br></pre></td></tr></table></figure>
+<h1 id="git-状态迁移"><a class="markdownIt-Anchor" href="#git-状态迁移"></a> Git 状态迁移</h1>
+<h1 id="参考"><a class="markdownIt-Anchor" href="#参考"></a> 参考</h1>
+<ul>
+<li><a href="https://education.github.com/git-cheat-sheet-education.pdf" target="_blank" rel="noopener">GIT CHEAT SHEET</a></li>
+<li><a href="http://www.flutterbys.com.au/stats/tut/tut19.1.html" target="_blank" rel="noopener">Tutorial 19.1 - Git and version control</a></li>
+</ul>
+
+      </div>
+      
+      
+      
+    </div>
+    
+  <ul class="breadcrumb">
+          
+            <li><a href="/notes/">NOTES</a></li>
+            <li><a href="/notes/tools/">TOOLS</a></li>
+          <li>GIT</li>
+        
+  </ul>
+
+    
+    
+    
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#git-简介"><span class="nav-number">1.</span> <span class="nav-text"> Git 简介</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#版本控制系统-vcs"><span class="nav-number">1.1.</span> <span class="nav-text"> 版本控制系统 (VCS)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#git-特性"><span class="nav-number">1.2.</span> <span class="nav-text"> Git 特性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#工作区域和文件状态"><span class="nav-number">1.3.</span> <span class="nav-text"> 工作区域和文件状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#git-配置"><span class="nav-number">1.4.</span> <span class="nav-text"> Git 配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#获取帮助"><span class="nav-number">1.5.</span> <span class="nav-text"> 获取帮助</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#git-状态迁移"><span class="nav-number">2.</span> <span class="nav-text"> Git 状态迁移</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">3.</span> <span class="nav-text"> 参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yanjiu Li"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Yanjiu Li</p>
+  <div class="site-description" itemprop="description">演绎一场技术溯源的盛宴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">97</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yanjiulab" title="GitHub → https://github.com/yanjiulab" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:liyanjiu@outlook.com" title="E-Mail → mailto:liyanjiu@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Worth Reading
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP" title="http://pages.cs.wisc.edu/~remzi/OSTEP" rel="noopener" target="_blank">OSTEP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" title="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" rel="noopener" target="_blank">OSTEP-Chinese</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.apuebook.com/about3e.html" title="http://www.apuebook.com/about3e.html" rel="noopener" target="_blank">APUE</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" title="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" rel="noopener" target="_blank">UNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" title="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" rel="noopener" target="_blank">IUNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.yinwang.org/" title="http://www.yinwang.org/" rel="noopener" target="_blank">当然我在扯淡</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yanjiu Li</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">204k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:05</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

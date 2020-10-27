@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Microsoft YaHei:300,300italic,400,400italic,700,700italic|Cinzel Decorative:300,300italic,400,400italic,700,700italic|Times New Roman:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yjlab.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Linux Namespace (名称空间，命名空间) 是 Linux 提供的一种内核级别环境隔离的方法。该功能对内核资源进行分区，使得一组进程只能看到一组资源，而另一组进程看到另一组不同的资源。我们可以将 Namespace 视为一个盒子，这些盒子内有一些系统资源，具体含有哪些资源完全取决于盒子（命名空间）的类型。从内核版本 5.6 开始，存在 8 种 Namespace。分别为 Cgroup，">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux Namespace">
+<meta property="og:url" content="http://yjlab.xyz/2020/06/21/linux-network-notes/index.html">
+<meta property="og:site_name" content="Yanjiu Lab">
+<meta property="og:description" content="Linux Namespace (名称空间，命名空间) 是 Linux 提供的一种内核级别环境隔离的方法。该功能对内核资源进行分区，使得一组进程只能看到一组资源，而另一组进程看到另一组不同的资源。我们可以将 Namespace 视为一个盒子，这些盒子内有一些系统资源，具体含有哪些资源完全取决于盒子（命名空间）的类型。从内核版本 5.6 开始，存在 8 种 Namespace。分别为 Cgroup，">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-10-21T03:34:31.849Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux Namespace">
+<meta name="twitter:description" content="Linux Namespace (名称空间，命名空间) 是 Linux 提供的一种内核级别环境隔离的方法。该功能对内核资源进行分区，使得一组进程只能看到一组资源，而另一组进程看到另一组不同的资源。我们可以将 Namespace 视为一个盒子，这些盒子内有一些系统资源，具体含有哪些资源完全取决于盒子（命名空间）的类型。从内核版本 5.6 开始，存在 8 种 Namespace。分别为 Cgroup，">
+
+<link rel="canonical" href="http://yjlab.xyz/2020/06/21/linux-network-notes/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Linux Namespace | Yanjiu Lab</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yanjiu Lab</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Learning then grokking</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        
+            
+  <li class="menu-item menu-item-notes">
+
+    <a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记</a>
+
+  </li>
+
+
+      
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yjlab.xyz/2020/06/21/linux-network-notes/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Yanjiu Li">
+      <meta itemprop="description" content="演绎一场技术溯源的盛宴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yanjiu Lab">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux Namespace
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-06-21 23:43:06" itemprop="dateCreated datePublished" datetime="2020-06-21T23:43:06+08:00">2020-06-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-10-21 11:34:31" itemprop="dateModified" datetime="2020-10-21T11:34:31+08:00">2020-10-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OS/" itemprop="url" rel="index"><span itemprop="name">OS</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OS/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Linux Namespace (名称空间，命名空间) 是 Linux 提供的一种内核级别环境隔离的方法。该功能对内核资源进行分区，使得一组进程只能看到一组资源，而另一组进程看到另一组不同的资源。我们可以将 Namespace 视为一个盒子，这些盒子内有一些系统资源，具体含有哪些资源完全取决于盒子（命名空间）的类型。从内核版本 5.6 开始，存在 8 种 Namespace。分别为 <code>Cgroup</code>，<code>IPC</code>，<code>Network</code>，<code>Mount</code>，<code>PID</code>，<code>User</code>，<code>UTS</code>，<code>Time</code>。</p>
+<a id="more"></a>
+<div class="note info">
+            <p>Time Namespace 在 2020 年 3 月才被加入，在 Linux 内核 5.6 以上的版本才可以看到。因此在下面的例子中暂不讨论 Time Namespace 这种类型。</p>
+          </div>
+<h1 id="进程与命名空间"><a class="markdownIt-Anchor" href="#进程与命名空间"></a> 进程与命名空间</h1>
+<p>每个进程都与一个命名空间相关联，并且进程只能查看或使用与该命名空间以及后代命名空间相关的资源。在任何给定时刻，任何进程 P 都恰好属于每种 Namespace 类型的一个实例。这样每个进程（或其进程组）可以在每种资源上拥有唯一的视图，隔离哪个资源取决于该进程所属的 Namespace 实例。</p>
+<p>我们可以看到一个进程所属的 Namespace，在典型的 Linux 发行版中，它们以文件的形式存在于 <code>/proc/$pid/ns</code> 目录下。</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ ls -al /proc/$$/ns</span><br><span class="line">total <span class="number">0</span></span><br><span class="line">lrwxrwxrwx <span class="number">1</span> liyanjiu liyanjiu <span class="number">0</span> <span class="number">6</span>月  <span class="number">27</span> <span class="number">21</span>:<span class="number">00</span> cgroup -&gt; <span class="string">'cgroup:[4026531835]'</span></span><br><span class="line">lrwxrwxrwx <span class="number">1</span> liyanjiu liyanjiu <span class="number">0</span> <span class="number">6</span>月  <span class="number">27</span> <span class="number">21</span>:<span class="number">00</span> ipc -&gt; <span class="string">'ipc:[4026531839]'</span></span><br><span class="line">lrwxrwxrwx <span class="number">1</span> liyanjiu liyanjiu <span class="number">0</span> <span class="number">6</span>月  <span class="number">27</span> <span class="number">21</span>:<span class="number">00</span> mnt -&gt; <span class="string">'mnt:[4026531840]'</span></span><br><span class="line">lrwxrwxrwx <span class="number">1</span> liyanjiu liyanjiu <span class="number">0</span> <span class="number">6</span>月  <span class="number">27</span> <span class="number">21</span>:<span class="number">00</span> net -&gt; <span class="string">'net:[4026531992]'</span></span><br><span class="line">lrwxrwxrwx <span class="number">1</span> liyanjiu liyanjiu <span class="number">0</span> <span class="number">6</span>月  <span class="number">27</span> <span class="number">21</span>:<span class="number">00</span> pid -&gt; <span class="string">'pid:[4026531836]'</span></span><br><span class="line">lrwxrwxrwx <span class="number">1</span> liyanjiu liyanjiu <span class="number">0</span> <span class="number">6</span>月  <span class="number">27</span> <span class="number">21</span>:<span class="number">00</span> user -&gt; <span class="string">'user:[4026531837]'</span></span><br><span class="line">lrwxrwxrwx <span class="number">1</span> liyanjiu liyanjiu <span class="number">0</span> <span class="number">6</span>月  <span class="number">27</span> <span class="number">21</span>:<span class="number">00</span> uts -&gt; <span class="string">'uts:[4026531838]'</span></span><br></pre></td></tr></table></figure>
+<p>如果打开第二个终端并运行相同的命令，则应该产生完全相同的输出。这是因为进程必须属于某个名称空间，除非我们明确指定哪个名称空间，否则 Linux 会将其添加为默认名称空间的成员。</p>
+<h1 id="uts-namespace"><a class="markdownIt-Anchor" href="#uts-namespace"></a> UTS Namespace</h1>
+<p>此时我们使用 <code>unshare</code> 命令在一个新的 Namespace 中运行一个 shell 进程。其中 -u 标志告诉它在新的 <code>UTS</code> 命名空间中运行 bash。请注意此时我们的新 bash 进程指向不同的 uts 文件，而其他所有文件都保持不变。</p>
+<figure class="highlight tcl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">$ hostname</span><br><span class="line">liyanjiu-virtual-machine</span><br><span class="line">$ sudo unshare -u bash  # run bash in a new UTS <span class="keyword">namespace</span>.</span><br><span class="line">$ ls -la /<span class="keyword">proc</span>/$$/ns</span><br><span class="line">total 0</span><br><span class="line">lrwxrwxrwx 1<span class="title"> root</span> root 0 6月  27 21:07<span class="title"> cgroup</span> -&gt; 'cgroup:[4026531835]'</span><br><span class="line">lrwxrwxrwx 1<span class="title"> root</span> root 0 6月  27 21:07<span class="title"> ipc</span> -&gt; 'ipc:[4026531839]'</span><br><span class="line">lrwxrwxrwx 1<span class="title"> root</span> root 0 6月  27 21:07<span class="title"> mnt</span> -&gt; 'mnt:[4026531840]'</span><br><span class="line">lrwxrwxrwx 1<span class="title"> root</span> root 0 6月  27 21:07<span class="title"> net</span> -&gt; 'net:[4026531992]'</span><br><span class="line">lrwxrwxrwx 1<span class="title"> root</span> root 0 6月  27 21:07<span class="title"> pid</span> -&gt; 'pid:[4026531836]'</span><br><span class="line">lrwxrwxrwx 1<span class="title"> root</span> root 0 6月  27 21:07<span class="title"> user</span> -&gt; 'user:[4026531837]'</span><br><span class="line">lrwxrwxrwx 1<span class="title"> root</span> root 0 6月  27 21:07<span class="title"> uts</span> -&gt; 'uts:[4026533065]'</span><br><span class="line">$<span class="title"> hostname</span></span><br><span class="line"><span class="title">liyanjiu-virtual-machine</span></span><br><span class="line"><span class="title">$</span> hostname<span class="title"> container</span></span><br><span class="line"><span class="title">$</span> hostname</span><br><span class="line">container</span><br><span class="line">$<span class="title"> exit</span> </span><br><span class="line">$<span class="title"> hostname</span>  </span><br><span class="line">liyanjiu-virtual-machine</span><br></pre></td></tr></table></figure>
+<p>我们在新的 UTS Namespace 中设置 hostname 为 container，并且不会影响系统中的任何其他进程。</p>
+<p>现在我们来思考一个问题：什么是容器？简而言之，<strong>容器是普通的进程，其具有与其他进程不同的 Namespace</strong>。实际上，容器不必为每种类型都属于唯一的命名空间，它可以共享其中的一些。当 <code>docker run --net=host redis</code> 执行时，其实告诉docker 不要为 redis 进程创建新的 Network Namespace，并且如我们所见，Linux 将该进程添加为默认 Network Namespace 的成员，就像其他所有常规进程一样没有任何区别。</p>
+<p>那么新的问题来了？如果一个容器，只有一种 Namespace 是私有的，而其余所有的 Namespace 都是和其他进程共享的，那么它还能称之为容器吗？笔者认为这个问题的答案是肯定的，但结果其实并不是那么重要。通常，容器通过 Namespace 实现<strong>隔离 (isolation)</strong> 的概念，进程共享的 Namespace 和资源的数量越少，则进程越隔离，这才是真正重要的。</p>
+<h1 id="user-namespace"><a class="markdownIt-Anchor" href="#user-namespace"></a> User Namespace</h1>
+<h1 id="mount-namespace"><a class="markdownIt-Anchor" href="#mount-namespace"></a> Mount Namespace</h1>
+<h1 id="network-namespace"><a class="markdownIt-Anchor" href="#network-namespace"></a> Network namespace</h1>
+<p>使用 <code>iproute2</code> 包的 <code>ip</code> 命令可以创建 namespace，默认创建在 <code>/var/run/netns</code> 下，但实际上可以在任何地方，例如 <code>docker</code> 中的 namespace 在 <code>/var/run/docker/netns</code>。</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ip netns <span class="builtin-name">add</span> ns1</span><br><span class="line">ip netns <span class="builtin-name">add</span> ns2</span><br><span class="line"></span><br><span class="line">tree /var/run/netns/</span><br><span class="line">/var/run/netns/</span><br><span class="line">├── ns1</span><br><span class="line">└── ns2</span><br></pre></td></tr></table></figure>
+<p>创建 namespace 后，我们可以利用 <code>ip netns exec</code> 在其中执行一些命令来确认隔离性：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip netns exec ns1 \</span><br><span class="line">       <span class="built_in"> ip address </span>show</span><br></pre></td></tr></table></figure>
+<p>接下来创建 veth 对，将 namespace 连接起来</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ip link <span class="builtin-name">add</span> veth1<span class="built_in"> type </span>veth<span class="built_in"> peer </span>name br-veth1</span><br><span class="line">ip link <span class="builtin-name">add</span> veth2<span class="built_in"> type </span>veth<span class="built_in"> peer </span>name br-veth2</span><br><span class="line">s</span><br><span class="line">ip link <span class="builtin-name">set</span> veth1 netns ns1</span><br><span class="line">ip link <span class="builtin-name">set</span> veth2 netns ns2</span><br></pre></td></tr></table></figure>
+<p>现在，namespace 具有另外的接口了，请检查它们是否确实存在：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip netns exec ns1 \</span><br><span class="line">       <span class="built_in"> ip address </span>show</span><br></pre></td></tr></table></figure>
+<p>设置 IP 地址</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ip netns exec ns1 \</span><br><span class="line">       <span class="built_in"> ip </span>addr <span class="builtin-name">add</span> 192.168.1.11/24 dev veth1</span><br><span class="line"></span><br><span class="line">ip netns exec ns2 \</span><br><span class="line">       <span class="built_in"> ip </span>addr <span class="builtin-name">add</span> 192.168.1.12/24 dev veth2</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h1 id="参考"><a class="markdownIt-Anchor" href="#参考"></a> 参考</h1>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Linux_namespace" target="_blank" rel="noopener">Linux Namespace, Wikipedia</a></li>
+<li><a href="http://ifeanyi.co/posts/linux-namespaces-part-1" target="_blank" rel="noopener">A deep dive into Linux namespaces</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/wechatpay.png" alt="Yanjiu Li 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/alipay.jpeg" alt="Yanjiu Li 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"><i class="fa fa-tag"></i> Linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/04/08/algo-bitwise/" rel="prev" title="Amazing Bitwise">
+      <i class="fa fa-chevron-left"></i> Amazing Bitwise
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/07/18/linux-lvs/" rel="next" title="Linux Virtual Server">
+      Linux Virtual Server <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80MTAzMS8xNzU1Ng=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#进程与命名空间"><span class="nav-number">1.</span> <span class="nav-text"> 进程与命名空间</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#uts-namespace"><span class="nav-number">2.</span> <span class="nav-text"> UTS Namespace</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#user-namespace"><span class="nav-number">3.</span> <span class="nav-text"> User Namespace</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mount-namespace"><span class="nav-number">4.</span> <span class="nav-text"> Mount Namespace</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#network-namespace"><span class="nav-number">5.</span> <span class="nav-text"> Network namespace</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">6.</span> <span class="nav-text"> 参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yanjiu Li"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Yanjiu Li</p>
+  <div class="site-description" itemprop="description">演绎一场技术溯源的盛宴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">97</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yanjiulab" title="GitHub → https://github.com/yanjiulab" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:liyanjiu@outlook.com" title="E-Mail → mailto:liyanjiu@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Worth Reading
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP" title="http://pages.cs.wisc.edu/~remzi/OSTEP" rel="noopener" target="_blank">OSTEP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" title="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" rel="noopener" target="_blank">OSTEP-Chinese</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.apuebook.com/about3e.html" title="http://www.apuebook.com/about3e.html" rel="noopener" target="_blank">APUE</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" title="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" rel="noopener" target="_blank">UNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" title="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" rel="noopener" target="_blank">IUNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.yinwang.org/" title="http://www.yinwang.org/" rel="noopener" target="_blank">当然我在扯淡</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yanjiu Li</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">204k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:05</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

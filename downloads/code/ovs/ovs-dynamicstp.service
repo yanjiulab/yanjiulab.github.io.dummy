@@ -1,0 +1,12 @@
+[Unit]
+Description=Disable STP when the tcp connections between OVS and controller is detected, otherwise enable STP.
+After=ovs-config.service
+Requires=ovs-config.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python /usr/local/ovs/ovs-dynamicstp.py &
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=Configuarte ovs automatically when startup. 
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/ovs/ovs-config.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

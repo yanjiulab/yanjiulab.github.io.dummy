@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Microsoft YaHei:300,300italic,400,400italic,700,700italic|Cinzel Decorative:300,300italic,400,400italic,700,700italic|Times New Roman:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yjlab.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Linux Virtual Server (LVS) is load balancing software for Linux kernel–based operating systems.  LVS 是一个虚拟的服务器集群系统，用于 Linux 操作系统实现负载平衡。LVS 通过使用集群技术和 Linux 操作系统实现了一个高性能、高可用的服务器，其具备良好的可伸缩性、可靠性、可管理性。目前">
+<meta name="keywords" content="Network,Linux,LVS,LB">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux Virtual Server">
+<meta property="og:url" content="http://yjlab.xyz/2020/07/18/linux-lvs/index.html">
+<meta property="og:site_name" content="Yanjiu Lab">
+<meta property="og:description" content="Linux Virtual Server (LVS) is load balancing software for Linux kernel–based operating systems.  LVS 是一个虚拟的服务器集群系统，用于 Linux 操作系统实现负载平衡。LVS 通过使用集群技术和 Linux 操作系统实现了一个高性能、高可用的服务器，其具备良好的可伸缩性、可靠性、可管理性。目前">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yjlab.xyz/2020/07/18/linux-lvs/lvs-dr.png">
+<meta property="og:image" content="http://yjlab.xyz/2020/07/18/linux-lvs/lvs-nat.png">
+<meta property="og:image" content="http://yjlab.xyz/2020/07/18/linux-lvs/lvs-fullnat.png">
+<meta property="og:image" content="http://yjlab.xyz/2020/07/18/linux-lvs/lvs-tun.png">
+<meta property="og:updated_time" content="2020-10-21T03:34:31.861Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux Virtual Server">
+<meta name="twitter:description" content="Linux Virtual Server (LVS) is load balancing software for Linux kernel–based operating systems.  LVS 是一个虚拟的服务器集群系统，用于 Linux 操作系统实现负载平衡。LVS 通过使用集群技术和 Linux 操作系统实现了一个高性能、高可用的服务器，其具备良好的可伸缩性、可靠性、可管理性。目前">
+<meta name="twitter:image" content="http://yjlab.xyz/2020/07/18/linux-lvs/lvs-dr.png">
+
+<link rel="canonical" href="http://yjlab.xyz/2020/07/18/linux-lvs/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Linux Virtual Server | Yanjiu Lab</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yanjiu Lab</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Learning then grokking</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        
+            
+  <li class="menu-item menu-item-notes">
+
+    <a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记</a>
+
+  </li>
+
+
+      
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yjlab.xyz/2020/07/18/linux-lvs/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Yanjiu Li">
+      <meta itemprop="description" content="演绎一场技术溯源的盛宴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yanjiu Lab">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux Virtual Server
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-18 15:58:05" itemprop="dateCreated datePublished" datetime="2020-07-18T15:58:05+08:00">2020-07-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-10-21 11:34:31" itemprop="dateModified" datetime="2020-10-21T11:34:31+08:00">2020-10-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OS/" itemprop="url" rel="index"><span itemprop="name">OS</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OS/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>Linux Virtual Server (LVS) is load balancing software for Linux kernel–based operating systems.</p>
+</blockquote>
+<p>LVS 是一个虚拟的服务器集群系统，用于 Linux 操作系统实现负载平衡。LVS 通过使用集群技术和 Linux 操作系统实现了一个高性能、高可用的服务器，其具备良好的可伸缩性、可靠性、可管理性。目前 LVS 已是 Linux 内核的一部分，通过 <code>ipvsadm</code> 来管理。</p>
+<a id="more"></a>
+<h1 id="术语表"><a class="markdownIt-Anchor" href="#术语表"></a> 术语表</h1>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">术语/缩写</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">Client Computer</td>
+<td>请求服务的客户端</td>
+</tr>
+<tr>
+<td style="text-align:center">LVS Director</td>
+<td>负载均衡器接收客户端服务请求，并均衡到特定的“真实服务器”以处理请求。</td>
+</tr>
+<tr>
+<td style="text-align:center">RS (Real Server)</td>
+<td>负载均衡器背后用于代表该 LVS 集群提供服务的真实服务器。</td>
+</tr>
+<tr>
+<td style="text-align:center">VIP (Virtual IP address)</td>
+<td>Director 用于向客户端提供服务的 IP 地址</td>
+</tr>
+<tr>
+<td style="text-align:center">RIP (Real IP address)</td>
+<td>RS 的真实 IP 地址</td>
+</tr>
+<tr>
+<td style="text-align:center">DIP (Director IP address)</td>
+<td>Director 用于和 RS 通信的 IP 地址</td>
+</tr>
+<tr>
+<td style="text-align:center">CIP (Client IP address)</td>
+<td>客户端的 IP 地址</td>
+</tr>
+</tbody>
+</table>
+<h1 id="调度器-scheduler"><a class="markdownIt-Anchor" href="#调度器-scheduler"></a> 调度器 (Scheduler)</h1>
+<p>LVS 实现了多种负载均衡调度器，常用的包括：</p>
+<ul>
+<li>Round-robin (ip_vs_rr.c)：轮询将收到的访问请求按照顺序轮流调度到不同的服务器上，不管后端真实服务器的实际连接数和系统负载。</li>
+<li>Weighted round-robin (ip_vs_wrr.c)：加权轮询给 RS 设置权重，权重越高，那么分发的请求数越多，权重的取值范围0–100。根据每台服务器的性能，给每台服务器添加权值，如果 RS1 的权值为 1，RS2 的权值为 2，那么调度到 RS2 的请求会是 RS1 的 2 倍。权值越高的服务器，处理的请求越多。这种算法是对 rr 算法的一种优化和补充。</li>
+<li>Least-connection (ip_vs_lc.c)：最少链接根据后端 RS 的连接数来决定把请求分发给谁，RS1 连接数比 RS2 连接数少，那么请求就优先发给 RS1。</li>
+<li>Weighted least-connection (ip_vs_wlc.c)：上述的一种补充。</li>
+</ul>
+<p>其他算法包括：</p>
+<ul>
+<li>Locality-based least-connection (ip_vs_lblc.c)</li>
+<li>Locality-based least-connection with replication (ip_vs_lblcr.c)</li>
+<li>Destination hashing (ip_vs_dh.c)</li>
+<li>Source hashing (ip_vs_sh.c)</li>
+<li>Shortest expected delay (ip_vs_sed.c)</li>
+<li>Never queue (ip_vs_nq.c)</li>
+</ul>
+<h1 id="转发模式"><a class="markdownIt-Anchor" href="#转发模式"></a> 转发模式</h1>
+<p>LVS 可以基于多种方式工作，主要包括：</p>
+<ul>
+<li>直接路由 (DR)</li>
+<li>网络地址转换 (NAT)</li>
+<li>完全网络地址转换 (FullNAT)</li>
+<li>IP 隧道 (IP Tunneling)</li>
+</ul>
+<p>LVS 不同的转发方式具有不同的网络架构，也导致了不同的性能。</p>
+<h2 id="virtual-server-via-direct-routing"><a class="markdownIt-Anchor" href="#virtual-server-via-direct-routing"></a> Virtual Server via Direct Routing</h2>
+<p>直接路由 (DR) 的特点是：LVS 和 RS 在同一个 LAN/VLAN，多个 RS 和 LVS 共用同一个 VIP，然后依据 MAC 地址来在 LVS 和多个 RS 之间转发。</p>
+<p>具体流程为：入站请求走 LVS，LVS 修改目的 MAC，将其转发给真正的 RS，RS 的回复报文绕过 LVS 直接发给 Client。具体数据包流向如下图所示。其中 LVS 和 RS 虽然有虚线连接，但只表示逻辑上的连接，实际数据包是通过交换机转发的。</p>
+<p><img src="lvs-dr.png" alt="lvs-dr"></p>
+<p>由于大部分情况下都是请求包小，回复包大，LVS 不容易成为流量瓶颈，同时 LVS 只需要修改进来的包的 MAC 地址，因此 DR 模式性能很好。</p>
+<p>但同时这种模式也具有明显的缺点：</p>
+<ul>
+<li>要求 LVS 和 RS 在同一个 LAN/VLAN，扩展性不够好。</li>
+<li>RS 需要配置 VIP 同时特殊处理 ARP。</li>
+<li>配置比较复杂（需要将 VIP 配置到 lo 接口，避免直接将请求发到 RS）。</li>
+<li>不支持端口映射。</li>
+</ul>
+<h2 id="virtual-server-via-nat"><a class="markdownIt-Anchor" href="#virtual-server-via-nat"></a> Virtual Server via NAT</h2>
+<p>NAT 模式基于 NAT 技术完成转发，类似于 NAT 路由器的功能，只不过多了负载均衡的过程，这种方式配置简单，支持端口映射（看名字就知道），并且 RIP 一般是私有地址。其数据包流向如下图所示：</p>
+<p><img src="lvs-nat.png" alt="lvs-nat"></p>
+<p>这种模式的缺点为：</p>
+<ul>
+<li>LVS 必须有一个接口和所有 RS 在同一个 LAN/VLAN。</li>
+<li>进出流量都要走 LVS 转发，LVS 容易成为瓶颈。</li>
+<li>一般而言需要将 LVS 配置成 RS 的网关。</li>
+</ul>
+<h2 id="virtual-server-via-fullnat"><a class="markdownIt-Anchor" href="#virtual-server-via-fullnat"></a> Virtual Server via FullNAT</h2>
+<p>完全 NAT 模式是 NAT 模式的一个变种，与 NAT 模式不同，FullNAT 模式不仅将目的 IP 修改为 RIP，并且将源 IP 修改为 DIP，这样 DIP 和 RIP 不必非得在同一个二层网络之中，两者只需要 IP 互通即可。</p>
+<p><img src="lvs-fullnat.png" alt="lvs-fullnat"></p>
+<p>但这种模式也有缺点：</p>
+<ul>
+<li>RS 看不到 CIP（NAT 模式下可以看到）。</li>
+<li>进出流量还是都走的 LVS，容易成为瓶颈（跟 NAT 一样都有这个问题）。</li>
+</ul>
+<div class="note info">
+            <p>因为 CIP 被修改掉了，RS 只能看到 LVS 的 DIP，可将 CIP 放入 TCP 包的 Option 中传递给 RS，RS 上一般部署自己写的模块来从 Options 中读取 CIP，这样 RS 能看到 CIP 了, 当然这不是一个开源的通用方案。</p>
+          </div>
+<h2 id="virtual-server-via-ip-tunneling"><a class="markdownIt-Anchor" href="#virtual-server-via-ip-tunneling"></a> Virtual Server via IP Tunneling</h2>
+<p>IP 隧道模式利用了 IP 隧道技术来打通 LVS 和 RS 之间的通信。当请求包到达 LVS 后，LVS 将请求包封装成一个新的 IP 报文，新的 IP 包的目的 IP 是某一 RS 的 IP，然后转发给 RS，RS 收到报文后 IPIP 内核模块解封装，取出用户的请求报文发现目的 IP 是 VIP，而自己的 tun 虚拟网卡上配置了这个 IP，从而愉快地处理请求并将结果直接发送给客户。</p>
+<p>这种方式的运行过程十分类似于 DR 模式，只不过 DR 模式基于 MAC 转发，而 IP 隧道模式基于 IPIP 协议路由。</p>
+<p><img src="lvs-tun.png" alt="lvs-tun"></p>
+<p>这种方式的优点是：</p>
+<ul>
+<li>集群节点可以跨二层。</li>
+<li>跟 DR 一样，响应报文直接发给 Client，LVS 没有性能瓶颈。</li>
+</ul>
+<p>同时也存在了一定的缺点：</p>
+<ul>
+<li>RS 上必须安装运行 IPIP 模块。</li>
+<li>多增加了一个 IP 头，增加了开销。</li>
+<li>LVS 和 RS 上的 tun 虚拟网卡上配置同一个 VIP（类似 DR）。</li>
+</ul>
+<h1 id="四层-lb-vs-七层-lb"><a class="markdownIt-Anchor" href="#四层-lb-vs-七层-lb"></a> 四层 LB vs 七层 LB</h1>
+<p>LVS 通常用来实现四层负载均衡，通过发布虚拟 VIP 和四层的端口号，来决定哪些流量需要做负载均衡。</p>
+<p>七层的负载均衡就是基于虚拟的 URL 或主机 IP 的负载均衡：在四层负载均衡的基础上，再考虑应用层的特征，比如同一个 Web 服务器的负载均衡，除了根据 VIP 加端口辨别是否需要处理的流量，还可根据七层的 URL、浏览器类别、语言来决定是否要进行负载均衡。</p>
+<p>实现七层负载均衡的软件有：</p>
+<ul>
+<li>nginx：只在 http 协议和 mail 协议上功能比较好，性能与 haproxy 差不多。</li>
+<li>tengine：阿里基于 nginx 的开源七层 LB。</li>
+<li>haproxy</li>
+<li>apache</li>
+</ul>
+<p>除此之外，还有二层负载均衡和三层负载均衡，由于应用程度不广泛，故不再讨论。</p>
+<h1 id="参考"><a class="markdownIt-Anchor" href="#参考"></a> 参考</h1>
+<ul>
+<li><a href="http://www.linuxvirtualserver.org/Documents.html" target="_blank" rel="noopener">LVS Documentation</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Linux_Virtual_Server" target="_blank" rel="noopener">LVS wikepedia</a></li>
+<li><a href="https://programmer.group/dr-mode-of-lvs-load-balancing-cluster-deployment.html" target="_blank" rel="noopener">DR mode of LVS load balancing cluster deployment</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/wechatpay.png" alt="Yanjiu Li 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/alipay.jpeg" alt="Yanjiu Li 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Network/" rel="tag"><i class="fa fa-tag"></i> Network</a>
+              <a href="/tags/Linux/" rel="tag"><i class="fa fa-tag"></i> Linux</a>
+              <a href="/tags/LVS/" rel="tag"><i class="fa fa-tag"></i> LVS</a>
+              <a href="/tags/LB/" rel="tag"><i class="fa fa-tag"></i> LB</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/06/21/linux-network-notes/" rel="prev" title="Linux Namespace">
+      <i class="fa fa-chevron-left"></i> Linux Namespace
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/07/19/linux-netfilter/" rel="next" title="Netfilter 网络框架">
+      Netfilter 网络框架 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80MTAzMS8xNzU1Ng=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#术语表"><span class="nav-number">1.</span> <span class="nav-text"> 术语表</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#调度器-scheduler"><span class="nav-number">2.</span> <span class="nav-text"> 调度器 (Scheduler)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#转发模式"><span class="nav-number">3.</span> <span class="nav-text"> 转发模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#virtual-server-via-direct-routing"><span class="nav-number">3.1.</span> <span class="nav-text"> Virtual Server via Direct Routing</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#virtual-server-via-nat"><span class="nav-number">3.2.</span> <span class="nav-text"> Virtual Server via NAT</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#virtual-server-via-fullnat"><span class="nav-number">3.3.</span> <span class="nav-text"> Virtual Server via FullNAT</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#virtual-server-via-ip-tunneling"><span class="nav-number">3.4.</span> <span class="nav-text"> Virtual Server via IP Tunneling</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#四层-lb-vs-七层-lb"><span class="nav-number">4.</span> <span class="nav-text"> 四层 LB vs 七层 LB</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text"> 参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yanjiu Li"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Yanjiu Li</p>
+  <div class="site-description" itemprop="description">演绎一场技术溯源的盛宴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">97</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yanjiulab" title="GitHub → https://github.com/yanjiulab" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:liyanjiu@outlook.com" title="E-Mail → mailto:liyanjiu@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Worth Reading
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP" title="http://pages.cs.wisc.edu/~remzi/OSTEP" rel="noopener" target="_blank">OSTEP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" title="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" rel="noopener" target="_blank">OSTEP-Chinese</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.apuebook.com/about3e.html" title="http://www.apuebook.com/about3e.html" rel="noopener" target="_blank">APUE</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" title="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" rel="noopener" target="_blank">UNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" title="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" rel="noopener" target="_blank">IUNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.yinwang.org/" title="http://www.yinwang.org/" rel="noopener" target="_blank">当然我在扯淡</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yanjiu Li</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">204k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:05</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

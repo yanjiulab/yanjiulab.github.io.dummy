@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Microsoft YaHei:300,300italic,400,400italic,700,700italic|Cinzel Decorative:300,300italic,400,400italic,700,700italic|Times New Roman:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yjlab.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="计算机是如何运行程序的？简而言之：执行指令。  首先处理器从内存中获取 (fetch) 一条指令； 然后对其进行解码 (decode)，弄清楚这是什么指令； 接着执行 (execute) 它，具体可以做什么和处理器的指令集有关； 完成这条指令后，跳转到下一条指令，直到最后完成程序的执行。">
+<meta name="keywords" content="OS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Introduction to Operating System">
+<meta property="og:url" content="http://yjlab.xyz/2020/08/03/os-intro/index.html">
+<meta property="og:site_name" content="Yanjiu Lab">
+<meta property="og:description" content="计算机是如何运行程序的？简而言之：执行指令。  首先处理器从内存中获取 (fetch) 一条指令； 然后对其进行解码 (decode)，弄清楚这是什么指令； 接着执行 (execute) 它，具体可以做什么和处理器的指令集有关； 完成这条指令后，跳转到下一条指令，直到最后完成程序的执行。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yjlab.xyz/2020/08/03/os-intro/system-structure.png">
+<meta property="og:updated_time" content="2020-10-21T03:34:31.869Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Introduction to Operating System">
+<meta name="twitter:description" content="计算机是如何运行程序的？简而言之：执行指令。  首先处理器从内存中获取 (fetch) 一条指令； 然后对其进行解码 (decode)，弄清楚这是什么指令； 接着执行 (execute) 它，具体可以做什么和处理器的指令集有关； 完成这条指令后，跳转到下一条指令，直到最后完成程序的执行。">
+<meta name="twitter:image" content="http://yjlab.xyz/2020/08/03/os-intro/system-structure.png">
+
+<link rel="canonical" href="http://yjlab.xyz/2020/08/03/os-intro/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Introduction to Operating System | Yanjiu Lab</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yanjiu Lab</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Learning then grokking</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        
+            
+  <li class="menu-item menu-item-notes">
+
+    <a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记</a>
+
+  </li>
+
+
+      
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yjlab.xyz/2020/08/03/os-intro/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Yanjiu Li">
+      <meta itemprop="description" content="演绎一场技术溯源的盛宴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yanjiu Lab">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Introduction to Operating System
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-03 21:06:04" itemprop="dateCreated datePublished" datetime="2020-08-03T21:06:04+08:00">2020-08-03</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-10-21 11:34:31" itemprop="dateModified" datetime="2020-10-21T11:34:31+08:00">2020-10-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OS/" itemprop="url" rel="index"><span itemprop="name">OS</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>计算机是如何运行程序的？简而言之：执行指令。</p>
+<ul>
+<li>首先处理器从内存中获取 (fetch) 一条指令；</li>
+<li>然后对其进行解码 (decode)，弄清楚这是什么指令；</li>
+<li>接着执行 (execute) 它，具体可以做什么和处理器的指令集有关；</li>
+<li>完成这条指令后，跳转到下一条指令，直到最后完成程序的执行。</li>
+</ul>
+<a id="more"></a>
+<p>这就是冯·诺依曼计算模型的基础，它的实质就是如此的简单。然而实际上编写这样的代码无异于异常困难，你需要对这个系统中方方面面都了解才能写出一个简单的程序。而<strong>操作系统负责让程序运行变得容易</strong>，允许程序与设备交互，甚至允许你同时运行多个程序！</p>
+<p>为了实现上述目的，操作系统利用<strong>虚拟化</strong>技术将物理资源 (如 CPU、内存、硬盘) 转换为更加通用、强大且易于使用的虚拟形式，因此操作系统是一个资源管理器。</p>
+<p>为了让你知道你能通过操作系统做些什么，操作系统还提供了一些接口供你调用，实际上典型的操作系统会提供几百个<strong>系统调用 (system call)</strong> 供程序使用。因此操作系统为应用程序提供了一个标准库。下面是 Unix 系统的结构，最底层是硬件，然后是内核 (操作系统) ，上层是利用各种系统调用而构建的库或工具，再上层便是应用程序。</p>
+<p><img src="system-structure.png" alt="system-structure"></p>
+<h1 id="虚拟化-cpu"><a class="markdownIt-Anchor" href="#虚拟化-cpu"></a> 虚拟化 CPU</h1>
+<p>以下是一个简单的程序，该程序的作用是：每隔一秒打印一个字符串。</p>
+<figure class="highlight c"><figcaption><span>cpu.c</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* argv[])</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (argc != <span class="number">2</span>) &#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">"usage: cpu &lt;string&gt;\n"</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">char</span>* str = argv[<span class="number">1</span>];</span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>) &#123;</span><br><span class="line">        sleep(<span class="number">1</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%s\n"</span>, str); </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们可以直接运行一个程序，然后使用 <code>Control + C</code> 来强制终止他。但假如同时运行四个程序，我们会观察到四个程序仿佛在同时运行，程序交替输出 A B C D，但顺序是不能保证的。</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">liyj@ubuntu:~$ gcc -o cpu cpu.c </span><br><span class="line">liyj@ubuntu:~$ ./cpu <span class="string">"A"</span></span><br><span class="line">A</span><br><span class="line">A</span><br><span class="line">A</span><br><span class="line">^C</span><br><span class="line">liyj@ubuntu:~$ ./cpu <span class="string">"A"</span> &amp; ./cpu <span class="string">"B"</span> &amp; ./cpu <span class="string">"C"</span> &amp; ./cpu <span class="string">"D"</span> &amp;</span><br><span class="line">... <span class="comment"># 4 个程序的 PID</span></span><br><span class="line">... <span class="comment"># 交替输出的 ABCD</span></span><br></pre></td></tr></table></figure>
+<p>虽然我们只有一个 CPU (忽略多核超线程) ，但我们好似拥有无限的 CPU，从而让许多程序看似同时运行，这就是 <strong>CPU 虚拟化</strong>。</p>
+<h1 id="虚拟化内存"><a class="markdownIt-Anchor" href="#虚拟化内存"></a> 虚拟化内存</h1>
+<p>现代机器提供的物理内存模型非常简单：内存就是一个字节数组。程序运行需要访问内存，因为我们的代码和数据都存储在内存之上。</p>
+<figure class="highlight c"><figcaption><span>mem.c</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* argv[])</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> *p = <span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">int</span>));</span><br><span class="line">    assert(p != <span class="literal">NULL</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"(%d) memory address of p: %p\n"</span>, getpid(), p);</span><br><span class="line">    *p = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>) &#123;</span><br><span class="line">        sleep(<span class="number">1</span>);</span><br><span class="line">        *p = *p + <span class="number">1</span>;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"(%d) p: %d\n"</span>, getpid(), *p);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">liyj@ubuntu:~$ ./mem &amp; ./mem &amp;</span><br><span class="line">... <span class="comment"># 2 个进程的 PID </span></span><br><span class="line">(9170) memory address of p: 0x555555559260</span><br><span class="line">(9171) memory address of p: 0x555555559260</span><br><span class="line">... <span class="comment"># 交替输出 p 值</span></span><br></pre></td></tr></table></figure>
+<p>可以发现，两个进程中的 p 的地址竟然是完全一样的！这正是操作系统虚拟化内存的作用，每个进程都拥有自己的虚拟地址空间，而虚拟地址以某种方式映射到了物理地址上，从而不会影响其他进程。</p>
+<div class="note info">
+            <p>当然，要想看到上述效果，必须保证禁用了<strong>地址空间随机化</strong>，随机化可以带来更好的安全性。</p>
+          </div>
+<h1 id="并发"><a class="markdownIt-Anchor" href="#并发"></a> 并发</h1>
+<p><strong>并发 (Concurrency)</strong> 指的是可以<strong>同时具有多个活动的任务</strong>。并发的反义词是顺序 (Sequential)，顺序执行的意思是各个任务必须依次执行，而不是并发的交替执行。与并发经常对比的另一个术语是<strong>并行 (parallelism)</strong>，并行强调<strong>同时执行</strong>。</p>
+<div class="note info">
+            <p>早期的单核处理器系统 (Uniprocessor System) 中，因为仅仅只有一个 CPU 可以执行程序，因此并发执行仅是通过使一台计算机在其执行任务之间快速切换来模拟的。</p><p>然而，在现代多处理器系统 (Multiprocessor System) 已经司空见惯，多处理器系统具有多个 CPU (通常称为核心 core) 集成到单个 IC 芯片中，同时，超线程技术 (Hyperthreading) 使得单个 CPU 核心可以执行多个控制流，看起来我们拥有了更多的 CPU 硬件。假设你的 PC 使用了一颗 Intel Core i7 8 核 16 线程的芯片，那么可以认为你的 PC 拥有 16 个 CPU 可以用来执行代码。</p><p>正是由于现代多处理器系统的出现，并发的底层实际上不一定需要频繁的切换任务来模拟，它可能是真正并行执行的。然而作为用户我们无需深究这个过程，因为并发是逻辑上的概念，而并行是一种用来优化的底层技术。</p>
+          </div>
+<p>操作系统为我们提供了多种形式的并发手段：基于进程、基于线程、基于 IO 多路复用。当我们需要并发的时候，我们需要同时执行多个任务，那么任务之间的关系就有两种可能性：</p>
+<ol>
+<li>分工：多个任务之间不需要交流，每个任务只需专注自己的任务。</li>
+<li>合作：多个任务之间需要传递信息。</li>
+</ol>
+<p>对于分工式的并发，情况要好处理的多。然而对于合作式的并发，多个任务同时正确的操作共享 (shared) 可变的 (mutable) 资源可能很有难度。</p>
+<p>通过 CPU 虚拟化和内存虚拟化我们已经知道了进程这个概念，<strong>基于进程的并发(process-based concurrency)</strong> 是操作系统固有的并发手段，进程具有“单独的虚拟地址空间”，每个进程都是由内核调度和维护的。</p>
+<p>随着线程的出现，并发可以更小的粒度来实现，线程是在单个进程的中运行并由内核调度的逻辑流。<strong>基于线程的并发 (thread-based concurrency)</strong> 似乎是目前最常用的手段。</p>
+<p>还有一类比较高级的并发基于 IO 多路复用实现，这种方式称为<strong>基于事件的并发 (event-based concurrency)</strong>。与前两种并发手段不同的是，基于事件的并发不再依赖操作系统进行任务调度，所有的任务的逻辑流都是由程序员来完成的。基于事件的并发常用于一些 GUI 程序或网络服务器中。</p>
+<p>另一种新兴的并发手段是协程 (coroutine)，这种并发手段专注于协作式任务，通常由高级编程语言所支持，与基于事件的并发相同，这种并发手段也是由程序员来完成的。</p>
+<h1 id="持久性"><a class="markdownIt-Anchor" href="#持久性"></a> 持久性</h1>
+<p>内存的特性是掉电丢失，因此，操作系统需要<strong>硬件和软件</strong>来持久地（persistently）存储数据。</p>
+<ul>
+<li>硬件以某种输入/输出设备的形式出现。在现代系统中可能是磁盘驱动器（Hard Disk Driver）或者固态硬盘（SSD）。</li>
+<li>操作系统中管理磁盘的软件通常称为<strong>文件系统（file system）</strong>，它负责以可靠和高效的方式，将用户创建的任何文件（file）存储在系统的磁盘上。</li>
+</ul>
+<p>不像操作系统为 CPU 和内存提供的抽象，操作系统不会为每个应用程序创建专用的虚拟磁盘。相反，它假设用户经常需要<strong>共享文件</strong>中的信息。</p>
+<h1 id="抽象-机制-策略"><a class="markdownIt-Anchor" href="#抽象-机制-策略"></a> 抽象、机制、策略</h1>
+<p>操作系统会将某项功能抽象为具体的形式，例如：</p>
+<ul>
+<li>将虚拟化 CPU 抽象为进程</li>
+<li>将虚拟化内存抽象为进程的地址空间</li>
+<li>将并发功能抽象为线程</li>
+<li>将持久化功能抽象为文件系统</li>
+</ul>
+<p>为了实现这些抽象，操作系统就需要一些低级机制以及一些高级智能。我们将低级机制称为<strong>机制 (mechanism)</strong>。机制是一些低级方法或协议，实现了所需的功能。例如，进程切换是一种虚拟化 CPU 的机制。</p>
+<p>在这些机制之上，操作系统中有一些智能以<strong>策略 (policy)</strong> 的形式存在，策略是在操作系统内做出某种决定的算法。操作系统在不同的情况下可以使用不同的策略，从而获得更高效的性能。这是一种模块化的思想，即操作系统可以在底层机制不变的情况下，通过更改策略来更好的实现功能。例如，当需要进程切换时，需要切换到哪一个进程就是进程调度策略。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/wechatpay.png" alt="Yanjiu Li 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/alipay.jpeg" alt="Yanjiu Li 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/OS/" rel="tag"><i class="fa fa-tag"></i> OS</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/08/03/os-vm/" rel="prev" title="虚拟内存 (Virtual Memory)">
+      <i class="fa fa-chevron-left"></i> 虚拟内存 (Virtual Memory)
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/09/01/network-local-socket/" rel="next" title="Network Local Socket">
+      Network Local Socket <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80MTAzMS8xNzU1Ng=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#虚拟化-cpu"><span class="nav-number">1.</span> <span class="nav-text"> 虚拟化 CPU</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#虚拟化内存"><span class="nav-number">2.</span> <span class="nav-text"> 虚拟化内存</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#并发"><span class="nav-number">3.</span> <span class="nav-text"> 并发</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#持久性"><span class="nav-number">4.</span> <span class="nav-text"> 持久性</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#抽象-机制-策略"><span class="nav-number">5.</span> <span class="nav-text"> 抽象、机制、策略</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yanjiu Li"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Yanjiu Li</p>
+  <div class="site-description" itemprop="description">演绎一场技术溯源的盛宴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">97</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yanjiulab" title="GitHub → https://github.com/yanjiulab" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:liyanjiu@outlook.com" title="E-Mail → mailto:liyanjiu@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Worth Reading
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP" title="http://pages.cs.wisc.edu/~remzi/OSTEP" rel="noopener" target="_blank">OSTEP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" title="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" rel="noopener" target="_blank">OSTEP-Chinese</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.apuebook.com/about3e.html" title="http://www.apuebook.com/about3e.html" rel="noopener" target="_blank">APUE</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" title="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" rel="noopener" target="_blank">UNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" title="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" rel="noopener" target="_blank">IUNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.yinwang.org/" title="http://www.yinwang.org/" rel="noopener" target="_blank">当然我在扯淡</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yanjiu Li</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">204k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:05</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

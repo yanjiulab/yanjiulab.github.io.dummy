@@ -1,0 +1,12 @@
+[Unit]
+Description=Add a virtual host via network namespace for ovs when startup.
+After=ovs-config.service
+Requires=ovs-config.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/ovs/ovs-vhost.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

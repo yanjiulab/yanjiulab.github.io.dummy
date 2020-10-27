@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Microsoft YaHei:300,300italic,400,400italic,700,700italic|Cinzel Decorative:300,300italic,400,400italic,700,700italic|Times New Roman:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yjlab.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="还记不住 tar 的各种选项吗？">
+<meta name="keywords" content="Linux,Tar">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Data Archiving and Compression">
+<meta property="og:url" content="http://yjlab.xyz/2018/10/26/linux-data-archiving-and-compression/index.html">
+<meta property="og:site_name" content="Yanjiu Lab">
+<meta property="og:description" content="还记不住 tar 的各种选项吗？">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-10-21T03:34:31.885Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Data Archiving and Compression">
+<meta name="twitter:description" content="还记不住 tar 的各种选项吗？">
+
+<link rel="canonical" href="http://yjlab.xyz/2018/10/26/linux-data-archiving-and-compression/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Data Archiving and Compression | Yanjiu Lab</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yanjiu Lab</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Learning then grokking</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        
+            
+  <li class="menu-item menu-item-notes">
+
+    <a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记</a>
+
+  </li>
+
+
+      
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yjlab.xyz/2018/10/26/linux-data-archiving-and-compression/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Yanjiu Li">
+      <meta itemprop="description" content="演绎一场技术溯源的盛宴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yanjiu Lab">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Data Archiving and Compression
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-10-26 22:52:09" itemprop="dateCreated datePublished" datetime="2018-10-26T22:52:09+08:00">2018-10-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-10-21 11:34:31" itemprop="dateModified" datetime="2020-10-21T11:34:31+08:00">2020-10-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OS/" itemprop="url" rel="index"><span itemprop="name">OS</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OS/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>还记不住 tar 的各种选项吗？</p>
+<a id="more"></a>
+<p>Unix 程序设计的其中一条哲学为：一个程序应当只做一件事，并做好它。日常我们经常说的压缩文件其实包含了两个过程：</p>
+<ol>
+<li>建档 (Archiving)：将多个文件<strong>打包</strong>成一个档案/目录(archive file)，或将其<strong>拆包</strong>。例如 <code>tar</code> 。</li>
+<li>压缩 (Compression)：将档案<strong>压缩</strong>成占用空间更小的文件，或将其<strong>解压</strong>。例如 <code>gzip</code>。</li>
+</ol>
+<p>所以，压缩过程实际上是：<strong>首先建立档案文件，然后压缩它</strong>。</p>
+<h2 id="归档工具"><a class="markdownIt-Anchor" href="#归档工具"></a> 归档工具</h2>
+<p>归档工具的作用是：只生成档案文件。归档工具有很多，如 <code>GNU tar</code>，<code>ar</code>等，这里仅仅介绍一下 tar ，因为在日常使用中，基本用它最多。</p>
+<p>tar 的常用命令为：<code>tar cfv archive.tar /etc</code>，但我相信你第一次看肯定记不住，因为这条命令进行了高度简化，原命令可以写成：<code>tar --create --file archive.tar --verbose /etc</code>。它其实包含三个参数，可以按照如下方式记忆：</p>
+<ul>
+<li>c (create)：<strong>创建</strong></li>
+<li>f (file)：<strong>文件</strong>（archive.tar），</li>
+<li>v (verbose)：文件的<strong>详细</strong>内容为（/etc）。</li>
+</ul>
+<p>同理，解包命令 <code>tar xfv archive.tar</code> 也就很容易记忆了，其中 <code>x</code> 代表 e<strong>x</strong>tract 。</p>
+<div class="note info">
+            <p>注意，上条命令代表将 archive.tar 文件解包到当前目录下，如果要将其解压到特定的目录下，需要加入 <code>-C</code> 参数，其意义为<strong>Change Directory</strong>。完整命令为：<code>tar xfv archive.tar -C /path/to/what/you/want</code>，更详细的用法参阅手册。</p>
+          </div>
+<h2 id="压缩工具"><a class="markdownIt-Anchor" href="#压缩工具"></a> 压缩工具</h2>
+<p>在 Unix 系统中，常用的三种压缩格式如下：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>拓展名</th>
+<th>与 tar 连用时的拓展名</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bzip2</code></td>
+<td><code>.bz2, .bz</code></td>
+<td><code>.tbz2, .tbz, .tar.bz2</code></td>
+</tr>
+<tr>
+<td><code>gzip</code></td>
+<td><code>.gz, .z</code></td>
+<td><code>.tgz, .taz, .tar.gz</code></td>
+</tr>
+<tr>
+<td><code>xz</code></td>
+<td><code>.xz, .lzma</code></td>
+<td><code>.txz, .tlz, .tar.xz</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>使用方法也比较统一，默认执行压缩动作，通过 <code>-d</code> 指示解压动作。</strong></p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>压缩</th>
+<th>解压</th>
+<th>解压到标准输出设备</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bzip2</code></td>
+<td><code>bzip2 file</code></td>
+<td><code>bzip2 -d file.bz2</code></td>
+<td><code>bzcat file.bz2</code></td>
+</tr>
+<tr>
+<td><code>gzip</code></td>
+<td><code>gzip file</code></td>
+<td><code>gzip -d file.gz</code></td>
+<td><code>zcat file.gz</code></td>
+</tr>
+<tr>
+<td><code>xz</code></td>
+<td><code>xz file</code></td>
+<td><code>xz -d file.xz</code></td>
+<td><code>xzcat file.xz</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="归档压缩工具王者tar"><a class="markdownIt-Anchor" href="#归档压缩工具王者tar"></a> 归档压缩工具王者：tar</h2>
+<p>事实上，说 tar 仅是打包工具是不准确的，因为 tar 命令可以具有<strong>压缩参数</strong>。通过选择压缩选项可以同时完成两个阶段，在实际使用中也是如此。</p>
+<p>tar 难以记忆的点主要有两方面：</p>
+<ul>
+<li>参数风格</li>
+<li>压缩格式对应的参数</li>
+</ul>
+<p>事实上，tar 分为 BSD tar 和 GNU tar 两种，主要区别在于参数前有没有 <code>-</code>：</p>
+<ul>
+<li>BSD 风格<strong>没有</strong> <code>-</code></li>
+<li>GNU 风格有 <code>-</code></li>
+</ul>
+<p>总体来说两种风格都可以使用，GNU 风格更新一点，混用问题也不大。但是有一个点需要特别注意，<strong>如果使用带有 <code>-</code> 的风格，那么最后一个参数必须为 <code>f</code></strong>，这是因为这种风格的代码参数解析时，将 f 后面的参数作为了<strong>文件名</strong>；然而 BSD 风格的参数解析没有这个问题。</p>
+<p>当建立一个压缩包的时候，两者均支持使用 <code>-a</code> 参数来自动创建压缩包 (compressed archive)，并依据其文件扩展名选择对应的压缩程序。另外，tar 针对不同的压缩格式提供了定制的参数，如</p>
+<ul>
+<li>xz 的 <code>-J</code></li>
+<li>gzip 的 <code>-z</code></li>
+<li>bzip2 的 <code>-j</code></li>
+</ul>
+<p>推荐使用 a 参数，代表 auto compress，不仅使用方便，又能<strong>降低命令记忆负担</strong>。</p>
+<p>当解包一个被 bzip2，compress，gzip，lzip，lzma 或 xz压缩过的包的时候，两种 tar 工具均自动进行解压缩，再拆包。所不同的是，BSD tar <strong>基于格式</strong>识别压缩文件的格式，而 GNU tar 仅是<strong>基于文件后缀猜测</strong>压缩文件格式。</p>
+<p>综上所述：笔者个人习惯于选择 BSD 风格，常用例子如下：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">tar cvf archive.tar /etc            <span class="comment"># 创建包 archive.tar，其内容为 /etc 目录</span></span><br><span class="line">tar cvf archive.tar a.txt b.c       <span class="comment"># 创建包 archive.tar，其内容为 a.txt b.c </span></span><br><span class="line">tar cavf archive.tar.gz /etc        <span class="comment"># 创建压缩包，需要什么压缩格式就写什么后缀</span></span><br><span class="line">tar xvf archive.tar.gz              <span class="comment"># 解压包 archive 到当前目录（自动选择压缩工具）</span></span><br><span class="line">tar xvf archive.tar.bz2 -C /opt/    <span class="comment"># 解压包 archive 到指定目录（自动选择压缩工具）</span></span><br></pre></td></tr></table></figure>
+<h2 id="其他归档压缩工具"><a class="markdownIt-Anchor" href="#其他归档压缩工具"></a> 其他归档压缩工具</h2>
+<p>虽然 Unix 设计的哲学是简单，但<strong>打包后压缩</strong>或<strong>解压后拆包</strong>应该是对用户无感的，用户只关注结果！如下是日常生活中用到的三种压缩格式对应的工具</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>命令</th>
+<th>拓展名</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>7z</code></td>
+<td><code>7z</code></td>
+<td><code>.7z</code></td>
+<td>较为小众，但很易用的工具。</td>
+</tr>
+<tr>
+<td><code>RAR</code></td>
+<td><code>rar</code>, <code>unrar</code></td>
+<td><code>.rar</code></td>
+<td>格式和工具都是专有的。</td>
+</tr>
+<tr>
+<td><code>ZIP</code></td>
+<td><code>zip</code>, <code>unzip</code></td>
+<td><code>.zip</code></td>
+<td>在 Windows 系统上常用。</td>
+</tr>
+</tbody>
+</table>
+<p>常用命令如下，其中 7z 和 rar 都不约而同的使用了 <strong><code>a</code> (add) 指示打包并压缩，<code>x</code> (extract) 指示解压并拆包</strong>，对于 zip 文件则采用了 unzip 来解包，更加方便。</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>压缩</th>
+<th>解压</th>
+<th>列出内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>7z</code></td>
+<td><code>7z a a.7z file1 file2</code></td>
+<td><code>7z x a.7z</code></td>
+<td><code>7z l a.7z</code></td>
+</tr>
+<tr>
+<td><code>rar</code></td>
+<td><code>rar a a.rar file1 file2</code></td>
+<td><code>rar x a.rar</code></td>
+<td><code>rar l a.rar</code></td>
+</tr>
+<tr>
+<td><code>zip, unzip</code></td>
+<td><code>zip a.zip file1 file2</code></td>
+<td><code>unzip a.zip</code></td>
+<td><code>unzip -l a.zip</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<ul>
+<li>利用 tar 打包， <code>cfv</code> 分别代表 create file verbose， <code>xfv</code> 的 x 代表 extract(抽取) 。</li>
+<li>使用 tar 打包时候还可以压缩，增加参数 a 并 写明包后缀，如 <code>archive.tar.gz</code>，tar 可以自动依据后缀选择对应压缩程序对所选文件/目录进行压缩打包。</li>
+<li>tar 支持自动解包常用的压缩包格式。如不支持，先解压，再解包。</li>
+<li>有一些工具仅支持压缩，其命令格式大致为：命令 + 文件。默认压缩，使用 <code>-d</code> 参数指示解压。</li>
+<li>有一些工具支持打包并压缩，大部分用 <code>a</code> 指示打包并压缩， 用 <code>x</code> 指示解压并拆包。</li>
+</ul>
+<p>以上均是一些浅显的规律，目的是减少记忆负担。**在拿不准命令如何使用的时候，千万 <code>man</code> 一下。**本文编写时，笔者曾多次查阅 man page 以获取信息和验证。</p>
+<h2 id="参考"><a class="markdownIt-Anchor" href="#参考"></a> 参考</h2>
+<ul>
+<li><a href="https://wiki.archlinux.org/index.php/Archiving_and_compression" target="_blank" rel="noopener">Archiving and compression, ArchWiki</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/wechatpay.png" alt="Yanjiu Li 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/alipay.jpeg" alt="Yanjiu Li 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"><i class="fa fa-tag"></i> Linux</a>
+              <a href="/tags/Tar/" rel="tag"><i class="fa fa-tag"></i> Tar</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/10/25/hexo-writing-skills/" rel="prev" title="Hexo Writing Skills">
+      <i class="fa fa-chevron-left"></i> Hexo Writing Skills
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/10/31/sdn-mininet/" rel="next" title="Mininet Basics">
+      Mininet Basics <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80MTAzMS8xNzU1Ng=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#归档工具"><span class="nav-number">1.</span> <span class="nav-text"> 归档工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#压缩工具"><span class="nav-number">2.</span> <span class="nav-text"> 压缩工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#归档压缩工具王者tar"><span class="nav-number">3.</span> <span class="nav-text"> 归档压缩工具王者：tar</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其他归档压缩工具"><span class="nav-number">4.</span> <span class="nav-text"> 其他归档压缩工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text"> 总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">6.</span> <span class="nav-text"> 参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yanjiu Li"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Yanjiu Li</p>
+  <div class="site-description" itemprop="description">演绎一场技术溯源的盛宴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">97</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yanjiulab" title="GitHub → https://github.com/yanjiulab" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:liyanjiu@outlook.com" title="E-Mail → mailto:liyanjiu@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Worth Reading
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP" title="http://pages.cs.wisc.edu/~remzi/OSTEP" rel="noopener" target="_blank">OSTEP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" title="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" rel="noopener" target="_blank">OSTEP-Chinese</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.apuebook.com/about3e.html" title="http://www.apuebook.com/about3e.html" rel="noopener" target="_blank">APUE</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" title="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" rel="noopener" target="_blank">UNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" title="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" rel="noopener" target="_blank">IUNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.yinwang.org/" title="http://www.yinwang.org/" rel="noopener" target="_blank">当然我在扯淡</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yanjiu Li</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">204k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:05</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

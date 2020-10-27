@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Microsoft YaHei:300,300italic,400,400italic,700,700italic|Cinzel Decorative:300,300italic,400,400italic,700,700italic|Times New Roman:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yjlab.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Algorithms + Data Structures = Programs – Niklaus Wirth Bad programmers worry about the code. Good programmers worry about data structures and their relationships. – Torvald">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Algorithm">
+<meta property="og:url" content="http://yjlab.xyz/notes/algorithm/index.html">
+<meta property="og:site_name" content="Yanjiu Lab">
+<meta property="og:description" content="Algorithms + Data Structures = Programs – Niklaus Wirth Bad programmers worry about the code. Good programmers worry about data structures and their relationships. – Torvald">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-10-21T03:34:31.749Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Algorithm">
+<meta name="twitter:description" content="Algorithms + Data Structures = Programs – Niklaus Wirth Bad programmers worry about the code. Good programmers worry about data structures and their relationships. – Torvald">
+
+<link rel="canonical" href="http://yjlab.xyz/notes/algorithm/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : false,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Algorithm | Yanjiu Lab
+</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yanjiu Lab</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Learning then grokking</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        
+            
+  <li class="menu-item menu-item-notes">
+
+    <a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记</a>
+
+  </li>
+
+
+      
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+  
+
+      
+
+        
+        <ul id="sub-menu" class="sub-menu menu">
+          
+            
+          
+          
+            
+                
+  <li class="menu-item menu-item-algorithm">
+
+    <a href="/notes/algorithm/" rel="section"><i class="fa fa-rocket fa-fw"></i>Algorithm</a>
+
+  </li>
+
+
+          
+            
+                
+  <li class="menu-item menu-item-programming">
+
+    <a href="/notes/programming/" rel="section"><i class="fa fa-star fa-fw"></i>Programming</a>
+
+  </li>
+
+
+          
+              
+  <li class="menu-item menu-item-networking">
+
+    <a href="/notes/networking/" rel="section"><i class="fa fa-cloud fa-fw"></i>Networking</a>
+
+  </li>
+
+
+          
+          
+            
+                
+  <li class="menu-item menu-item-operating-system">
+
+    <a href="/notes/os/" rel="section"><i class="fab fa-linux fa-fw"></i>Operating System</a>
+
+  </li>
+
+
+          
+              
+  <li class="menu-item menu-item-database">
+
+    <a href="/notes/database/" rel="section"><i class="fa fa-database fa-fw"></i>Database</a>
+
+  </li>
+
+
+          
+          
+              
+  <li class="menu-item menu-item-cloud-computing">
+
+    <a href="/notes/cloud/" rel="section"><i class="fab fa-mixcloud fa-fw"></i>Cloud Computing</a>
+
+  </li>
+
+
+          
+          
+            
+                
+  <li class="menu-item menu-item-tools">
+
+    <a href="/notes/tools/" rel="section"><i class="fa fa-tools fa-fw"></i>Tools</a>
+
+  </li>
+
+
+        </ul>
+        
+
+        
+
+                
+
+                    
+                    <ul id="sub-menu-2" class="sub-menu menu">
+                      
+                        
+  <li class="menu-item menu-item-leetcode">
+
+    <a href="/notes/algorithm/leetcode/" rel="section"><i class="fa fa-code fa-fw"></i>LeetCode</a>
+
+  </li>
+
+
+                    </ul>
+                    
+                
+
+                
+                
+
+                
+                
+
+                
+                
+        
+      
+  
+
+          <div class="content page posts-expand">
+            
+
+    
+    
+    
+    <div class="post-block" lang="zh-CN">
+      <header class="post-header">
+
+<h1 class="post-title" itemprop="name headline">Algorithm
+</h1>
+
+<div class="post-meta">
+  
+  <ul class="breadcrumb">
+          
+            <li><a href="/notes/">NOTES</a></li>
+          <li>ALGORITHM</li>
+        
+  </ul>
+
+</div>
+
+</header>
+
+      
+      
+      
+      <div class="post-body">
+          
+<blockquote class="blockquote-center">
+            <i class="fa fa-quote-left"></i>
+            <p>Algorithms + Data Structures = Programs<br>
+– Niklaus Wirth</p>
+<p>Bad programmers worry about the code. Good programmers worry about data structures and their relationships.<br>
+– Torvalds Linus</p>
+
+            <i class="fa fa-quote-right"></i>
+          </blockquote>
+<h1 id="数据结构"><a class="markdownIt-Anchor" href="#数据结构"></a> 数据结构</h1>
+<h2 id="数据类型-data-type"><a class="markdownIt-Anchor" href="#数据类型-data-type"></a> 数据类型 (Data Type)</h2>
+<p><a href="https://en.wikipedia.org/wiki/Data_type" target="_blank" rel="noopener">数据类型</a>可以分为以下几种。</p>
+<h3 id="原始数据类型-primitive-data-type"><a class="markdownIt-Anchor" href="#原始数据类型-primitive-data-type"></a> 原始数据类型 (Primitive Data Type)</h3>
+<p>编程语言提供若干<a href="https://en.wikipedia.org/wiki/Primitive_data_type" target="_blank" rel="noopener">原始数据类型</a>，以作为程序以及专用化复合类型的创建基础。典型的原始数据类型包含各种<strong>整数</strong>、<strong>浮点数</strong>以及<strong>布尔类型</strong>。</p>
+<div class="note info">
+            <p>有些高级语言将 String 字符串视为内建数据类型 (Built-in type)，这是因为字符串使用的过于广泛，但字符串不属于原始数据类型。</p>
+          </div>
+<h3 id="复合数据类型-composite-types"><a class="markdownIt-Anchor" href="#复合数据类型-composite-types"></a> 复合数据类型 (Composite Types)</h3>
+<p>复合数据类型通常由原始数据类型以一定的方式组织而成，从而提供更便利的表达方式。每种编程语言提供的复合数据类型不尽相同，通常包括：</p>
+<ul>
+<li>Array：数组（广泛提供）</li>
+<li>String：字符串（广泛提供）</li>
+<li>Struct：结构体（例如 C）</li>
+<li>Union：联合体（例如 C）</li>
+<li>Object：对象（面向对象语言）</li>
+<li>Enumerate：枚举体（广泛提供）</li>
+</ul>
+<h3 id="其他类型-other-types"><a class="markdownIt-Anchor" href="#其他类型-other-types"></a> 其他类型 (Other Types)</h3>
+<p>除此之外，还有几种特别重要的类型，几乎在任何编程语言都有实现。</p>
+<ul>
+<li>Pointer：指针类型</li>
+<li>Reference：引用类型</li>
+<li>Function：函数类型</li>
+</ul>
+<h2 id="抽象数据类型-abstract-data-type"><a class="markdownIt-Anchor" href="#抽象数据类型-abstract-data-type"></a> 抽象数据类型 (Abstract Data Type)</h2>
+<p>抽象数据类型 (Abstract Data Type, ADT) 是计算机科学中具有类似行为的特定类别的数据结构的数学模型，简单的理解就是一种对于数据结构的抽象表示，因此也被称为抽象数据结构，其理论性较强，对于程序员而言，<strong>ADT 可以看作是一种接口与实现分离</strong>的表示，ADT 定义了某一类数据类型应该具有的特性和方法，却不关心其具体的实现，有助于程序员从宏观的角度来思考数据结构的组织。</p>
+<p>从形式上讲，ADT 可以定义为“<strong>一类对象，其逻辑行为由一组值和一组操作定义</strong>”，这可以方便的通过支持类 (Class) 的编程语言实现。某些抽象数据类型在程序设计中相当普遍且实用，因此常常出现在编程语言的原生类型或标准库中。更多的信息可以查看 <a class="btn" href="https://en.wikipedia.org/wiki/Abstract_data_type" target="_blank" rel="noopener">
+            <i class="fa fa-home fa-fw fa-lg"></i>Abstract data type
+          </a>。</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>特征</th>
+<th>实现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>List</td>
+<td>列表的元素顺序排列</td>
+<td>动态数组、链表</td>
+</tr>
+<tr>
+<td>Set</td>
+<td>集合包含不重复的元素</td>
+<td>哈希表、树</td>
+</tr>
+<tr>
+<td>Multiset</td>
+<td>包含重复的元素的集合</td>
+<td></td>
+</tr>
+<tr>
+<td>Map</td>
+<td>由键唯一的键值对组成的集合</td>
+<td>哈希表、树、链表</td>
+</tr>
+<tr>
+<td>Multimap</td>
+<td>由键不唯一的键值对组成的集合</td>
+<td></td>
+</tr>
+<tr>
+<td>Graph</td>
+<td>若干节点和链接组成的无规则图</td>
+<td>邻接矩阵、链表的链表</td>
+</tr>
+<tr>
+<td>Tree</td>
+<td>若干节点和链接组成的层次结构</td>
+<td>树</td>
+</tr>
+<tr>
+<td>Stack</td>
+<td>栈中元素先入后出</td>
+<td>动态数组、链表</td>
+</tr>
+<tr>
+<td>Queue</td>
+<td>队列中元素先进先出</td>
+<td>动态数组、链表</td>
+</tr>
+<tr>
+<td>Priority queue</td>
+<td>优先队列中元素有优先级区别</td>
+<td>堆</td>
+</tr>
+<tr>
+<td>Double-ended queue</td>
+<td>两端都可以进出的队列</td>
+<td>动态数组、双链表</td>
+</tr>
+<tr>
+<td>Double-ended priority queue</td>
+<td>两端都可以进出的优先队列</td>
+<td>双端堆</td>
+</tr>
+</tbody>
+</table>
+<p>我们可以看到，虽然抽象数据类型定义了一些接口的特征，但其后支撑的数据结构（实现部分）更加重要，其中主要包括：</p>
+<ul>
+<li>动态数组</li>
+<li><strong>链表</strong></li>
+<li><strong>树</strong></li>
+<li><strong>哈希表</strong></li>
+</ul>
+<p>而其中最复杂多变的就是树。</p>
+<h2 id="数据结构-data-structure"><a class="markdownIt-Anchor" href="#数据结构-data-structure"></a> 数据结构 (Data Structure)</h2>
+<p>数据结构 (Data Structure) 是抽象数据类型 (ADT) 的基础。抽象数据类型<strong>定义</strong>了数据类型的<strong>逻辑形式</strong>，而数据结构<strong>实现</strong>了数据类型的<strong>物理形式</strong>。</p>
+<p>不同的数据结构适用于不同的应用，其中有一些是针对特殊任务而高度定制的。合理的数据结构不仅可以提高数据组织和使用的效率，还是设计高效算法的基础。</p>
+<p><strong>数据结构的实现基于计算机可以在内存中存取数据</strong>这一事实，计算机使用指针 (pointer) 来表示内存中的地址，而这个指针本身作为一个位字符串，也可以存储在内存中从而被程序使用。因此，数据结构可以被简单的分为两类：</p>
+<ul>
+<li>数组 (array) 和 记录/结构体 (record, struct, structure) 这种数据结构<strong>基于计算数据项的地址</strong>，该类数据结构存储数据本身。</li>
+<li>链接数据结构<strong>基于存储数据项的地址</strong>，该类数据结构不存储数据本身，而存储数据项的地址。</li>
+</ul>
+<blockquote>
+<p>Thus, the array and record data structures are based on computing the addresses of data items with arithmetic operations, while the linked data structures are based on storing addresses of data items within the structure itself.</p>
+</blockquote>
+<p>数据结构的实现需要编写用于创建和管理该结构实例的方法，而一个数据结构的效率间接地被这些方法的性能而决定，这性能包括时间复杂度和空间复杂度。</p>
+<p>以下是常用数据结构的列表 <a class="btn" href="https://en.wikipedia.org/wiki/List_of_data_structures" target="_blank" rel="noopener">
+            <i class="fa fa-home fa-fw fa-lg"></i>List of data structures
+          </a></p>
+<p>其中比较重要的将在其他博文详述：</p>
+<ul>
+<li><a href="/2020/01/21/algo-tree/">Trees</a></li>
+<li><a href="/2020/02/17/algo-hash-table/">Hash table</a></li>
+</ul>
+<h1 id="算法分析-analysis"><a class="markdownIt-Anchor" href="#算法分析-analysis"></a> 算法分析 (Analysis)</h1>
+<p>我们首先给出算法分析的一些基本概念，其次明确算法分析的符号表示，最后掌握一般算法分析的方式。</p>
+<h2 id="基本概念"><a class="markdownIt-Anchor" href="#基本概念"></a> 基本概念</h2>
+<h3 id="关心对象"><a class="markdownIt-Anchor" href="#关心对象"></a> 关心对象</h3>
+<p>算法分析的结果意味着<strong>预测算法需要的资源</strong>。涉及到的资源有内存，通信带宽或计算机硬件，但是<strong>通常最关心计算时间</strong>。</p>
+<h3 id="技术模型"><a class="markdownIt-Anchor" href="#技术模型"></a> 技术模型</h3>
+<p>我们假定使用 RAM 模型，在 RAM 模型中，<strong>程序一条条执行</strong>，没有并发操作。同时，不试图对当代计算机中常见的内存层次建模，也就是说，<strong>不考虑高速缓存和虚拟内存</strong>，但对于真实计算机运行的程序，这种影响有时是巨大的。对于这种问题，需要特殊考虑。</p>
+<h3 id="输入规模与运行时间"><a class="markdownIt-Anchor" href="#输入规模与运行时间"></a> 输入规模与运行时间</h3>
+<p>一般来说，算法的运行时间与输入规模同时增长。可以将“运行时间”看作是“输入规模”的一个函数。</p>
+<p><strong>输入规模的概念依赖于具体的研究问题</strong>。但感性上来说，输入规模度量是比较好找到的。例如在排序算法中，输入规模是待排序数组的项数，在一个输入为图的算法中，输入规模可以是图的顶点数和边数。</p>
+<p><strong>一个算法在特定输入规模上的运行时间是指执行基本操作数或步数</strong>。也就是说，我们认为执行一句 for 语句与执行一句 while 语句是相当的，只是两者语句代价不同，但也仍然只是不同的常数而已，在绝大多数情况下，我们不必考虑其中差别。</p>
+<p>对于给定规模的输入n，我们可以将运行时间表示为 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>T</mi><mo stretchy="false">(</mo><mi>n</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">T(n)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="mopen">(</span><span class="mord mathdefault">n</span><span class="mclose">)</span></span></span></span>，即 n 的函数，其可能是 n 的对数函数、线性函数、二次函数等。</p>
+<h3 id="情况分析"><a class="markdownIt-Anchor" href="#情况分析"></a> 情况分析</h3>
+<ul>
+<li>最坏情况运行时间：对规模为 n 的任何输入，算法的最长运行时间。</li>
+<li>最好情况运行时间：对规模为 n 的某个或某些输入，算法的最短运行时间。</li>
+<li>平均情况运行时间：对规模为 n 的所有输入，算法的平均运行时间。</li>
+</ul>
+<p>但是通常我们仅会关注<strong>最坏情况运行时间</strong>，理由如下：</p>
+<ul>
+<li>一个算法的最坏情况运行时间，给出了任何输入的运行时间的一个上界。这样就可以确保，该算法绝不需要更长时间。</li>
+<li>对于某些算法，最坏情况经常出现。比如对缺失信息的检索。</li>
+<li>平均情况大致与最坏情况一样差。</li>
+</ul>
+<p>在某些时候，我们会关注平均情况，这涉及到一些概率分析。</p>
+<h3 id="渐进效率"><a class="markdownIt-Anchor" href="#渐进效率"></a> 渐进效率</h3>
+<p>一个算法的运行时间中最重要的的项决定了我们真正感兴趣的<strong>增长量级</strong>。而不重要的低阶项（或者说极限情况下的高阶无穷小项）往往被忽略。当输入规模足够大时，我们要研究算法的<strong>渐进效率</strong>。即：极限中，算法的运行时间如何随输入规模的变大而增加。</p>
+<p>但是，在实际使用中，需要结合实际规模考虑算法的可用性。渐进效率不是唯一的考虑因素，需要结合具体问题具体分析。例如,在 [0, 100] 范围内 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>T</mi><mo stretchy="false">(</mo><mi>n</mi><mo stretchy="false">)</mo><mo>=</mo><msup><mi>n</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">T(n) = n^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="mopen">(</span><span class="mord mathdefault">n</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.8141079999999999em;vertical-align:0em;"></span><span class="mord"><span class="mord mathdefault">n</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span> 比 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>T</mi><mo stretchy="false">(</mo><mi>n</mi><mo stretchy="false">)</mo><mo>=</mo><mn>10000</mn><mi>n</mi></mrow><annotation encoding="application/x-tex">T(n) = 10000n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="mopen">(</span><span class="mord mathdefault">n</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">1</span><span class="mord">0</span><span class="mord">0</span><span class="mord">0</span><span class="mord">0</span><span class="mord mathdefault">n</span></span></span></span> 具有更好的性能，然而前者的渐进效率很低。</p>
+<h2 id="渐进符号表示"><a class="markdownIt-Anchor" href="#渐进符号表示"></a> 渐进符号表示</h2>
+<p>这部分涉及一些数学知识，不再详述，可阅读 wiki 相关词条内容。</p>
+<ul>
+<li>big Theta：给出渐进紧确界。</li>
+<li>big Order：给出渐进上界，但通常给出一个紧缺的上界。</li>
+<li>big Omega：给出渐进下界。</li>
+<li>small order：表示一个非渐进紧确的上界。</li>
+<li>small omega：表示一个非渐进紧确的下界。</li>
+</ul>
+<h2 id="算法分析"><a class="markdownIt-Anchor" href="#算法分析"></a> 算法分析</h2>
+<p>算法分析主要取决于该算法使用的<strong>设计准则 (Design Paradigms)</strong>。依据不同的准则设计出来的算法分析思路往往不同，但根据相同的准则设计出来的算法分析思路往往相同。例如，求单向图最短简单路径的算法与归并排序算法的分析思路不相同，因为前者依据动态规划设计，后者依据分治法设计。又如归并排序和求解最大子数组算法看起来很不相关，但是两者分析思路一致，因为均是基于分治法设计。</p>
+<p>基于以上思路，我们得到如下启示：</p>
+<ol>
+<li>明确算法分析的基本原理和表示方法。</li>
+<li>掌握算法设计准则，从宏观学习算法分析思路。也就是掌握某一类问题。</li>
+<li>在算法设计准则掌握熟练的情况下。主要思考内容就是<strong>如何把某个问题抽象成某一类问题</strong>和<strong>某一个问题中的特殊的地方</strong>。</li>
+</ol>
+<h1 id="算法设计准则-design-paradigms"><a class="markdownIt-Anchor" href="#算法设计准则-design-paradigms"></a> 算法设计准则 (Design Paradigms)</h1>
+<ul>
+<li>Iteration | 迭代</li>
+<li>Recursion | 递归</li>
+<li>Recurrence | 递推</li>
+<li>Randomization | 随机化</li>
+<li>Brute Force | 穷举法</li>
+<li>Back Tracking  | 回溯法</li>
+<li>Divide and Conquer | 分治法</li>
+<li>Dynamic Programming | 动态规划</li>
+<li>Greedy Algorithm | 贪心算法</li>
+</ul>
+<h1 id="排序-sorting"><a class="markdownIt-Anchor" href="#排序-sorting"></a> 排序 (Sorting)</h1>
+<p>排序是一个非常常见的应用，通常我们需要对各种数据类型进行排序，甚至包括自定义数据类型。但最终基本可以归结为三种：</p>
+<ul>
+<li>通用排序算法</li>
+<li>数字排序算法</li>
+<li>字符串排序算法</li>
+</ul>
+<p>详情请见 <a class="btn" href="/2020/03/17/algo-sort/">
+            <i class="fa fa-book fa-fw fa-lg"></i>Sorting
+          </a></p>
+<h1 id="搜索-searching"><a class="markdownIt-Anchor" href="#搜索-searching"></a> 搜索 (Searching)</h1>
+<p>搜索可能时最常用的场景了，与排序不同，毕竟搜索的结果只有两种：找到或未找到。因此搜索算法与待搜索的数据类型关系不大，只要是能比较的对象即可，搜索主要和数据组织的方式有关。感受一下以下的场景：</p>
+<ul>
+<li>在一个数组里搜索一个数字、一个字符串；</li>
+<li>在一个链表里搜索一个数字、一个字符串；</li>
+<li>在一个字符串里搜索一个字符；</li>
+<li>在一个树中搜索一个节点；</li>
+<li>在一个哈希表中搜索一个键对应的值；</li>
+<li>在一个图中搜索一个值；</li>
+<li>在一个文件中搜索感兴趣的字符串；</li>
+<li>在一个文件系统中搜索感兴趣的文件；</li>
+<li>在互联网上搜索你感兴趣的某个文本；</li>
+<li>在互联网上搜索你感兴趣的某些图片；</li>
+</ul>
+<p>当然，后几种场景已经远远超出了数据结构和算法的范围，不过我们仍然可以感受到，<strong>搜索对应于字典/符号表这一 ADT</strong>，任何数据结构，<code>value = dict.get(key)</code> 都是最重要的 API 应用，毕竟我们关心的东西才是有价值的东西。</p>
+<p>以下是一些搜索的算法：</p>
+<ul>
+<li><a href="/2019/11/12/algo-binary-search/">二分搜索 Binary Search</a></li>
+</ul>
+<!-- ------------------------------------------------------------
+
+# 符号表 (Symbol Table)
+符号表 (symbol table, map, associative array or dictionary) 是一种由键值对 (key-value pairs) 的集合构成的抽象数据类型。符号表又称之为映射表、关联数组或者字典，其支持的操作如下：
+- 向表中增加键值对
+- 从表中删除键值对
+- 在表中根据键查询其关联的值
+
+因此，在符号表的实现中，我们关心的通常是**增、删、查**的性能，其中“改”操作可以视为“增”操作的一种，即插入一个键已存在但值不同的键值对视为表的更改。
+## API 
+## 实现 (Implementations)
+### 链表
+- get() 的实现为遍历链表
+- put() 的实现也为遍历链表
+
+### 总结 (Comparison)
+Underlying data structure|
+---|---|---|---
+Unordered linked list (sequential search)|$$
+Ordered arrays (binary search)|
+BST|
+RedBlackBST|
+Hash table|
+
+# Dynamic Programming (DP)
+
+- careful brute force
+- subproblems + reuse
+
+example 1：
+- fibonacci 
+    - naive
+    - naive + memorization
+- shortest path
+- text justification
+- black jack
+
+# Priority Queue
+优先队列 (Priority Queue) 支持两种操作：
+- 删除最大元素
+- 插入元素
+
+## API
+
+## 初级实现
+可以使用**有序或者无序的数组或链表**来实现优先队列。
+
+### 数组实现
+最简单的一种方法是修改栈的实现以支持优先队列的特性。其中，insert() 方法和 push() 方法完全相同；要实现 delMax() 方法，可以**添加一段选择排序的内循环代码，将最大元素和边界元素交换然后删除它**，就和栈的 pop() 方法实现一致。
+
+和栈相同，可以加入动态调整数组大小的方法，使得数据结构中具有适合容量的元素而又不会溢出。
+
+另一种方法就是在 insert() 方法中添加代码，**将所有较大的元素向右边移动一格，以使得数组保持有序，就和插入排序一样**，这样最大的元素总会在数组的一边，delMax() 的操作就和栈的 pop() 操作一致。
+
+### 链表表示
+和上文类似，可以用基于链表的栈作为基础，来支持优先队列的实现。而后只需要选择修改 pop() 来找到并返回最大元素，或者修改 push() 来保证所有元素为逆序并用 pop() 来删除并返回列表的首元素（最大的元素）。
+
+### 分析
+使用无序序列是解决这个问题的惰性方法，仅在返回最大元素的时候才采取行动；使用有序序列则是解决问题的积极方法，会在插入元素时候就保持列表有序，使得后续操作更加高效。
+
+无论采用何种方式，插入元素和删除最大元素这两个操作之一在最坏情况下时间复杂度都是线性的，而接下来的基于数据结构**堆的实现能够保证两种操作都可以更快的执行**。
+
+数据结构|插入元素|删除最大元素
+:---|:---:|:---:
+无序数组|$1$|$n$|
+有序数组|$n$|$1$|
+堆|$\log n$|$\log n$|
+
+## 堆实现
+### 堆的定义
+二叉堆能够很好的实现优先队列的基本操作。
+
+## 堆排序
+1. 从无序数组中构造最大堆
+2. 找到最大的元素 `A[1]`
+3. 交换 `A[1]` 和 `A[n]` (最大的元素位于数组最后)
+4. discard node n from heap
+5. New root may violate max heap but children are max heaps. (Go to step 2)
+
+# 字符串
+
+
+
+
+
+## 单词查找树 (Trie)
+### R 向单词查找树
+### 三向单词查找树
+
+二叉查找树与快速排序
+单词查找树与高位优先字符串排序
+三向单词查找树与三向字符串快速排序
+
+
+## 子字符串查找
+应用场景：
+- 文本编辑器和浏览器查找单词 -->
+<h1 id="推荐阅读"><a class="markdownIt-Anchor" href="#推荐阅读"></a> 推荐阅读</h1>
+<ul>
+<li><a href="https://algs4.cs.princeton.edu/home/" target="_blank" rel="noopener">Algorithms 4th Edition</a> | <a href="https://book.douban.com/subject/19952400/" target="_blank" rel="noopener">算法 (第四版)</a></li>
+</ul>
+
+      </div>
+      
+      
+      
+    </div>
+    
+  <ul class="breadcrumb">
+          
+            <li><a href="/notes/">NOTES</a></li>
+          <li>ALGORITHM</li>
+        
+  </ul>
+
+    
+    
+    
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#数据结构"><span class="nav-number">1.</span> <span class="nav-text"> 数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#数据类型-data-type"><span class="nav-number">1.1.</span> <span class="nav-text"> 数据类型 (Data Type)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#原始数据类型-primitive-data-type"><span class="nav-number">1.1.1.</span> <span class="nav-text"> 原始数据类型 (Primitive Data Type)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#复合数据类型-composite-types"><span class="nav-number">1.1.2.</span> <span class="nav-text"> 复合数据类型 (Composite Types)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他类型-other-types"><span class="nav-number">1.1.3.</span> <span class="nav-text"> 其他类型 (Other Types)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#抽象数据类型-abstract-data-type"><span class="nav-number">1.2.</span> <span class="nav-text"> 抽象数据类型 (Abstract Data Type)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据结构-data-structure"><span class="nav-number">1.3.</span> <span class="nav-text"> 数据结构 (Data Structure)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#算法分析-analysis"><span class="nav-number">2.</span> <span class="nav-text"> 算法分析 (Analysis)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#基本概念"><span class="nav-number">2.1.</span> <span class="nav-text"> 基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#关心对象"><span class="nav-number">2.1.1.</span> <span class="nav-text"> 关心对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#技术模型"><span class="nav-number">2.1.2.</span> <span class="nav-text"> 技术模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#输入规模与运行时间"><span class="nav-number">2.1.3.</span> <span class="nav-text"> 输入规模与运行时间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#情况分析"><span class="nav-number">2.1.4.</span> <span class="nav-text"> 情况分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#渐进效率"><span class="nav-number">2.1.5.</span> <span class="nav-text"> 渐进效率</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#渐进符号表示"><span class="nav-number">2.2.</span> <span class="nav-text"> 渐进符号表示</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#算法分析"><span class="nav-number">2.3.</span> <span class="nav-text"> 算法分析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#算法设计准则-design-paradigms"><span class="nav-number">3.</span> <span class="nav-text"> 算法设计准则 (Design Paradigms)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#排序-sorting"><span class="nav-number">4.</span> <span class="nav-text"> 排序 (Sorting)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#搜索-searching"><span class="nav-number">5.</span> <span class="nav-text"> 搜索 (Searching)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#推荐阅读"><span class="nav-number">6.</span> <span class="nav-text"> 推荐阅读</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yanjiu Li"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Yanjiu Li</p>
+  <div class="site-description" itemprop="description">演绎一场技术溯源的盛宴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">97</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yanjiulab" title="GitHub → https://github.com/yanjiulab" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:liyanjiu@outlook.com" title="E-Mail → mailto:liyanjiu@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Worth Reading
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP" title="http://pages.cs.wisc.edu/~remzi/OSTEP" rel="noopener" target="_blank">OSTEP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" title="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" rel="noopener" target="_blank">OSTEP-Chinese</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.apuebook.com/about3e.html" title="http://www.apuebook.com/about3e.html" rel="noopener" target="_blank">APUE</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" title="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" rel="noopener" target="_blank">UNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" title="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" rel="noopener" target="_blank">IUNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.yinwang.org/" title="http://www.yinwang.org/" rel="noopener" target="_blank">当然我在扯淡</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yanjiu Li</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">204k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:05</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+
+</body>
+</html>
