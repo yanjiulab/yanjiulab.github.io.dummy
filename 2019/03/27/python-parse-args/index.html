@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yjlab.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="在编写程序时，有时候需要从系统中传入一些信息 (变量) 给程序使用。在编写命令行程序时，可以通过解析 Python 解释器的命令行参数来实现，在编写图形界面程序 (或者一些命令行程序) 时，还可以通过与系统交互来传递信息，例如读写系统环境变量，读写 (配置) 文件等。本文总结了 Python 中解析命令行参数的几种方法。">
+<meta name="keywords" content="Python">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python 解析命令行参数">
+<meta property="og:url" content="http://yjlab.xyz/2019/03/27/python-parse-args/index.html">
+<meta property="og:site_name" content="Yanjiu Lab">
+<meta property="og:description" content="在编写程序时，有时候需要从系统中传入一些信息 (变量) 给程序使用。在编写命令行程序时，可以通过解析 Python 解释器的命令行参数来实现，在编写图形界面程序 (或者一些命令行程序) 时，还可以通过与系统交互来传递信息，例如读写系统环境变量，读写 (配置) 文件等。本文总结了 Python 中解析命令行参数的几种方法。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-11-15T04:28:15.096Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Python 解析命令行参数">
+<meta name="twitter:description" content="在编写程序时，有时候需要从系统中传入一些信息 (变量) 给程序使用。在编写命令行程序时，可以通过解析 Python 解释器的命令行参数来实现，在编写图形界面程序 (或者一些命令行程序) 时，还可以通过与系统交互来传递信息，例如读写系统环境变量，读写 (配置) 文件等。本文总结了 Python 中解析命令行参数的几种方法。">
+
+<link rel="canonical" href="http://yjlab.xyz/2019/03/27/python-parse-args/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Python 解析命令行参数 | Yanjiu Lab</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yanjiu Lab</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Learning then grokking</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        
+            
+  <li class="menu-item menu-item-notes">
+
+    <a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记</a>
+
+  </li>
+
+
+      
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yjlab.xyz/2019/03/27/python-parse-args/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Yanjiu Li">
+      <meta itemprop="description" content="演绎一场技术溯源的盛宴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yanjiu Lab">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Python 解析命令行参数
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-03-27 19:38:06" itemprop="dateCreated datePublished" datetime="2019-03-27T19:38:06+08:00">2019-03-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-15 12:28:15" itemprop="dateModified" datetime="2020-11-15T12:28:15+08:00">2020-11-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Programming/" itemprop="url" rel="index"><span itemprop="name">Programming</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Programming/Python/" itemprop="url" rel="index"><span itemprop="name">Python</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>8.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>8 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在编写程序时，有时候需要从系统中传入一些信息 (变量) 给程序使用。在编写命令行程序时，可以通过<strong>解析 Python 解释器的命令行参数</strong>来实现，在编写图形界面程序 (或者一些命令行程序) 时，还可以通过<strong>与系统交互</strong>来传递信息，例如<strong>读写系统环境变量</strong>，<strong>读写 (配置) 文件</strong>等。本文总结了 Python 中解析命令行参数的几种方法。</p>
+<a id="more"></a>
+<h1 id="sysargv-simple"><a class="markdownIt-Anchor" href="#sysargv-simple"></a> sys.argv — Simple</h1>
+<p><a href="https://docs.python.org/3/library/sys.html" target="_blank" rel="noopener">sys — System-specific parameters and functions</a> 是一个 Python 中与系统相关的常用库，如果想要解析简单的命令行参数，最简单的方法是直接使用 <code>sys.argv</code>，<code>sys.argv</code> 是一个列表，存储了由系统解析的 Python 脚本的命令行参数。</p>
+<ul>
+<li>argv[0] 一般为脚本名称</li>
+<li>argv[1:] 为其他参数</li>
+</ul>
+<div class="note info">
+            <p>注意，解释器名称，如 python, sh 都不包含在 argv 中。</p>
+          </div>
+<p>例如：创建一个 Python 脚本如下</p>
+<figure class="highlight python"><figcaption><span>test_sysargv.py</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> sys</span><br><span class="line">print(sys.argv, len(sys.argv))</span><br></pre></td></tr></table></figure>
+<p>在命令行执行该文件，得到结果为：</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ python test_sysargv<span class="selector-class">.py</span> arg1 arg2 </span><br><span class="line">[<span class="string">'test_sysargv.py'</span>, <span class="string">'arg1'</span>, <span class="string">'arg2'</span>] <span class="number">3</span></span><br></pre></td></tr></table></figure>
+<p>总结：使用 <code>sys.argv</code> 简单直接，但是如果参数逻辑复杂，后续还需要完成手动解析参数的步骤。</p>
+<h1 id="getopt-c-style-parser-for-command-line-options"><a class="markdownIt-Anchor" href="#getopt-c-style-parser-for-command-line-options"></a> getopt — C-style parser for command line options</h1>
+<p>Python 中的 <a class="btn" href="https://docs.python.org/3/library/getopt.html" target="_blank" rel="noopener">
+            <i class="fa fa-home fa-fw fa-lg"></i>getopt
+          </a> 作为一个 C 风格的解析库，其抽象程度略高于直接使用 <code>sys.argv</code>，但其用法和写法类似与 C 语言的 getopt() 函数，其对新人不友好，对比下一节提到的 argparse 库，书写代码也更加臃肿。经过笔者的一次使用之后，便决定放弃使用该库，并将之前项目用到的 getopt 替换为 argparse 库。</p>
+<div class="note info">
+            <p>如果你考虑使用 Python 库来帮助你解析命令行参数，并且想要拥有更清晰的参数处理逻辑，写更少的代码，输出更漂亮的帮助信息，那么推荐使用下一节中提到的库。</p>
+          </div>
+<h1 id="argparse-parser-for-command-line-options-arguments-and-sub-commands"><a class="markdownIt-Anchor" href="#argparse-parser-for-command-line-options-arguments-and-sub-commands"></a> argparse — Parser for command-line options, arguments and sub-commands</h1>
+<p>相比于 getopt 的不友好，<a class="btn" href="https://docs.python.org/3/library/argparse.html" target="_blank" rel="noopener">
+            <i class="fa fa-home fa-fw fa-lg"></i>argparse
+          </a> 模块使得编写对用户友好的命令行接口更加容易，argparse 不仅会帮助我们解析 sys.argv，并且还自动生成了规范格式的 help 以及 usage 等附加信息。<strong>同时，argparse 也是 <a href="https://www.python.org/dev/peps/pep-0389/" target="_blank" rel="noopener">PEP 389 – argparse - New Command Line Parsing Module</a> 推荐的</strong>。</p>
+<h2 id="example"><a class="markdownIt-Anchor" href="#example"></a> Example</h2>
+<p>使用 argparse 库非常简单，只需 5 步：</p>
+<ol>
+<li>通过 <code>import argparse</code> 导入库；</li>
+<li>通过 <code>parser = argparse.ArgumentParser()</code> 创建参数解析器；</li>
+<li>通过 <code>parser.add_argument()</code> 为解析器添加待解析的参数及其解析方式；</li>
+<li>通过 <code>args = parser.parse_args()</code> 生成解析后的参数对象；</li>
+<li>通过调用 args 的成员使用对应的参数值，例如 <code>args.foo</code> 为参数 foo 的值。</li>
+</ol>
+<p>下面是官网提供的简单强大的例子，稍后你会看到一个详细的解析命令行参数的脚本模板。</p>
+<figure class="highlight python"><figcaption><span>prog.py</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> argparse</span><br><span class="line"></span><br><span class="line">parser = argparse.ArgumentParser(description=<span class="string">'Process some integers.'</span>)</span><br><span class="line">parser.add_argument(<span class="string">'integers'</span>, metavar=<span class="string">'N'</span>, type=int, nargs=<span class="string">'+'</span>,</span><br><span class="line">                    help=<span class="string">'an integer for the accumulator'</span>)</span><br><span class="line">parser.add_argument(<span class="string">'--sum'</span>, dest=<span class="string">'accumulate'</span>, action=<span class="string">'store_const'</span>,</span><br><span class="line">                    const=sum, default=max,</span><br><span class="line">                    help=<span class="string">'sum the integers (default: find the max)'</span>)</span><br><span class="line"></span><br><span class="line">args = parser.parse_args()</span><br><span class="line">print(args.accumulate(args.integers))</span><br></pre></td></tr></table></figure>
+<p>使用方式如下所示：</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ python prog<span class="selector-class">.py</span> -h</span><br><span class="line">... 一段格式清晰的帮助（省略） ...</span><br><span class="line">$ python prog<span class="selector-class">.py</span> <span class="number">1</span> <span class="number">2</span> <span class="number">3</span> <span class="number">4</span></span><br><span class="line"><span class="number">4</span></span><br><span class="line">$ python prog<span class="selector-class">.py</span> <span class="number">1</span> <span class="number">2</span> <span class="number">3</span> <span class="number">4</span> --sum</span><br><span class="line"><span class="number">10</span></span><br><span class="line">$ python prog<span class="selector-class">.py</span> <span class="selector-tag">a</span> <span class="selector-tag">b</span> c</span><br><span class="line">usage: prog<span class="selector-class">.py</span> [-h] [--sum] N [N ...]</span><br><span class="line">prog<span class="selector-class">.py</span>: error: argument N: invalid int value: <span class="string">'a'</span></span><br></pre></td></tr></table></figure>
+<h2 id="creating-a-parser"><a class="markdownIt-Anchor" href="#creating-a-parser"></a> Creating a Parser</h2>
+<p>使用 ArgumentParser 创建一个 parser 对象，同时可以指定一些参数。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">parser = argparse.ArgumentParser(description=<span class="string">'A brief description about your program.'</span>)</span><br></pre></td></tr></table></figure>
+<p>以下是一些常用的参数，更多参数查阅 <a class="btn" href="https://docs.python.org/3/library/argparse.html#argumentparser-objects" target="_blank" rel="noopener">
+            <i class="fa fa-book fa-fw fa-lg"></i>ArgumentParser objects
+          </a> :</p>
+<table>
+<thead>
+<tr>
+<th>Parameters</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>prog</td>
+<td>程序名</td>
+<td><code>sys.argv[0]</code> 一般是 Python 文件名</td>
+</tr>
+<tr>
+<td>usage</td>
+<td>使用方法</td>
+<td>依据添加参数自动生成</td>
+</tr>
+<tr>
+<td>description</td>
+<td>在参数 help 内容之前添加描述</td>
+<td>None</td>
+</tr>
+<tr>
+<td>epilog</td>
+<td>在参数 help 之后添加的内容</td>
+<td>None</td>
+</tr>
+<tr>
+<td>add_help</td>
+<td>自动添加 <code>-h/--help</code> 参数</td>
+<td>True</td>
+</tr>
+<tr>
+<td>allow_abbrev</td>
+<td>在无歧义的情况下允许长选项省略</td>
+<td>True</td>
+</tr>
+</tbody>
+</table>
+<h2 id="adding-arguments"><a class="markdownIt-Anchor" href="#adding-arguments"></a> Adding Arguments</h2>
+<p>通过调用 add_argument() 方法添加参数，也就是告诉 ArgumentParser 如何将命令行的字符串转变为合适的对象。这也是最需要费心编写的部分。</p>
+<h3 id="name-or-flags"><a class="markdownIt-Anchor" href="#name-or-flags"></a> Name or flags</h3>
+<p>add_argument() 的第一个参数值必须为<strong>一个或一系列</strong>参数名称/标志，<strong>参数分为可选参数 (optional arguments) 以及必选参数 (positional arguments)</strong>。以短横杠或双短横杠开头的，如 <code>-f</code> 或 <code>--foo</code> 将被解析成可选参数 (可省略)，不加任何前缀的将会被解析成必选参数 (不可省略)。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">parser.add_argument(<span class="string">'-f'</span>, <span class="string">'--foo'</span>) <span class="comment"># 添加一个可选参数</span></span><br><span class="line">parser.add_argument(<span class="string">'bar'</span>)         <span class="comment"># 添加一个必选参数</span></span><br></pre></td></tr></table></figure>
+<div class="note info">
+            <p>为什么称呼为名称或标志呢？有时候，我们想通过命令行参数传递一些值，并以键值对的形式存储，例如 <code>python prog.py --ip=10.0.0.1</code> 可以给 ip 参数传递一个值，这时候 ip 就成为参数的<strong>名称 (name)</strong>。有时候，我们希望通过命令行参数指定某些特性，并不明显的指定一个值 (或者说其实存储了一个布尔型的值)，例如 <code>python prog.py --feature</code> 使得程序中打开某项特性，这时候 feature 成为了一个<strong>标志位 (flag)</strong>。<br>但两者本质是相同的。</p>
+          </div>
+<h3 id="action"><a class="markdownIt-Anchor" href="#action"></a> action</h3>
+<p>ArgumentParser 对象将命令行参数与 action 相关联，action 关键字参数指定应如何处理命令行参数。以下为各种 action 类型：</p>
+<ul>
+<li><code>store</code>：该参数仅能存储一个值，也是<strong>默认行为</strong>。</li>
+<li><code>store_const</code>：将 const 关键字指定的值存储到该参数。<strong>常用于指定具有某种固定值的可选参数</strong>。</li>
+<li><code>store_true</code> and <code>store_false</code>：为 <code>store_const</code> 的特例，用来存储布尔值，默认分别为 True 和 False。<strong>常与 dest 关键字结合用于标志位的设定。</strong></li>
+<li><code>append</code>：允许同一个多次参数叠加使用，并将参数值存储为一个列表，如 <code>--foo 1 --foo 2</code> 将解析为 <code>foo=['1', '2']</code>。</li>
+<li><code>append_const</code>：允许同一个参数多次叠加使用，并将参数值存储为一个列表，但参数必须由 const 关键字指定。</li>
+<li><code>count</code>：计算某个参数出现的次数。<strong>常用于指定某种参数的等级</strong>。例如 <code>-vvv</code> 将会解析为 <code>v=3</code>。</li>
+<li><code>help</code>：生成 help，<strong>默认自动添加</strong>即可。</li>
+<li><code>version</code>：常用于<strong>指定软件版本</strong>。例如 <code>parser.add_argument('--version', action='version', version='%(prog)s 2.0')</code>，当执行 <code>--version</code> 时会输出 <code>PROG 2.0</code> 并且退出程序。</li>
+</ul>
+<h3 id="nargs"><a class="markdownIt-Anchor" href="#nargs"></a> nargs</h3>
+<p>通常一个命令行参数对应一个 action，也就是“一次匹配-赋值动作”，<code>nargs</code> 关键字将多个不同的命令行参数对应到一个 action。</p>
+<ul>
+<li><code>N</code> (一个整数)：</li>
+<li><code>?</code>：0个或一个</li>
+<li><code>*</code>：0个或多个</li>
+<li><code>+</code>：1个或多个</li>
+<li><code>argparse.REMAINDER</code>：其余全部</li>
+</ul>
+<h3 id="const"><a class="markdownIt-Anchor" href="#const"></a> const</h3>
+<p>这是一个可选的关键字，默认为 None，与 <code>store_const</code> 和 <code>append_const</code> 结合使用。</p>
+<h3 id="default"><a class="markdownIt-Anchor" href="#default"></a> default</h3>
+<p>所有的可选参数以及部分必选参数可以省略，当这些参数省略的时候，为它们指定一个默认值。</p>
+<figure class="highlight python"><figcaption><span>optional_args</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>parser.add_argument(<span class="string">'--foo'</span>, default=<span class="number">42</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>parser.parse_args([<span class="string">'--foo'</span>, <span class="string">'2'</span>])</span><br><span class="line">Namespace(foo=<span class="string">'2'</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>parser.parse_args([])</span><br><span class="line">Namespace(foo=<span class="number">42</span>)</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><figcaption><span>positional_args</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>parser = argparse.ArgumentParser()</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>parser.add_argument(<span class="string">'foo'</span>, nargs=<span class="string">'?'</span>, default=<span class="number">42</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>parser.parse_args([<span class="string">'a'</span>])</span><br><span class="line">Namespace(foo=<span class="string">'a'</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>parser.parse_args([])</span><br><span class="line">Namespace(foo=<span class="number">42</span>)</span><br></pre></td></tr></table></figure>
+<h3 id="type"><a class="markdownIt-Anchor" href="#type"></a> type</h3>
+<p>通过 type 关键字指定参数类型。</p>
+<h3 id="choices"><a class="markdownIt-Anchor" href="#choices"></a> choices</h3>
+<p>一些命令行参数有一定的要求，应从一组限定的值中选择，这时候应该使用 choices 关键字，choices 的值可以是任何支持 in 操作符的对象，如果用户提供了不在集合中的值，将会报错。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">parser.add_argument(<span class="string">'choices'</span>, choices=[<span class="string">'choice1'</span>, <span class="string">'choice2'</span>, <span class="string">'choice3'</span>])</span><br><span class="line">parser.add_argument(<span class="string">'door'</span>, type=int, choices=range(<span class="number">1</span>, <span class="number">4</span>))</span><br></pre></td></tr></table></figure>
+<h3 id="help"><a class="markdownIt-Anchor" href="#help"></a> help</h3>
+<p>使用 help 关键字可以为该参数提供一个简短的解释，当用户使用 help 时，每个参数的帮助都会被显示。几乎总应该提供该关键字。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">parser.add_argument(<span class="string">'--foo'</span>, help=<span class="string">'foo the bars'</span>)</span><br></pre></td></tr></table></figure>
+<h3 id="metavar"><a class="markdownIt-Anchor" href="#metavar"></a> metavar</h3>
+<p>当 ArgumentParser 生成帮助消息时，它需要某种方式来引用每个预期的参数。默认情况下，使用 dest 值作为每个对象的名字，其中必选参数的 dest 是和参数名称相同，可选参数的 dest 是参数名称的大写。</p>
+<div class="note info">
+            <p>metavar 只会更改显示的名称，由 parse_args() 解析出的真正的属性名称仍然只由 dest 值决定。所以，该参数我们基本不用更改，保持使用默认值即可。</p>
+          </div>
+<h3 id="dest"><a class="markdownIt-Anchor" href="#dest"></a> dest</h3>
+<p>大多数 ArgumentParser 操作都会添加一些值作为 parse_args() 返回的对象的属性。此属性的名称由 dest 关键字参数确定。对于必选参数动作，dest 通常为第一个add_argument() 的第一个参数，也就是前文提到的 name or flag；对于可选参数，通常为 name 去掉最前面的 <code>-</code>，如果名称中含有 <code>-</code>，则使用 <code>_</code> 代替。<strong>dest 关键字只在自定义该值的时候使用，否则采用默认值即可</strong>。</p>
+<h2 id="parsing-arguments"><a class="markdownIt-Anchor" href="#parsing-arguments"></a> Parsing Arguments</h2>
+<p>ArgumentParser 通过 parse_args() 方法 parse 参数，无需指定参数，ArgumentParser 会自动根据 <code>sys.argv</code> 解析参数并返回一个包含所有参数情况的 Namespace 对象，在程序中可以使用这个对象进行参数判断。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">args = parser.parse_args()</span><br><span class="line">print(type(args))</span><br><span class="line">print(args)</span><br></pre></td></tr></table></figure>
+<h2 id="template"><a class="markdownIt-Anchor" href="#template"></a> Template</h2>
+<p>经过上文，我们已经了解了大部分用法，虽然关键字选项很多，但是其中一些关键字我们基本不会用到。在大多数情况下，仅仅设置较少关键字即可达到我们对于某参数的要求，所以经过总结，一个完整的模板如下：</p>
+<figure class="highlight python"><figcaption><span>test_argparse</span><a href="/downloads/code/python/test_argparse.py">view raw</a></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> argparse</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    <span class="comment"># Creating a parser</span></span><br><span class="line">    parser = argparse.ArgumentParser(</span><br><span class="line">        prog=<span class="string">'myprogram'</span>,</span><br><span class="line">        description=<span class="string">'A brief description about your program.'</span>,</span><br><span class="line">        epilog=<span class="string">'A brief epilog about your program.'</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Adding a simple positional argument.</span></span><br><span class="line">    parser.add_argument(<span class="string">'echo'</span>, help=<span class="string">"echo the string you use here"</span>, default=<span class="string">'hello world'</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Adding a optional argument with both the short and long format of the name. </span></span><br><span class="line">    parser.add_argument(<span class="string">'-v'</span>, <span class="string">'--verbosity'</span>, help=<span class="string">'Display some details.'</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Adding a argument with a const value or none if not specified. </span></span><br><span class="line">    parser.add_argument(<span class="string">'--flag'</span>, action=<span class="string">'store_const'</span>, const=<span class="number">42</span>, help=<span class="string">'Set flag to 42 if specified, otherwise remains none.'</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Enable or disable some feature, the value of this feature will be false initially, </span></span><br><span class="line">    <span class="comment"># because the second store_false action sets the default value of this attribute to false.</span></span><br><span class="line">    parser.add_argument(<span class="string">'--feature'</span>, dest=<span class="string">'feature'</span>, action=<span class="string">'store_true'</span>, help=<span class="string">'Enable this feature.'</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'--no-feature'</span>, dest=<span class="string">'feature'</span>, action=<span class="string">'store_false'</span>, help=<span class="string">'Disable this feature.'</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Adding a argument which can be set twice and each value will be appended.</span></span><br><span class="line">    parser.add_argument(<span class="string">'--append'</span>, action=<span class="string">'append'</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Adding a argument with count action</span></span><br><span class="line">    parser.add_argument(<span class="string">'--counter'</span>, <span class="string">'-c'</span>, action=<span class="string">'count'</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Adding version argument</span></span><br><span class="line">    parser.add_argument(<span class="string">'--version'</span>, action=<span class="string">'version'</span>, version=<span class="string">'%(prog)s 1.0'</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Adding a argument with more values</span></span><br><span class="line">    parser.add_argument(<span class="string">'--one'</span>, nargs=<span class="number">1</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'--two'</span>, nargs=<span class="number">2</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'--zero-or-one'</span>, nargs=<span class="string">'?'</span>, const=<span class="string">'c'</span>, default=<span class="string">'d'</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'--zero-to-more'</span>, nargs=<span class="string">'*'</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'--one-to-more'</span>, nargs=<span class="string">'+'</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'--other'</span>, nargs=argparse.REMAINDER)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Add a argument with a default value (of the specified type).</span></span><br><span class="line">    parser.add_argument(<span class="string">'pos-default1'</span>, nargs=<span class="string">'?'</span>, default=<span class="string">'positional1'</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'pos-default2'</span>, nargs=<span class="string">'*'</span>, default=<span class="string">'positional2'</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'--none-default'</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'--any-default'</span>, default=<span class="string">'42'</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'--int-default'</span>, default=<span class="number">42</span>, type=int)</span><br><span class="line">    parser.add_argument(<span class="string">'--float-default'</span>, default=<span class="number">42.5</span>, type=float)</span><br><span class="line">    parser.add_argument(<span class="string">'--file-default'</span>, default=<span class="string">'test_argparse.py'</span>, type=open)</span><br><span class="line">    parser.add_argument(<span class="string">'--sup-default'</span>, default=argparse.SUPPRESS)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Adding a argument with some choices.</span></span><br><span class="line">    parser.add_argument(<span class="string">'choices'</span>, choices=[<span class="string">'left'</span>, <span class="string">'mid'</span>, <span class="string">'right'</span>])</span><br><span class="line">    parser.add_argument(<span class="string">'--int-choice'</span>, type=int, choices=range(<span class="number">1</span>, <span class="number">4</span>))</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Parsing arguments</span></span><br><span class="line">    args = parser.parse_args()</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Dispaly args and its type.</span></span><br><span class="line">    print(<span class="string">'----------------------- Args ------------------------------'</span>)</span><br><span class="line">    print(type(args))</span><br><span class="line">    print(args)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Display all args line by line.</span></span><br><span class="line">    print(<span class="string">'----------------------- More details ------------------------------'</span>)</span><br><span class="line">    args_dict = args.__dict__</span><br><span class="line">    <span class="keyword">for</span> arg <span class="keyword">in</span> args_dict.keys():</span><br><span class="line">        print(arg, <span class="string">'='</span>, args_dict[arg], <span class="string">', type:'</span>, type(args_dict[arg]))</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># ... do something with args[.ARGS] ...</span></span><br></pre></td></tr></table></figure>
+<h1 id="see-also"><a class="markdownIt-Anchor" href="#see-also"></a> See Also</h1>
+<ul>
+<li><a href="https://docs.python.org/3/howto/argparse.html" target="_blank" rel="noopener">Argparse Tutorial</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/wechatpay.png" alt="Yanjiu Li 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/alipay.jpeg" alt="Yanjiu Li 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Python/" rel="tag"><i class="fa fa-tag"></i> Python</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/02/23/sdn-openflow/" rel="prev" title="OpenFlow Specification">
+      <i class="fa fa-chevron-left"></i> OpenFlow Specification
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/11/12/algo-binary-search/" rel="next" title="Binary Search">
+      Binary Search <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80MTAzMS8xNzU1Ng=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#sysargv-simple"><span class="nav-number">1.</span> <span class="nav-text"> sys.argv — Simple</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#getopt-c-style-parser-for-command-line-options"><span class="nav-number">2.</span> <span class="nav-text"> getopt — C-style parser for command line options</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#argparse-parser-for-command-line-options-arguments-and-sub-commands"><span class="nav-number">3.</span> <span class="nav-text"> argparse — Parser for command-line options, arguments and sub-commands</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#example"><span class="nav-number">3.1.</span> <span class="nav-text"> Example</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#creating-a-parser"><span class="nav-number">3.2.</span> <span class="nav-text"> Creating a Parser</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#adding-arguments"><span class="nav-number">3.3.</span> <span class="nav-text"> Adding Arguments</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#name-or-flags"><span class="nav-number">3.3.1.</span> <span class="nav-text"> Name or flags</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#action"><span class="nav-number">3.3.2.</span> <span class="nav-text"> action</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#nargs"><span class="nav-number">3.3.3.</span> <span class="nav-text"> nargs</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#const"><span class="nav-number">3.3.4.</span> <span class="nav-text"> const</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#default"><span class="nav-number">3.3.5.</span> <span class="nav-text"> default</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#type"><span class="nav-number">3.3.6.</span> <span class="nav-text"> type</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#choices"><span class="nav-number">3.3.7.</span> <span class="nav-text"> choices</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#help"><span class="nav-number">3.3.8.</span> <span class="nav-text"> help</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#metavar"><span class="nav-number">3.3.9.</span> <span class="nav-text"> metavar</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dest"><span class="nav-number">3.3.10.</span> <span class="nav-text"> dest</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#parsing-arguments"><span class="nav-number">3.4.</span> <span class="nav-text"> Parsing Arguments</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#template"><span class="nav-number">3.5.</span> <span class="nav-text"> Template</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#see-also"><span class="nav-number">4.</span> <span class="nav-text"> See Also</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yanjiu Li"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Yanjiu Li</p>
+  <div class="site-description" itemprop="description">演绎一场技术溯源的盛宴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">95</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yanjiulab" title="GitHub → https://github.com/yanjiulab" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:liyanjiu@outlook.com" title="E-Mail → mailto:liyanjiu@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Worth Reading
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP" title="http://pages.cs.wisc.edu/~remzi/OSTEP" rel="noopener" target="_blank">OSTEP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" title="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" rel="noopener" target="_blank">OSTEP-Chinese</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.apuebook.com/about3e.html" title="http://www.apuebook.com/about3e.html" rel="noopener" target="_blank">APUE</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" title="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" rel="noopener" target="_blank">UNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" title="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" rel="noopener" target="_blank">IUNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.yinwang.org/" title="http://www.yinwang.org/" rel="noopener" target="_blank">当然我在扯淡</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yanjiu Li</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">218k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:18</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>
