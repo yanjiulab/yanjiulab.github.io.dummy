@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yjlab.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Although the basic idea of binary search is comparatively straightforward, the details can be surprisingly tricky …没想到眉清目秀的二分查找，折磨人起来可是毫不含糊。">
+<meta name="keywords" content="Algorithm,Search">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Binary Search">
+<meta property="og:url" content="http://yjlab.xyz/2019/11/12/algo-binary-search/index.html">
+<meta property="og:site_name" content="Yanjiu Lab">
+<meta property="og:description" content="Although the basic idea of binary search is comparatively straightforward, the details can be surprisingly tricky …没想到眉清目秀的二分查找，折磨人起来可是毫不含糊。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-10-21T03:34:31.849Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Binary Search">
+<meta name="twitter:description" content="Although the basic idea of binary search is comparatively straightforward, the details can be surprisingly tricky …没想到眉清目秀的二分查找，折磨人起来可是毫不含糊。">
+
+<link rel="canonical" href="http://yjlab.xyz/2019/11/12/algo-binary-search/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Binary Search | Yanjiu Lab</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yanjiu Lab</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Learning then grokking</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        
+            
+  <li class="menu-item menu-item-notes">
+
+    <a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记</a>
+
+  </li>
+
+
+      
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yjlab.xyz/2019/11/12/algo-binary-search/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Yanjiu Li">
+      <meta itemprop="description" content="演绎一场技术溯源的盛宴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yanjiu Lab">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Binary Search
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-11-12 21:38:57" itemprop="dateCreated datePublished" datetime="2019-11-12T21:38:57+08:00">2019-11-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-10-21 11:34:31" itemprop="dateModified" datetime="2020-10-21T11:34:31+08:00">2020-10-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Algorithm/" itemprop="url" rel="index"><span itemprop="name">Algorithm</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote class="blockquote-center">
+            <i class="fa fa-quote-left"></i>
+            <p>Although the basic idea of binary search is comparatively straightforward, the details can be surprisingly tricky …<br>没想到眉清目秀的二分查找，折磨人起来可是毫不含糊。</p>
+
+            <i class="fa fa-quote-right"></i>
+          </blockquote>
+<a id="more"></a>
+<p>以上是 Donald Ervin Knuth 对于二分查找 (Binary Search) 的看法。的确，二分查找确实是一个思路简单，细节爆炸的算法。</p>
+<h1 id="二分查找模板-两分支"><a href="#二分查找模板-两分支" class="headerlink" title="二分查找模板 - 两分支"></a>二分查找模板 - 两分支</h1><p>以下这个模板是用于 Leetcode 中的二分查找的，使用 Java 语言编写。只讨论输入 array 是非降序 (non-descending order) 的情况。</p>
+<figure class="highlight java"><figcaption><span>BinarySearchTemplate</span><a href="/downloads/code/algo/search/BinarySearchTemplate.java">view raw</a></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BinarySearchTemplate</span> </span>{</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">binarySearch</span><span class="params">(<span class="keyword">int</span>[] nums, <span class="keyword">int</span> target)</span></span>{</span><br><span class="line">        <span class="comment">// Pre-processing:</span></span><br><span class="line">        <span class="comment">// handle some corner case or edge case</span></span><br><span class="line">        <span class="keyword">if</span>(nums == <span class="keyword">null</span> || nums.length == <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Flexible selection of boundary conditions</span></span><br><span class="line">        <span class="keyword">int</span> left = <span class="number">0</span>, right = nums.length;</span><br><span class="line">        <span class="keyword">while</span>(left &lt; right){</span><br><span class="line">            <span class="comment">// Prevent (left + right) overflow</span></span><br><span class="line">            <span class="comment">// int mid = (left + right) &gt;&gt;&gt; 1;</span></span><br><span class="line">            <span class="keyword">int</span> mid = left + (right - left) / <span class="number">2</span>;</span><br><span class="line">            </span><br><span class="line">            <span class="keyword">if</span>(nums[mid] &lt; target) {</span><br><span class="line">                left = mid + <span class="number">1</span>;</span><br><span class="line">            } <span class="keyword">else</span> {</span><br><span class="line">                right = mid;</span><br><span class="line">            }</span><br><span class="line">        }</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Post-processing:</span></span><br><span class="line">        <span class="comment">// End Condition: left == right</span></span><br><span class="line">        <span class="keyword">if</span>(left != nums.length &amp;&amp; nums[left] == target) {</span><br><span class="line">            <span class="keyword">return</span> left;</span><br><span class="line">        }                                                                                                                                                           </span><br><span class="line">        <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">    }</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<h2 id="前处理"><a href="#前处理" class="headerlink" title="前处理"></a>前处理</h2><p>主要用于处理一定查找不存在的情况，直接返回 -1：</p>
+<ol>
+<li>未给出待查找数据集合</li>
+<li>该数据集合为空</li>
+</ol>
+<h2 id="边界条件选取"><a href="#边界条件选取" class="headerlink" title="边界条件选取"></a>边界条件选取</h2><p>边界条件选取依赖于具体情况，对于数组来说，可能有两种情况比较常用：</p>
+<ol>
+<li>左闭右闭区间 [left, right]</li>
+<li>左闭右开区间 [left, right)</li>
+</ol>
+<p>在我们的模板中，<strong>使用第二种情况</strong>，其中 right 一般取 array.length，这主要是因为：</p>
+<ul>
+<li>二分查找无结果时，默认返回待插入位置的下标。</li>
+<li>right - left 正好是当前搜索范围的长度。   </li>
+</ul>
+<h2 id="循环条件"><a href="#循环条件" class="headerlink" title="循环条件"></a>循环条件</h2><p>在其他的二分模板中，可能使用 left &lt;= right 作为判断条件，对应的分支会分别更新左边界和右边界，此时循环退出时，往往需要讨论 left 和 right 哪个才是真正需要的值。</p>
+<p>在本模板中，<strong>使用 left &lt; right 作为循环判断条件</strong>，这样当循环退出的时候，<strong>一定有 left == right</strong>，避免了一些判断的情况，虽然避免了 left 和 right 的讨论问题，但由此产生了新的问题。当然我认为这些代价是值得的。</p>
+<h2 id="主体代码"><a href="#主体代码" class="headerlink" title="主体代码"></a>主体代码</h2><p>二分的主体首先需要进行中位数的计算，中位数索引计算至少隐含了两方面的问题：</p>
+<ol>
+<li>mid 值是否会溢出？</li>
+<li>对于偶数个元素的数据集合，会产生两个中位数。我们称之为<strong>左中位数和右中位数</strong>。到底选择哪一个？选择这个是任意的还是有条件的？</li>
+</ol>
+<p>对于第一个问题，显然当 left 和 right 值都较大时，其和值会产生整型溢出。因此我们可以写成<br><figure class="highlight excel"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">int</span> <span class="built_in">mid</span> = <span class="built_in">left</span> + (length) / <span class="number">2</span>;  // length = <span class="built_in">right</span> - <span class="built_in">left</span></span><br></pre></td></tr></table></figure></p>
+<div class="note info">
+            <p><strong>不推荐的 tricky 写法</strong><br>在 Java 中可以使用无符号移位 <code>&gt;&gt;&gt;</code> 来代替除法，并且不需要考虑溢出问题，可以写为 <code>int mid = (left + right) &gt;&gt;&gt; 1;</code>。与有符号右移 <code>&gt;&gt;</code> 不同的是，无符号右移总是将高位补零，因此当溢出时，本来最高位为 1 的负数又会重新成为正数。而在 JDK 中也是这么写的。其他语言同理，也可以使用无符号右移运算符。</p>
+          </div>
+<p>对于第二个问题，当数组的</p>
+<ul>
+<li>元素为奇数个时，有唯一的中位数。</li>
+<li>元素为偶数个时，有两个可用的中位数：<ul>
+<li>下标较小的称为下位中位数</li>
+<li>下标较大的称为上位中位数</li>
+</ul>
+</li>
+</ul>
+<p>我们我们在实际情况中，一般采用 <code>mid = left + (right - left) / 2</code> 来计算中位值，对于 C，Java 等自动取整的语言，其返回的总是<strong>上位中位数</strong>。因此，对于两种中位数的表示为：</p>
+<ul>
+<li>下位中位数：lowerMid = left + (length - 1) / 2</li>
+<li>上位中位数：upperMid = left + length / 2 （不用 -1，就它了）</li>
+</ul>
+<p><strong>由于这两个中位数都在区间 [left, right) 内，所以都可以采用</strong>。</p>
+<p>二分搜索写法可以分为求上下界两种，并转化为以下等价写法，可以解决各种细节问题：</p>
+<ol>
+<li>求下界：找满足 <code>x &gt;= value</code> 或 <code>x &gt; value</code> 条件的最小 <code>x</code> 的位置。</li>
+<li>求上界：找满足 <code>x &lt; value</code> 或 <code>x &lt;= value</code> 条件的最大 <code>x</code> 的位置。</li>
+</ol>
+<div class="tabs" id="bound"><ul class="nav-tabs"><li class="tab active"><a href="#bound-1">求下界</a></li><li class="tab"><a href="#bound-2">求上界</a></li></ul><div class="tab-content"><div class="tab-pane active" id="bound-1"><figure class="highlight java"><figcaption><span>lower_bound</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (arr[mid] &lt; target) &#123;    <span class="comment">// mid 值小于目标值更新区间</span></span><br><span class="line">    left = mid + <span class="number">1</span>;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    right = mid;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div><div class="tab-pane" id="bound-2"><figure class="highlight java"><figcaption><span>upper_bound</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (arr[mid] &lt;= target) &#123;   <span class="comment">// mid 值小于等于目标值就更新区间</span></span><br><span class="line">    left = mid + <span class="number">1</span>;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    right = mid;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div></div></div>
+<p>两者的区别仅仅是 if 中的条件不同而已！因此在 [first, last) 范围内搜索 value 的话：</p>
+<ul>
+<li>lower_bound(value) 本身找的是 <code>x &gt;= value</code> 的下界，若为 last 则不存在；</li>
+<li>upper_bound(value) 本身找的是 <code>x &gt; value</code> 的下界，若为 last 则不存在；</li>
+</ul>
+<p>因为区间是离散的，所以：</p>
+<ul>
+<li>lower_bound(value) - 1 即为 <code>x &lt; value</code> 的上界，若为 <code>first - 1</code> 则不存在；</li>
+<li>upper_bound(value) - 1 即为 <code>x &lt;= value</code> 的上界，若为 <code>first - 1</code> 则不存在；</li>
+</ul>
+<p>综上，在 [first, last) 范围内搜索 value 的结果应该是：<strong>[lower_bound(value), upper_bound(value))</strong>。</p>
+<h2 id="后处理"><a href="#后处理" class="headerlink" title="后处理"></a>后处理</h2><p>这一部分不是必须的，需要结合具体情景思考一下。</p>
+<ul>
+<li>如果你的业务逻辑保证了你要找的数一定在左边界和右边界所表示的区间里出现，那么可以放心地返回 left 或者 right，<strong>无需再做判断</strong>；</li>
+<li>如果你的业务逻辑不能保证你要找的数一定在左边界和右边界所表示的区间里出现，那么只要在退出循环以后，再针对 <code>nums[left]</code> 或者 <code>nums[right]</code> （此时 <code>nums[left]</code> == <code>nums[right]</code>）单独作一次判断，看它是不是你要找的数即可。</li>
+</ul>
+<p>对于搜索目标值问题，不能保证目标值一定会在区间内出现，因此需要如下后处理，因为 ${A}\cap{B}$ &lt;==&gt; $\overline{A}\cup\overline{B}$，所以还可以写成相反的条件，但两种方式都是一样的。</p>
+<p>以下对 [lower_bound(value), upper_bound(value) - 1] 结果中两个最值的后处理。</p>
+<div class="tabs" id="style"><ul class="nav-tabs"><li class="tab active"><a href="#style-1">lower_bound(val)</a></li><li class="tab"><a href="#style-2">upper_bound(val)-1</a></li></ul><div class="tab-content"><div class="tab-pane active" id="style-1"><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(left == nums.length || nums[left] != target) &#123;</span><br><span class="line">    <span class="keyword">return</span> -<span class="number">1</span>; </span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> left;</span><br></pre></td></tr></table></figure></div><div class="tab-pane" id="style-2"><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(left == first || nums[left - <span class="number">1</span>] != target) &#123;</span><br><span class="line">    <span class="keyword">return</span> -<span class="number">1</span>; </span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> left - <span class="number">1</span>;</span><br></pre></td></tr></table></figure></div></div></div>
+<h2 id="亿点细节"><a href="#亿点细节" class="headerlink" title="亿点细节"></a>亿点细节</h2><p>上述代码我们主要做了以下几件事：</p>
+<ol>
+<li>使用下界搜索模型：即在 [first, last) 范围中中搜索 value，且总是找到最小下标的那个 value。</li>
+<li>确定循环终止条件 <code>l &lt; r</code>；这样循环结束之时，l == r 总成立。</li>
+<li>使用上位中位数：<code>mid = left + (right - left) / 2</code>。</li>
+<li>编写两个分支，其中一个分支总是左边界强收紧（向右归约） <code>left = mid + 1</code>，而另一个一定为 <code>right = mid</code>。</li>
+<li>最后根据实际情况判断是否需要后处理。</li>
+</ol>
+<h3 id="搜索范围"><a href="#搜索范围" class="headerlink" title="搜索范围"></a>搜索范围</h3><p>是否可以使用两端闭区间？可以但不推荐。使用闭区间会使得上述公式计算中位数不再返回上位中位数，因此可能产生死循环问题。推荐做法是将题意转为 [first, last) 这样的范围。</p>
+<p>或者直接使用三分支模板！</p>
+<h3 id="三分支-OR-两分支"><a href="#三分支-OR-两分支" class="headerlink" title="三分支 OR 两分支"></a>三分支 OR 两分支</h3><p>分支的编写也比较自然，我们通常会写出三个分支，分别为中位值大于、小于、等于目标值。在本模板中，我们可以依照具体情况来决定我们编写的分支个数：</p>
+<ul>
+<li>大部分情况下忽略了等于分支，因为中位数直接命中的几率是随着剩余元素个数降低而逐渐升高的，很好理解，剩的越少，直接命中几率越大，所以我们的<strong>思路是每次排除一半左右的元素</strong>，等到只剩一个元素的时候，再测试该值是否命中。这种情况下，我们可以我们需要编写两个分支：<strong>其中一个分支需要排除该元素，另一个分支不需要排除该元素。</strong>，结果是即使有多个相等的目标值，也总是找到最小下标的那个 value。</li>
+<li>当返回任意一个相等的元素即可时，不忽略等于分支，这样可以使二分更早结束。</li>
+</ul>
+<h3 id="中位数与分支"><a href="#中位数与分支" class="headerlink" title="中位数与分支"></a>中位数与分支</h3><p><strong>通常情况下，证明该元素不是我们需要的值的条件判断比较容易写出</strong>，因此可以首先编写排除元素的分支。如果我们可以完成排除分支的编写，那么对于不排除元素的分支，我们就直接 else 即可，不用再思考。因此可以写为以下两种中的一种：<br><div class="tabs" id="shrink"><ul class="nav-tabs"><li class="tab active"><a href="#shrink-1">左边界强收紧</a></li><li class="tab"><a href="#shrink-2">右边界强收紧</a></li></ul><div class="tab-content"><div class="tab-pane active" id="shrink-1"><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (check(mid)) &#123;</span><br><span class="line">    left = mid + <span class="number">1</span>;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    right = mid;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div><div class="tab-pane" id="shrink-2"><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (check(mid)) &#123;</span><br><span class="line">    right = mid - <span class="number">1</span>;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    left = mid;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div></div></div></p>
+<p>看起来是没什么问题，但我们在上文中，均强调<strong>一定要使用左边界强收紧</strong>的情况，为什么呢？</p>
+<p>因为我们的范围是 [first, last)，求中位数时候从<strong>下界</strong> left（闭区间侧）出发：<code>mid = left + (right - left) / 2</code>。这样的话，假设区间长度为 1 时，<code>mid = left + 1 / 2 = left</code> 仍然在 [left, left + 1) 这个区间中，然后进入判断分支，无论进入那个分支，都会不溢出不死循环的结束循环体。</p>
+<ul>
+<li>如果 left = mid + 1 的话，那么下一次 left == mid + 1 == left + 1，正常结束。</li>
+<li>如果 right = mid 的话，那么下一次 mid = mid，正常结束。</li>
+</ul>
+<p>假设写成了右边界收紧呢？当区间长度为 1 时，<code>mid = left + 1 / 2 = left</code></p>
+<ul>
+<li>如果 right = mid - 1 的话，那么下一次范围为：[left, left - 1)，导致越界。 </li>
+<li>如果 left = mid 的话，那么下一次范围为：[mid, left + 1]，导致死循环。</li>
+</ul>
+<div class="note info">
+            <p>当你使用右边界强收紧的写法时，应该是在 (first, last] 这样的区间去找。此时中位数也要从闭区间侧出发 <code>int mid = right - (right - left) / 2</code> 才对。这样的结果是搜索的结果总会返回下标较大的元素。</p>
+          </div>
+<h1 id="二分查找模板-三分支"><a href="#二分查找模板-三分支" class="headerlink" title="二分查找模板 - 三分支"></a>二分查找模板 - 三分支</h1><p>既然有了两分支查找，为何还要三分支查找？</p>
+<p>三分支查找和二分查找对比，具有如下特点：</p>
+<ol>
+<li>二分支的查找范围为 [l, r)，三分支查找范围为 [l, r]。</li>
+<li>二分支结束时（假设没有后处理过程）：<ul>
+<li>若查找成功，下标为 l == r</li>
+<li>若查找失败，下标为 l == r == 该 target 应该存在的位置 == 第一个不小于该 target 元素的位置。</li>
+</ul>
+</li>
+<li><p>三分支结束时：</p>
+</li>
+<li><p>适合集合中不存在目标值时直接返回 -1 的场景；<strong>二分支需要进行最后一次判断</strong>。</p>
+</li>
+<li>不适合当集合中不存在目标值时需要返回适合插入位置的场景；</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BinarySearchTemplate</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">binarySearch</span><span class="params">(<span class="keyword">int</span>[] nums, <span class="keyword">int</span> target)</span></span>&#123;</span><br><span class="line">        <span class="comment">// Pre-processing:</span></span><br><span class="line">        <span class="comment">// handle some corner case or edge case</span></span><br><span class="line">        <span class="keyword">if</span>(nums == <span class="keyword">null</span> || nums.length == <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Flexible selection of boundary conditions</span></span><br><span class="line">        <span class="keyword">int</span> left = <span class="number">0</span>, right = nums.length - <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">while</span>(left &lt;= right)&#123;</span><br><span class="line">            <span class="keyword">int</span> mid = (left + right) &gt;&gt;&gt; <span class="number">1</span>;</span><br><span class="line">            <span class="keyword">if</span> (nums[mid] == target) &#123;</span><br><span class="line">                <span class="keyword">return</span> mid;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span>(target &gt; nums[mid]) &#123;</span><br><span class="line">                left = mid + <span class="number">1</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                right = mid - <span class="number">1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;                                          </span><br><span class="line">        <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="旋转有序数组的二分查找"><a href="#旋转有序数组的二分查找" class="headerlink" title="旋转有序数组的二分查找"></a>旋转有序数组的二分查找</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">search</span><span class="params">(<span class="keyword">int</span>[] nums, <span class="keyword">int</span> target)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> l = <span class="number">0</span>, r = nums.length - <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">int</span> m;</span><br><span class="line">        <span class="keyword">while</span>(l &lt;= r) &#123;</span><br><span class="line">            m = (l + r) &gt;&gt;&gt; <span class="number">1</span>;     <span class="comment">// 下位中位数</span></span><br><span class="line">            <span class="keyword">if</span> (target == nums[m]) <span class="keyword">return</span> m;</span><br><span class="line">            <span class="keyword">if</span> (nums[l] &lt;= nums[m]) &#123; <span class="comment">// 有序区间</span></span><br><span class="line">                <span class="keyword">if</span> (target &gt;= nums[l] &amp;&amp; target &lt; nums[m]) &#123; <span class="comment">// target 在区间 [n[l], n[m]]</span></span><br><span class="line">                    r = m - <span class="number">1</span>;</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    l = m + <span class="number">1</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;    <span class="comment">// 转折区间</span></span><br><span class="line">                <span class="keyword">if</span> (target &gt; nums[m] &amp;&amp; target &lt;= nums[r]) &#123;</span><br><span class="line">                    l = m + <span class="number">1</span>;</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    r = m - <span class="number">1</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="LeetCode"><a href="#LeetCode" class="headerlink" title="LeetCode"></a>LeetCode</h1><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>题目</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>162</td>
+<td>寻找峰值</td>
+<td>非排序数组也可以二分</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a href="https://leetcode-cn.com/problems/search-insert-position/solution/te-bie-hao-yong-de-er-fen-cha-fa-fa-mo-ban-python-/" target="_blank" rel="noopener">十分好用的二分查找法模板</a></li>
+<li><a href="https://www.zhihu.com/question/36132386" target="_blank" rel="noopener">二分查找有几种写法？它们的区别是什么？</a></li>
+<li><a href="https://en.cppreference.com/w/cpp/algorithm/lower_bound" target="_blank" rel="noopener">Cpp STL lower_bound</a></li>
+<li><a href="https://en.cppreference.com/w/cpp/algorithm/upper_bound" target="_blank" rel="noopener">Cpp STL upper_bound</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/wechatpay.png" alt="Yanjiu Li 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/alipay.jpeg" alt="Yanjiu Li 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Algorithm/" rel="tag"><i class="fa fa-tag"></i> Algorithm</a>
+              <a href="/tags/Search/" rel="tag"><i class="fa fa-tag"></i> Search</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/03/27/python-parse-args/" rel="prev" title="Python 解析命令行参数">
+      <i class="fa fa-chevron-left"></i> Python 解析命令行参数
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/01/26/tool-v2ray/" rel="next" title="V2Ray">
+      V2Ray <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80MTAzMS8xNzU1Ng=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#二分查找模板-两分支"><span class="nav-number">1.</span> <span class="nav-text">二分查找模板 - 两分支</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#前处理"><span class="nav-number">1.1.</span> <span class="nav-text">前处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#边界条件选取"><span class="nav-number">1.2.</span> <span class="nav-text">边界条件选取</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#循环条件"><span class="nav-number">1.3.</span> <span class="nav-text">循环条件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#主体代码"><span class="nav-number">1.4.</span> <span class="nav-text">主体代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#后处理"><span class="nav-number">1.5.</span> <span class="nav-text">后处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#亿点细节"><span class="nav-number">1.6.</span> <span class="nav-text">亿点细节</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#搜索范围"><span class="nav-number">1.6.1.</span> <span class="nav-text">搜索范围</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#三分支-OR-两分支"><span class="nav-number">1.6.2.</span> <span class="nav-text">三分支 OR 两分支</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#中位数与分支"><span class="nav-number">1.6.3.</span> <span class="nav-text">中位数与分支</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#二分查找模板-三分支"><span class="nav-number">2.</span> <span class="nav-text">二分查找模板 - 三分支</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#旋转有序数组的二分查找"><span class="nav-number">2.1.</span> <span class="nav-text">旋转有序数组的二分查找</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#LeetCode"><span class="nav-number">3.</span> <span class="nav-text">LeetCode</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yanjiu Li"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Yanjiu Li</p>
+  <div class="site-description" itemprop="description">演绎一场技术溯源的盛宴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">99</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yanjiulab" title="GitHub → https://github.com/yanjiulab" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:liyanjiu@outlook.com" title="E-Mail → mailto:liyanjiu@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Worth Reading
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP" title="http://pages.cs.wisc.edu/~remzi/OSTEP" rel="noopener" target="_blank">OSTEP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" title="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" rel="noopener" target="_blank">OSTEP-Chinese</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.apuebook.com/about3e.html" title="http://www.apuebook.com/about3e.html" rel="noopener" target="_blank">APUE</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" title="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" rel="noopener" target="_blank">UNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" title="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" rel="noopener" target="_blank">IUNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.yinwang.org/" title="http://www.yinwang.org/" rel="noopener" target="_blank">当然我在扯淡</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yanjiu Li</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">217k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:17</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

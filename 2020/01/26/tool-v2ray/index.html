@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yjlab.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="通过 VPS 以及 V2Ray 让奇怪的知识增加！">
+<meta name="keywords" content="VPS,Vultr,V2Ray">
+<meta property="og:type" content="article">
+<meta property="og:title" content="V2Ray">
+<meta property="og:url" content="http://yjlab.xyz/2020/01/26/tool-v2ray/index.html">
+<meta property="og:site_name" content="Yanjiu Lab">
+<meta property="og:description" content="通过 VPS 以及 V2Ray 让奇怪的知识增加！">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yjlab.xyz/2020/01/26/tool-v2ray/v2ray-node.png">
+<meta property="og:image" content="http://yjlab.xyz/2020/01/26/tool-v2ray/architecture.png">
+<meta property="og:updated_time" content="2020-10-30T02:58:37.258Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="V2Ray">
+<meta name="twitter:description" content="通过 VPS 以及 V2Ray 让奇怪的知识增加！">
+<meta name="twitter:image" content="http://yjlab.xyz/2020/01/26/tool-v2ray/v2ray-node.png">
+
+<link rel="canonical" href="http://yjlab.xyz/2020/01/26/tool-v2ray/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>V2Ray | Yanjiu Lab</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yanjiu Lab</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Learning then grokking</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        
+            
+  <li class="menu-item menu-item-notes">
+
+    <a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记</a>
+
+  </li>
+
+
+      
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yjlab.xyz/2020/01/26/tool-v2ray/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Yanjiu Li">
+      <meta itemprop="description" content="演绎一场技术溯源的盛宴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yanjiu Lab">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          V2Ray
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-01-26 15:51:42" itemprop="dateCreated datePublished" datetime="2020-01-26T15:51:42+08:00">2020-01-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-10-30 10:58:37" itemprop="dateModified" datetime="2020-10-30T10:58:37+08:00">2020-10-30</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Tools/" itemprop="url" rel="index"><span itemprop="name">Tools</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>8.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>8 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>通过 VPS 以及 V2Ray 让奇怪的知识增加！<br><a id="more"></a></p>
+<h1 id="硬件：VPS"><a href="#硬件：VPS" class="headerlink" title="硬件：VPS"></a>硬件：VPS</h1><p>首先，笔者选择了一台海外的 VPS 服务商 <a href="https://www.vultr.com/" target="_blank" rel="noopener">Vultr</a>，主要原因如下：</p>
+<ol>
+<li>牌子比较大，不用担心跑路问题。</li>
+<li>新人注册优惠（不定期，注册赠送若干刀，但有使用期限，到期清除）。</li>
+<li>海外免除备案。</li>
+<li>支持支付宝、微信支付，对国内用户比较方便。</li>
+<li>按时收费，意味着随时可以销毁服务器，更换套餐。</li>
+</ol>
+<p>如果不考虑海外因素的话，对于学生党来说<strong>阿里云和腾讯云每月 10 元的学生优惠服务器</strong>将是首选。</p>
+<h1 id="软件：Project-V-V2Ray"><a href="#软件：Project-V-V2Ray" class="headerlink" title="软件：Project V (V2Ray)"></a>软件：Project V (V2Ray)</h1><p>V2Ray 是 Project V 下的一个工具。Project V 是一个包含一系列构建特定网络环境工具的项目，而 V2Ray 属于最核心的一个。 官方中介绍Project V 提供了单一的内核和多种界面操作方式。内核（V2Ray）用于实际的网络交互、路由等针对网络数据的处理，而外围的用户界面程序提供了方便直接的操作流程。不过从时间上来说，先有 V2Ray 才有 Project V。 如果还是不理解，那么简单地说，V2Ray 是一个与 Shadowsocks 类似的代理软件，可以用来科学上网学习国外先进科学技术。</p>
+<p>以下是用户可以参考的资源：</p>
+<ul>
+<li><a href="https://github.com/v2ray/v2ray-core" target="_blank" rel="noopener">V2Ray Github</a></li>
+<li><a href="https://www.v2ray.com/" target="_blank" rel="noopener">Project V (V2Ray) Official</a></li>
+<li><a href="https://guide.v2fly.org/" target="_blank" rel="noopener">官方小白教程</a></li>
+</ul>
+<p>本文为笔者对于以上官网教程的重点记录。如果有条件，请直接阅读上述教程。</p>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>从软件上 V2Ray 不区分服务器版和客户端版，也就是说在服务器和客户端运行的 V2Ray 是同一个软件，区别只是配置文件的不同。因此，通常情况下配置为：</p>
+<ul>
+<li>服务器为 Linux VPS</li>
+<li>客户端形式很多（例如 PC、手机、路由器、网关等），基本可以归结为以下几种：<ul>
+<li>Windows PC （笔者的情况，）</li>
+<li>Linux (同服务器)</li>
+<li>macOS (同服务器)</li>
+<li>iOS (APP Store下载)</li>
+<li>Android (Github 或者 Google Play Store下载)</li>
+</ul>
+</li>
+</ul>
+<h3 id="服务器安装"><a href="#服务器安装" class="headerlink" title="服务器安装"></a>服务器安装</h3><p>首先进行时间校准，对于 VPS (Linux) 可以执行命令 date -R 查看时间<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rm -rf /etc/localtime</span><br><span class="line">ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime</span><br></pre></td></tr></table></figure></p>
+<p>在 Linux 操作系统， V2Ray 的安装有脚本安装、手动安装、编译安装 3 种方式，<strong>请使用官方提供的脚本安装</strong>，大佬随意。该脚本由 V2Ray 官方提供。该脚本仅可以在 Debian 系列或者支持 Systemd 的 Linux 操作系统使用。</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">bash &lt;(curl -L -s https://install.direct/go.sh)   <span class="comment"># 使用脚本一步安装（使用 curl）</span></span><br><span class="line">systemctl start v2ray   <span class="comment"># 启动 V2Ray</span></span><br></pre></td></tr></table></figure>
+<p>服务器端安装完毕后会生成配置文件 <code>/etc/v2ray/config.json</code>，默认的配置已经保证可用，可以根据需求决定是否更改。如果需要更新 V2Ray，重新安装即可。在更新过程中会自动重启 V2Ray，但配置文件保持不变。</p>
+<div class="note info">
+            <p>安装脚本也可以使用 wget 完成：</p><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">wget https://install.direct/go.sh</span><br><span class="line">sudo bash go.sh</span><br></pre></td></tr></table></figure>
+          </div>
+<div class="note warning">
+            <p><strong>确保防火墙相应端口打开</strong><br>该一键脚本不会自动配置防护墙，这也是根据不同的 VPS 所不同，有的可以开启响应端口，有的不行，所以出现上述问题应该马上检测防火墙中响应的端口是否开启，例如所设置端口为 1000，那么使用下面的命令开启端口：</p><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">firewall-cmd --zone=public --add-port=1000/tcp --permanent</span><br><span class="line">firewall-cmd --zone=public --add-port=1000/udp --permanent</span><br><span class="line">systemctl restart firewalld.service</span><br></pre></td></tr></table></figure>
+          </div>
+<h3 id="客户端安装"><a href="#客户端安装" class="headerlink" title="客户端安装"></a>客户端安装</h3><p>点<a href="https://github.com/v2ray/v2ray-core/releases" target="_blank" rel="noopener">这里</a>下载 V2Ray 的 Windows 压缩包:</p>
+<ul>
+<li>如果是 32 位系统，下载 v2ray-windows-32.zip</li>
+<li>如果是 64 位系统，下载 v2ray-windows-64.zip</li>
+</ul>
+<p>下载速度慢或无法下载请考虑挂已有的翻墙软件来下载，下载并且解压之后会有下面这些文件：</p>
+<ul>
+<li>v2ray.exe 运行 V2Ray 的程序文件</li>
+<li>wv2ray.exe 同 v2ray.exe，区别在于wv2ray.exe是后台运行的，不像 v2ray.exe 会有类似于 cmd 控制台的窗口。运行 V2Ray 时从 v2ray.exe 和 wv2ray.exe 中任选一个即可</li>
+<li>config.json V2Ray 的配置文件，后面我们对 V2Ray 进行配置其实就是修改这个文件</li>
+<li>v2ctl.exe V2Ray 的工具，有多种功能，除特殊用途外，一般由 v2ray.exe 来调用，用户不用太关心</li>
+<li>geosite.dat 用于路由的域名文件</li>
+<li>geoip.dat 用于路由的 IP 文件</li>
+<li>其他</li>
+</ul>
+<p>实际上双击 v2ray.exe （或wv2ray.exe） 就可以运行 V2Ray 了，V2Ray 会读取 config.json 中的配置与服务器连接。</p>
+<p>也可以选择拥有 GUI 的第三方客户端。同时，由于通常情况下我们使用浏览器上网，因此还需要一个为浏览器设置代理。综上，笔者的客户端环境为：</p>
+<ul>
+<li>客户端：V2RayN (Windows)</li>
+<li>浏览器：Google Chrome</li>
+<li>SOCKS 代理插件：SwitchyOmega</li>
+</ul>
+<div class="note info">
+            <p>如果是 Linux 或 macOS 的系统，其安装方式同服务器端一模一样，只是配置文件不同。</p>
+          </div>
+<h2 id="工作原理"><a href="#工作原理" class="headerlink" title="工作原理"></a>工作原理</h2><p>其实各种科学上网的原理都是隧道，通过加密中转完成的，只不过手段不同，V2Ray 也不例外。</p>
+<p>V2Ray 没有使用常规代理软件的 C/S（即客户端/服务器）结构，它既可以当做服务器也可以作为客户端，V2Ray 使用 inbound (传入) 和 outbound (传出) 的结构，这样的结构非常清晰地体现了数据包的流动方向，同时也使得 V2Ray 功能强大复杂的同时而不混乱，清晰明了。</p>
+<p><img src="v2ray-node.png" alt="v2ray-node"></p>
+<ul>
+<li>需要配置至少一个入站协议（Inbound）和一个出站协议（Outbound）才可以正常工作。<ul>
+<li>入站协议负责与客户端（如浏览器）通信：<ul>
+<li>入站协议通常可以配置用户认证，如 ID 和密码等；</li>
+<li>入站协议收到数据之后，会交给分发器（Dispatcher）进行分发；</li>
+</ul>
+</li>
+<li>出站协议负责将数据发给服务器，如另一台主机上的 V2Ray。</li>
+</ul>
+</li>
+<li>当有多个出站协议时，可以配置路由（Routing）来指定某一类流量由某一个出站协议发出。<ul>
+<li>路由会在必要时查询 DNS 以获取更多信息来进行判断。</li>
+</ul>
+</li>
+</ul>
+<p>在这样的架构中，可以认为每一个 V2Ray 都是一个节点，inbound 是关于如何与上一个节点连接的配置，outbound 是关于如何与下一个节点连接的配置。对于第一个节点，inbound 与浏览器连接；对于最后一个节点，outbound与目标网站连接。以这样的角度理解的话：</p>
+<ul>
+<li>V2Ray 做客户端时，作为第一个节点，inbound 与浏览器链接，接收来自浏览器数据，由 outbound 发出去下一个节点 (通常是发到 V2Ray 服务器)；</li>
+<li>V2Ray 做服务器时，作为第二个节点，inbound 接收来自 V2Ray 客户端（上一个节点）的数据，outbound 与目标网站连接，因此数据由 outbound 发出去(通常是如 Google 等想要访问的目标网站)。</li>
+</ul>
+<p>综上所述，数据包的转发主要经过四部分：浏览器（含插件）、V2Ray 客户端、V2Ray 服务端、目标网站。其流程架构图如下所示：</p>
+<p><img src="architecture.png" alt="architecture"></p>
+<h2 id="配置文件"><a href="#配置文件" class="headerlink" title="配置文件"></a>配置文件</h2><p>V2Ray 的配置文件为 JSON 格式，JSON，全称 JavaScript Object Notation，简而言之是 Javascript 中的对象（Object）。一个 JSON 文件包含一个完整的对象，以大括号“{”开头，大括号“}”结束。</p>
+<p><strong>一个 JSON 对象包含一系列的键值对（Key-Value Pair）</strong>，一个键是一个字符串（String），而值有多种类型，常见的有字符串（String）、数字（Number）、布尔（Bool）、数组（Array）和对象（Object）。<br><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"stringValue"</span>: <span class="string">"This is a string."</span>,</span><br><span class="line">  <span class="attr">"numberValue"</span>: <span class="number">42</span>,</span><br><span class="line">  <span class="attr">"boolValue"</span>: <span class="literal">true</span>,</span><br><span class="line">  <span class="attr">"arrayValue"</span>: [<span class="string">"this"</span>, <span class="string">"is"</span>, <span class="string">"a"</span>, <span class="string">"string"</span>, <span class="string">"array"</span>],</span><br><span class="line">  <span class="attr">"objectValue"</span>: &#123;</span><br><span class="line">    <span class="attr">"another"</span>: <span class="string">"object"</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="文件格式"><a href="#文件格式" class="headerlink" title="文件格式"></a>文件格式</h3><p>V2Ray 的配置文件形式如下，客户端和服务器通用一种形式，只是实际的配置不一样。</p>
+<figure class="highlight json"><figcaption><span>config.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"log"</span>: &#123;&#125;,</span><br><span class="line">  <span class="attr">"api"</span>: &#123;&#125;,</span><br><span class="line">  <span class="attr">"dns"</span>: &#123;&#125;,</span><br><span class="line">  <span class="attr">"stats"</span>: &#123;&#125;,</span><br><span class="line">  <span class="attr">"routing"</span>: &#123;&#125;,</span><br><span class="line">  <span class="attr">"policy"</span>: &#123;&#125;,</span><br><span class="line">  <span class="attr">"reverse"</span>: &#123;&#125;,</span><br><span class="line">  <span class="attr">"inbounds"</span>: [],</span><br><span class="line">  <span class="attr">"outbounds"</span>: [],</span><br><span class="line">  <span class="attr">"transport"</span>: &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>配置项</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>log: LogObject</td>
+<td>日志配置，表示 V2Ray 如何输出日志。</td>
+</tr>
+<tr>
+<td>api: ApiObject</td>
+<td>内置的远程控置 API，详见远程控制配置。</td>
+</tr>
+<tr>
+<td>dns: DnsObject</td>
+<td>内置的 DNS 服务器，若此项不存在，则默认使用本机的 DNS 设置。详见DNS 配置</td>
+</tr>
+<tr>
+<td>routing: RoutingObject</td>
+<td>路由配置</td>
+</tr>
+<tr>
+<td>policy: PolicyObject</td>
+<td>本地策略可进行一些权限相关的配置，详见本地策略</td>
+</tr>
+<tr>
+<td>inbounds: [InboundObject]</td>
+<td>一个数组，每个元素是一个入站连接配置。</td>
+</tr>
+<tr>
+<td>outbounds: [OutboundObject]</td>
+<td>一个数组，每个元素是一个出站连接配置。列表中的第一个元素作为主出站协议。当路由匹配不存在或没有匹配成功时，流量由主出站协议发出。</td>
+</tr>
+<tr>
+<td>transport: TransportObject</td>
+<td>用于配置 V2Ray 如何与其它服务器建立和使用网络连接。详见底层传输配置</td>
+</tr>
+<tr>
+<td>stats: StatsObject</td>
+<td>当此项存在时，开启统计信息。</td>
+</tr>
+<tr>
+<td>reverse: ReverseObject</td>
+<td>反向代理配置。</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="note info">
+            <p>其中，主要的配置项为 <strong>inbounds 和 outbounds</strong>。详细配置项参见 <a href="https://www.v2ray.com/chapter_02/" target="_blank" rel="noopener">https://www.v2ray.com/chapter_02/</a></p>
+          </div>
+<h3 id="入站项-InboundObject"><a href="#入站项-InboundObject" class="headerlink" title="入站项 InboundObject"></a>入站项 InboundObject</h3><p>入站连接用于接收从客户端（浏览器或上一级代理服务器）发来的数据，可用的协议请见协议列表。前四项比较重要，其中 setting 包含了该协议的细节配置项，是主要配置的对象。</p>
+<figure class="highlight json"><figcaption><span>config.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"port"</span>: <span class="number">1080</span>,</span><br><span class="line">  <span class="attr">"listen"</span>: <span class="string">"127.0.0.1"</span>,</span><br><span class="line">  <span class="attr">"protocol"</span>: <span class="string">"协议名称"</span>,</span><br><span class="line">  <span class="attr">"settings"</span>: &#123;&#125;,</span><br><span class="line">  <span class="attr">"streamSettings"</span>: &#123;&#125;,</span><br><span class="line">  <span class="attr">"tag"</span>: <span class="string">"标识"</span>,</span><br><span class="line">  <span class="attr">"sniffing"</span>: &#123;</span><br><span class="line">    <span class="attr">"enabled"</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">"destOverride"</span>: [<span class="string">"http"</span>, <span class="string">"tls"</span>]</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">"allocate"</span>: &#123;</span><br><span class="line">    <span class="attr">"strategy"</span>: <span class="string">"always"</span>,</span><br><span class="line">    <span class="attr">"refresh"</span>: <span class="number">5</span>,</span><br><span class="line">    <span class="attr">"concurrency"</span>: <span class="number">3</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="出站项-OutboundObject"><a href="#出站项-OutboundObject" class="headerlink" title="出站项 OutboundObject"></a>出站项 OutboundObject</h3><p>出站连接用于向远程网站或下一级代理服务器发送数据，可用的协议请见协议列表。前三项比较重要，其中 setting 包含了该协议的细节配置项，是主要配置的对象。</p>
+<figure class="highlight json"><figcaption><span>config.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"sendThrough"</span>: <span class="string">"0.0.0.0"</span>,</span><br><span class="line">  <span class="attr">"protocol"</span>: <span class="string">"协议名称"</span>,</span><br><span class="line">  <span class="attr">"settings"</span>: &#123;&#125;,</span><br><span class="line">  <span class="attr">"tag"</span>: <span class="string">"标识"</span>,</span><br><span class="line">  <span class="attr">"streamSettings"</span>: &#123;&#125;,</span><br><span class="line">  <span class="attr">"proxySettings"</span>: &#123;</span><br><span class="line">    <span class="attr">"tag"</span>: <span class="string">"another-outbound-tag"</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">"mux"</span>: &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="路由-RoutingObject"><a href="#路由-RoutingObject" class="headerlink" title="路由 RoutingObject"></a>路由 RoutingObject</h3><p>V2Ray 内建了一个简单的路由功能，可以将入站数据按需求由不同的出站连接发出，以达到按需代理的目的。这一功能的<strong>常见用法是分流国内外流量，V2Ray 可以通过内部机制判断不同地区的流量，然后将它们发送到不同的出站代理。</strong></p>
+<h2 id="协议格式"><a href="#协议格式" class="headerlink" title="协议格式"></a>协议格式</h2><p>V2Ray 支持以下协议：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>简述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dokodemo-door</td>
+<td>入站</td>
+<td>Dokodemo door（任意门）可以监听一个本地端口，并把所有进入此端口的数据发送至指定服务器的一个端口，从而达到端口映射的效果。</td>
+</tr>
+<tr>
+<td><strong>Blackhole</strong></td>
+<td>出站</td>
+<td>Blackhole（黑洞）会阻碍所有数据的出站，配合路由（Routing）一起使用，可以达到禁止访问某些网站的效果。</td>
+</tr>
+<tr>
+<td><strong>Freedom</strong></td>
+<td>出站</td>
+<td>Freedom 是一个出站协议，可以用来向任意网络发送（正常的） TCP 或 UDP 数据。</td>
+</tr>
+<tr>
+<td>DNS</td>
+<td>出站</td>
+<td>DNS 是一个出站协议，主要用于拦截和转发 DNS 查询。此出站协议只能接收 DNS 流量，一般不需要配置。</td>
+</tr>
+<tr>
+<td><strong>Socks</strong></td>
+<td>入站/出站</td>
+<td>标准 Socks 协议实现，兼容 Socks 4、Socks 4a 和 Socks 5。</td>
+</tr>
+<tr>
+<td><strong>Shadowsocks</strong></td>
+<td>入站/出站</td>
+<td>Shadowsocks 协议，包含入站和出站两部分，兼容大部分其它版本的实现。</td>
+</tr>
+<tr>
+<td><strong>VMess</strong></td>
+<td>入站/出站</td>
+<td>VMess 是一个加密传输协议，它分为入站和出站两部分，通常作为 V2Ray 客户端和服务器之间的桥梁。</td>
+</tr>
+<tr>
+<td>HTTP</td>
+<td>入站/出站</td>
+<td>主要用作兼容，一般不用。</td>
+</tr>
+<tr>
+<td>MTProto</td>
+<td>入站/出站</td>
+<td>MTProto 是一个 Telegram 专用的代理协议。在 V2Ray 中可使用一组入站出站代理来完成 Telegram 数据的代理任务。</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="note info">
+            <p>详细配置见 <a href="https://www.v2ray.com/chapter_02/02_protocols.html" target="_blank" rel="noopener">https://www.v2ray.com/chapter_02/02_protocols.html</a></p>
+          </div>
+<h3 id="Socks"><a href="#Socks" class="headerlink" title="Socks"></a>Socks</h3><p>socks 协议没有对传输加密，不适宜经公网中传输。虽然 socks outbound 可以作为对外访问的配置，但 socks outbound 更有意义的用法是在特殊情况下，只能使用socks proxy对外访问内部网络中，作为为其他协议连接代理服务器的前置代理使用。</p>
+<p><strong>socks inbound 主要用法是在局域网或本机环境下，为其他程序提供本地服务。</strong></p>
+<h3 id="VMess"><a href="#VMess" class="headerlink" title="VMess"></a>VMess</h3><p>VMess 协议是由 V2Ray 原创并使用于 V2Ray 的加密传输协议，所有数据使用 TCP 传输。在 V2Ray 上客户端与服务器的通信主要是通过 VMess 协议通信。</p>
+<p><strong>VMess 依赖于系统时间</strong>，请确保使用 V2Ray 的系统 UTC 时间误差在 90 秒之内，时区无关。在 Linux 系统中可以安装ntp服务来自动同步系统时间。</p>
+<p>VMess 协议使用用户ID来提供类似密码的功能。ID 等价于 UUID，是一个 16 字节长的随机数，它的作用相当于一个令牌（Token）。 一个 ID 形如：de305d54-75b4-431b-adb2-eb6b9e546014，几乎完全随机，可以使用任何的 UUID 生成器来生成。用户 ID 需在配置文件中指定。</p>
+<h3 id="Shadowsocks"><a href="#Shadowsocks" class="headerlink" title="Shadowsocks"></a>Shadowsocks</h3><p>V2Ray 作为一个代理工具集合，集成有 Shadowsocks 模块。用 V2Ray 配置成 Shadowsocks 服务器或者 Shadowsocks 客户端都是可以的，兼容 Shadowsocks-libev, go-shadowsocks2 等基于 Shadowsocks 协议的客户端。</p>
+<p>配置与 VMess 大同小异，客户端服务器端都要有入口和出口，只不过是协议 (protocol) 和相关设置 (settings) 不同，不再赘述。</p>
+<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><p>以下提供一个基本且常用的配置思路。</p>
+<h3 id="TCP-传输"><a href="#TCP-传输" class="headerlink" title="TCP 传输"></a>TCP 传输</h3><div class="tabs" id="tcp"><ul class="nav-tabs"><li class="tab active"><a href="#tcp-1">客户端</a></li><li class="tab"><a href="#tcp-2">服务端 (45.45.45.45)</a></li></ul><div class="tab-content"><div class="tab-pane active" id="tcp-1"><ul>
+<li>设置入站：socks 协议 + 客户端地址 (127.0.0.1:10808)</li>
+<li>设置出站：<ul>
+<li>proxy：vmess 协议 + vnext 地址 (45.45.45.45:19999) + UUID (eb3dc148-97fb-4946-afac-bfbc304d40b4)</li>
+<li>direct：freedom 协议</li>
+<li>block：blackhole 协议</li>
+</ul>
+</li>
+<li>设置路由：<ul>
+<li>局域网以及国内网站流量走 direct</li>
+<li>广告网站流量走 block</li>
+<li>其他走 proxy</li>
+</ul>
+</li>
+</ul></div><div class="tab-pane" id="tcp-2"><ul>
+<li>设置入站：<ul>
+<li>协议：protocol (vmess)</li>
+<li>端口地址：port (19999)</li>
+<li>用户 ID：UUID (eb3dc148-97fb-4946-afac-bfbc304d40b4)</li>
+</ul>
+</li>
+<li>设置出站：<ul>
+<li>direct：freedom 协议</li>
+<li>block：blackhole 协议</li>
+</ul>
+</li>
+<li>设置路由<ul>
+<li>局域网走 block</li>
+<li>其他走 freedom</li>
+</ul>
+</li>
+</ul>
+<p>以下是默认配置：</p>
+<figure class="highlight json"><figcaption><span>/etc/v2ray/config</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"inbounds"</span>: [&#123;</span><br><span class="line">    <span class="attr">"port"</span>: xxxxx,</span><br><span class="line">    <span class="attr">"protocol"</span>: <span class="string">"xxxxx"</span>,</span><br><span class="line">    <span class="attr">"settings"</span>: &#123;</span><br><span class="line">      <span class="attr">"clients"</span>: [</span><br><span class="line">        &#123;</span><br><span class="line">          <span class="attr">"id"</span>: <span class="string">"xxxxxxxxxxxxxxxxxxxxxxx"</span>,</span><br><span class="line">          <span class="attr">"level"</span>: <span class="number">1</span>,</span><br><span class="line">          <span class="attr">"alterId"</span>: <span class="number">64</span></span><br><span class="line">        &#125;</span><br><span class="line">      ]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;],</span><br><span class="line">  <span class="attr">"outbounds"</span>: [&#123;</span><br><span class="line">    <span class="attr">"protocol"</span>: <span class="string">"freedom"</span>,</span><br><span class="line">    <span class="attr">"settings"</span>: &#123;&#125;</span><br><span class="line">  &#125;,&#123;</span><br><span class="line">    <span class="attr">"protocol"</span>: <span class="string">"blackhole"</span>,</span><br><span class="line">    <span class="attr">"settings"</span>: &#123;&#125;,</span><br><span class="line">    <span class="attr">"tag"</span>: <span class="string">"blocked"</span></span><br><span class="line">  &#125;],</span><br><span class="line">  <span class="attr">"routing"</span>: &#123;</span><br><span class="line">    <span class="attr">"rules"</span>: [</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">"type"</span>: <span class="string">"field"</span>,</span><br><span class="line">        <span class="attr">"ip"</span>: [<span class="string">"geoip:private"</span>],</span><br><span class="line">        <span class="attr">"outboundTag"</span>: <span class="string">"blocked"</span></span><br><span class="line">      &#125;</span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div></div></div>
+<h3 id="TCP-TLS-WebSocket"><a href="#TCP-TLS-WebSocket" class="headerlink" title="TCP + TLS + WebSocket"></a>TCP + TLS + WebSocket</h3><div class="tabs" id="tls+ws"><ul class="nav-tabs"><li class="tab active"><a href="#tls+ws-1">客户端</a></li><li class="tab"><a href="#tls+ws-2">服务端</a></li></ul><div class="tab-content"><div class="tab-pane active" id="tls+ws-1"><ul>
+<li>设置入站：socks 协议 + 客户端地址 (127.0.0.1:10808)</li>
+<li>设置出站：<ul>
+<li>proxy：vmess 协议 + vnext 地址 (domain.me:443) + users (UUID: eb3dc148-97fb-4946-afac-bfbc304d40b4) + tls + ws</li>
+<li>direct：freedom 协议</li>
+<li>block：blackhole 协议</li>
+</ul>
+</li>
+<li>设置路由：<ul>
+<li>局域网以及国内网站流量走 direct</li>
+<li>广告网站流量走 block</li>
+<li>其他走 proxy</li>
+</ul>
+</li>
+</ul></div><div class="tab-pane" id="tls+ws-2"><ul>
+<li>设置入站：vmess 协议 + 端口地址 (443) + clients (UUID: eb3dc148-97fb-4946-afac-bfbc304d40b4) + tls (证书＋密钥) + ws </li>
+<li>设置出站：<ul>
+<li>direct：freedom 协议</li>
+<li>block：blackhole 协议</li>
+</ul>
+</li>
+<li>设置路由<ul>
+<li>局域网走 block</li>
+<li>其他走 freedom</li>
+</ul>
+</li>
+</ul></div></div></div>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/wechatpay.png" alt="Yanjiu Li 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/alipay.jpeg" alt="Yanjiu Li 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/VPS/" rel="tag"><i class="fa fa-tag"></i> VPS</a>
+              <a href="/tags/Vultr/" rel="tag"><i class="fa fa-tag"></i> Vultr</a>
+              <a href="/tags/V2Ray/" rel="tag"><i class="fa fa-tag"></i> V2Ray</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/11/12/algo-binary-search/" rel="prev" title="Binary Search">
+      <i class="fa fa-chevron-left"></i> Binary Search
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/02/17/algo-hash-table/" rel="next" title="Hash Table">
+      Hash Table <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80MTAzMS8xNzU1Ng=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#硬件：VPS"><span class="nav-number">1.</span> <span class="nav-text">硬件：VPS</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#软件：Project-V-V2Ray"><span class="nav-number">2.</span> <span class="nav-text">软件：Project V (V2Ray)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#安装"><span class="nav-number">2.1.</span> <span class="nav-text">安装</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#服务器安装"><span class="nav-number">2.1.1.</span> <span class="nav-text">服务器安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#客户端安装"><span class="nav-number">2.1.2.</span> <span class="nav-text">客户端安装</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#工作原理"><span class="nav-number">2.2.</span> <span class="nav-text">工作原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置文件"><span class="nav-number">2.3.</span> <span class="nav-text">配置文件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#文件格式"><span class="nav-number">2.3.1.</span> <span class="nav-text">文件格式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#入站项-InboundObject"><span class="nav-number">2.3.2.</span> <span class="nav-text">入站项 InboundObject</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#出站项-OutboundObject"><span class="nav-number">2.3.3.</span> <span class="nav-text">出站项 OutboundObject</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#路由-RoutingObject"><span class="nav-number">2.3.4.</span> <span class="nav-text">路由 RoutingObject</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#协议格式"><span class="nav-number">2.4.</span> <span class="nav-text">协议格式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Socks"><span class="nav-number">2.4.1.</span> <span class="nav-text">Socks</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#VMess"><span class="nav-number">2.4.2.</span> <span class="nav-text">VMess</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Shadowsocks"><span class="nav-number">2.4.3.</span> <span class="nav-text">Shadowsocks</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#示例"><span class="nav-number">2.5.</span> <span class="nav-text">示例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP-传输"><span class="nav-number">2.5.1.</span> <span class="nav-text">TCP 传输</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP-TLS-WebSocket"><span class="nav-number">2.5.2.</span> <span class="nav-text">TCP + TLS + WebSocket</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yanjiu Li"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Yanjiu Li</p>
+  <div class="site-description" itemprop="description">演绎一场技术溯源的盛宴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">99</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yanjiulab" title="GitHub → https://github.com/yanjiulab" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:liyanjiu@outlook.com" title="E-Mail → mailto:liyanjiu@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Worth Reading
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP" title="http://pages.cs.wisc.edu/~remzi/OSTEP" rel="noopener" target="_blank">OSTEP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" title="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" rel="noopener" target="_blank">OSTEP-Chinese</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.apuebook.com/about3e.html" title="http://www.apuebook.com/about3e.html" rel="noopener" target="_blank">APUE</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" title="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" rel="noopener" target="_blank">UNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" title="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" rel="noopener" target="_blank">IUNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.yinwang.org/" title="http://www.yinwang.org/" rel="noopener" target="_blank">当然我在扯淡</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yanjiu Li</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">217k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:17</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

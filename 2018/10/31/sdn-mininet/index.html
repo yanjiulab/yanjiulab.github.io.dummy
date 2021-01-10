@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yjlab.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="本文依据 mininet.org 写成，包含官方文档的三部分：  Download/Get Started With Mininet Mininet Sample Workflow Mininet Walkthrough">
+<meta name="keywords" content="SDN,Mininet">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mininet Basics">
+<meta property="og:url" content="http://yjlab.xyz/2018/10/31/sdn-mininet/index.html">
+<meta property="og:site_name" content="Yanjiu Lab">
+<meta property="og:description" content="本文依据 mininet.org 写成，包含官方文档的三部分：  Download/Get Started With Mininet Mininet Sample Workflow Mininet Walkthrough">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-10-21T03:34:31.853Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Mininet Basics">
+<meta name="twitter:description" content="本文依据 mininet.org 写成，包含官方文档的三部分：  Download/Get Started With Mininet Mininet Sample Workflow Mininet Walkthrough">
+
+<link rel="canonical" href="http://yjlab.xyz/2018/10/31/sdn-mininet/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Mininet Basics | Yanjiu Lab</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yanjiu Lab</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Learning then grokking</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        
+            
+  <li class="menu-item menu-item-notes">
+
+    <a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记</a>
+
+  </li>
+
+
+      
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yjlab.xyz/2018/10/31/sdn-mininet/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Yanjiu Li">
+      <meta itemprop="description" content="演绎一场技术溯源的盛宴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yanjiu Lab">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Mininet Basics
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-10-31 16:03:50" itemprop="dateCreated datePublished" datetime="2018-10-31T16:03:50+08:00">2018-10-31</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-10-21 11:34:31" itemprop="dateModified" datetime="2020-10-21T11:34:31+08:00">2020-10-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Networking/" itemprop="url" rel="index"><span itemprop="name">Networking</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Networking/SDN/" itemprop="url" rel="index"><span itemprop="name">SDN</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>15k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>13 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文依据 <a href="http://mininet.org" target="_blank" rel="noopener">mininet.org</a> 写成，包含官方文档的三部分：</p>
+<ol>
+<li><a href="http://mininet.org/download" target="_blank" rel="noopener">Download/Get Started With Mininet</a></li>
+<li><a href="http://mininet.org/sample-workflow" target="_blank" rel="noopener">Mininet Sample Workflow</a></li>
+<li><a href="http://mininet.org/walkthrough" target="_blank" rel="noopener">Mininet Walkthrough</a></li>
+</ol>
+<a id="more"></a>
+<h2 id="下载安装-Download"><a href="#下载安装-Download" class="headerlink" title="下载安装 (Download)"></a>下载安装 (Download)</h2><p>官方提供了四种安装方式：</p>
+<ul>
+<li>Option 1: Mininet VM Installation (easy, recommended) | 虚拟机安装（简单，推荐）</li>
+<li>Option 2: Native Installation from Source | 从源码安装</li>
+<li>Option 3: Installation from Packages | 从包管理器安装</li>
+<li>Option 4. Upgrading an existing Mininet Installation | 升级安装 mininet</li>
+</ul>
+<p>由于笔者手头有 Ubuntu 18.04 系统，因此<strong>直接选择了第二项使用源码方式实体安装</strong>；如若没有 ubuntu 环境，还是按照官方推荐的 VM 方式安装。</p>
+<p>官方推荐的安装系统为：Ubuntu 和 Fedora 的较新发行版。安装方式也很简单，如下：</p>
+<ol>
+<li><p>下载官方源码：</p>
+<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git <span class="keyword">clone</span> <span class="title">git</span>://github.com/mininet/mininet</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>选择安装版本：</p>
+<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cd mininet</span><br><span class="line">git <span class="keyword">tag</span></span><br><span class="line">git checkout -b <span class="number">2.2</span>.<span class="number">1</span> <span class="comment"># 如果想安装某一个版本，使用对应的 git tag，否则，不执行此命令，默认安装最新版本。</span></span><br><span class="line">cd ..</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>执行安装脚本</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mininet<span class="regexp">/util/i</span>nstall.sh [<span class="keyword">options</span>]</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<div class="note info">
+            <p>脚本参数包含：</p><ul><li><code>-a</code>：安装 Mininet VM 中的全部内容。包括一些其他依赖，如Open vSwitch，OpenFlow wireshark dissector 和 POX。以上软件默认安装到 home 目录。</li><li><code>-nfv</code>：安装 Mininet, the OpenFlow reference switch, and Open vSwitch </li><li><code>-s mydir</code>：自定义安装的目录，默认为家目录。<br>例如：</li><li>To install everything (using your home directory): <code>install.sh -a</code></li><li>To install everything (using another directory for build): <code>install.sh -s mydir -a</code></li><li>To install Mininet + user switch + OVS (using your home dir): <code>install.sh -nfv</code></li><li>To install Mininet + user switch + OVS (using another dir:) <code>install.sh -s mydir -nfv</code></li></ul><p>另外的参数可以通过 <code>install -h</code> 获取。</p>
+          </div>
+<ol>
+<li>测试<br>安装完成后，测试基本功能：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo mn --<span class="built_in">test</span> pingall</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h2 id="工作流程-Sample-Workflow"><a href="#工作流程-Sample-Workflow" class="headerlink" title="工作流程 (Sample Workflow)"></a>工作流程 (Sample Workflow)</h2><p>通过 Mininet 可以快速创建，交互，自定义，分享 SDN 网络拓扑，或者部署到硬件。</p>
+<h3 id="创建网络"><a href="#创建网络" class="headerlink" title="创建网络"></a>创建网络</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">$ sudo mn --switch ovs --controller ref --topo tree,depth=2,fanout=4 --<span class="built_in">test</span> pingall</span><br><span class="line"></span><br><span class="line">**以下为输出结果：**</span><br><span class="line">*** Creating network</span><br><span class="line">*** Adding controller</span><br><span class="line">*** Adding hosts:</span><br><span class="line">h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 </span><br><span class="line">*** Adding switches:</span><br><span class="line">s1 s2 s3 s4 s5 </span><br><span class="line">*** Adding links:</span><br><span class="line">(s1, s2) (s1, s3) (s1, s4) (s1, s5) (s2, h1) (s2, h2) (s2, h3) (s2, h4) (s3, h5) (s3, h6)</span><br><span class="line">(s3, h7) (s3, h8) (s4, h9) (s4, h10) (s4, h11) (s4, h12) (s5, h13) (s5, h14) (s5, h15) (s5, h16) </span><br><span class="line">*** Configuring hosts</span><br><span class="line">h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 </span><br><span class="line">*** Starting controller</span><br><span class="line">c0 </span><br><span class="line">*** Starting 5 switches</span><br><span class="line">s1 s2 s3 s4 s5 ...</span><br><span class="line">*** Waiting <span class="keyword">for</span> switches to connect</span><br><span class="line">s1 s2 s3 s4 s5 </span><br><span class="line">*** Ping: testing ping reachability</span><br><span class="line">h1 -&gt; h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 </span><br><span class="line">h2 -&gt; h1 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 </span><br><span class="line">h3 -&gt; h1 h2 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 </span><br><span class="line">h4 -&gt; h1 h2 h3 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 </span><br><span class="line">h5 -&gt; h1 h2 h3 h4 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 </span><br><span class="line">h6 -&gt; h1 h2 h3 h4 h5 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 </span><br><span class="line">h7 -&gt; h1 h2 h3 h4 h5 h6 h8 h9 h10 h11 h12 h13 h14 h15 h16 </span><br><span class="line">h8 -&gt; h1 h2 h3 h4 h5 h6 h7 h9 h10 h11 h12 h13 h14 h15 h16 </span><br><span class="line">h9 -&gt; h1 h2 h3 h4 h5 h6 h7 h8 h10 h11 h12 h13 h14 h15 h16 </span><br><span class="line">h10 -&gt; h1 h2 h3 h4 h5 h6 h7 h8 h9 h11 h12 h13 h14 h15 h16 </span><br><span class="line">h11 -&gt; h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h12 h13 h14 h15 h16 </span><br><span class="line">h12 -&gt; h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h13 h14 h15 h16 </span><br><span class="line">h13 -&gt; h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h14 h15 h16 </span><br><span class="line">h14 -&gt; h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h15 h16 </span><br><span class="line">h15 -&gt; h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h16 </span><br><span class="line">h16 -&gt; h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 </span><br><span class="line">*** Results: 0% dropped (240/240 received)</span><br><span class="line">*** Stopping 1 controllers</span><br><span class="line">c0 </span><br><span class="line">*** Stopping 20 links</span><br><span class="line">....................</span><br><span class="line">*** Stopping 5 switches</span><br><span class="line">s1 s2 s3 s4 s5 </span><br><span class="line">*** Stopping 16 hosts</span><br><span class="line">h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 </span><br><span class="line">*** Done</span><br><span class="line">completed <span class="keyword">in</span> 15.003 seconds</span><br></pre></td></tr></table></figure>
+<p>命令行参数相关解释如下：</p>
+<ul>
+<li>交换机 (<code>--switch ovs</code>)：Open vSwitch</li>
+<li>控制器 (<code>--controller ref</code>)：OpenFlow/Stanford reference controller 标准参考控制器</li>
+<li>拓扑 (<code>--topo tree,depth=2,fanout=4</code>)：a tree topology of depth 2 and fanout 4 (i.e. 16 hosts connected to 5 switches)</li>
+<li>命令 (<code>--test pingall</code>)：测试连接，节点之间互相发送 ping 命令。</li>
+</ul>
+<div class="note info">
+            <p>ping 命令将会测试网络连接性，<strong>接着删除整个网络并退出 mininet 交互环境</strong>。如果不加任何命令，则进入 <strong>mininet 的命令行交互环境，等待用户执行 mininet 命令</strong>。</p>
+          </div>
+<h3 id="网络交互"><a href="#网络交互" class="headerlink" title="网络交互"></a>网络交互</h3><p>Mininet 允许使用命令行交互，通过一个单独的 console，便可以控制和管理整个虚拟网络。例如：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">sudo mn --switch ovs --controller ref --topo tree,depth=2,fanout=8</span><br><span class="line">*** Creating network ...</span><br><span class="line">*** Adding controller ...</span><br><span class="line">*** Adding hosts: ...</span><br><span class="line">*** Adding switches: ...</span><br><span class="line">*** Adding links: ...</span><br><span class="line">*** Configuring hosts ...</span><br><span class="line">*** Starting controller ...</span><br><span class="line">*** Starting 9 switches ...</span><br><span class="line">*** Starting CLI:</span><br><span class="line">mininet&gt; h2 ping h3</span><br><span class="line">PING 10.0.0.3 (10.0.0.3) 56(84) bytes of data.</span><br><span class="line">64 bytes from 10.0.0.3: icmp_seq=1 ttl=64 time=25.3 ms</span><br><span class="line">64 bytes from 10.0.0.3: icmp_seq=2 ttl=64 time=0.512 ms</span><br><span class="line">64 bytes from 10.0.0.3: icmp_seq=3 ttl=64 time=0.076 ms</span><br><span class="line">64 bytes from 10.0.0.3: icmp_seq=4 ttl=64 time=0.088 ms</span><br><span class="line">...</span><br></pre></td></tr></table></figure></p>
+<p>上述命令是：主机 <code>h2</code> 执行 ping 主机 <code>h3</code> 的命令。不仅如此，<strong>任何可用的 Linux 命令或者程序都可以在虚拟主机上运行</strong>，只需要在开头指明主机名即可。例如在主机<code>h2</code> 上运行一个简单的 Web 服务器，并在主机<code>h3</code>上使用 <code>wget</code> 命令请求。<br><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">mininet&gt; <span class="selector-tag">h2</span> python -m SimpleHTTPServer <span class="number">80</span> &gt;&amp; /tmp/http<span class="selector-class">.log</span> &amp;</span><br><span class="line">mininet&gt; <span class="selector-tag">h3</span> wget -O - h2</span><br><span class="line">--<span class="number">2018</span>-<span class="number">11</span>-<span class="number">06</span> <span class="number">20</span>:<span class="number">40</span>:<span class="number">20</span>--  http:<span class="comment">//10.0.0.2/</span></span><br><span class="line">Connecting to <span class="number">10.0</span>.<span class="number">0.2</span>:<span class="number">80</span>... connected.</span><br><span class="line">HTTP request sent, awaiting response... <span class="number">200</span> OK</span><br></pre></td></tr></table></figure></p>
+<h3 id="自定义网络"><a href="#自定义网络" class="headerlink" title="自定义网络"></a>自定义网络</h3><p>Mininet 的 API 允许用户使用 Python 脚本创建自定义网络。例如：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> mininet.net <span class="keyword">import</span> Mininet</span><br><span class="line"><span class="keyword">from</span> mininet.topolib <span class="keyword">import</span> TreeTopo</span><br><span class="line">tree4 = TreeTopo(depth=<span class="number">2</span>,fanout=<span class="number">2</span>)</span><br><span class="line">net = Mininet(topo=tree4)</span><br><span class="line">net.start()</span><br><span class="line">h1, h4  = net.hosts[<span class="number">0</span>], net.hosts[<span class="number">3</span>]</span><br><span class="line"><span class="keyword">print</span> h1.cmd(<span class="string">'ping -c1 %s'</span> % h4.IP())</span><br><span class="line">net.stop()</span><br></pre></td></tr></table></figure></p>
+<p>上述脚本创建了一个小型网络（4个主机，3个交换机），并通过 主机<code>h1</code> ping 主机<code>h4</code>。</p>
+<p>伴随 Mininet 一同发行的还有一些工具，可以帮助用户为自己的网络创建有用的应用。</p>
+<h3 id="分享网络"><a href="#分享网络" class="headerlink" title="分享网络"></a>分享网络</h3><ul>
+<li>通过 Mininet 的虚拟机镜像（VM Image）分享网络。</li>
+<li>通过在系统上实体安装 Mininet 分享网络。</li>
+</ul>
+<h3 id="硬件部署"><a href="#硬件部署" class="headerlink" title="硬件部署"></a>硬件部署</h3><p>一旦一个网络设计在 Mininet 上运行良好，便可以在真实的硬件上部署、测试和管理网络。<strong>但每个 Mininet 仿真组件必须和真实物理环境的组件对应</strong>。</p>
+<ul>
+<li>虚拟拓扑用真实物理拓扑取代。</li>
+<li>虚拟以太网连接对用链路级以太网连接取代。</li>
+<li>仿真主机用实际 OS 取代。</li>
+<li>仿真 OpenFlow Switch 用真实交换机取代。</li>
+<li><strong>控制器不需要改变</strong>。</li>
+</ul>
+<h2 id="官方攻略-Mininet-Walkthrough"><a href="#官方攻略-Mininet-Walkthrough" class="headerlink" title="官方攻略 (Mininet Walkthrough)"></a>官方攻略 (Mininet Walkthrough)</h2><p>通过前面两章的学习，我们已经安装了 Mininet，并进行了一些简单的用法介绍。在设计我们自己的网络之前，不如先学习一下官方提供的完整版攻略。</p>
+<h3 id="Mininet-启动选项参数-Startup-Options"><a href="#Mininet-启动选项参数-Startup-Options" class="headerlink" title="Mininet 启动选项参数 (Startup Options)"></a>Mininet 启动选项参数 (Startup Options)</h3><h4 id="显示启动选项"><a href="#显示启动选项" class="headerlink" title="显示启动选项"></a>显示启动选项</h4><figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">$ sudo mn -h</span><br><span class="line">Options:</span><br><span class="line">  -h, --help            show this help message <span class="literal">and</span> exit</span><br><span class="line">  <span class="attr">--switch=SWITCH</span>       default|ivs|lxbr|ovs|ovsbr|ovsk|user[,<span class="attr">param=value...]</span></span><br><span class="line">                        <span class="attr">ovs=OVSSwitch</span> <span class="attr">default=OVSSwitch</span> <span class="attr">ovsk=OVSSwitch</span></span><br><span class="line">                        <span class="attr">lxbr=LinuxBridge</span> <span class="attr">user=UserSwitch</span> <span class="attr">ivs=IVSSwitch</span></span><br><span class="line">                        <span class="attr">ovsbr=OVSBridge</span></span><br><span class="line">  <span class="attr">--host=HOST</span>           cfs|proc|rt[,<span class="attr">param=value...]</span></span><br><span class="line">                        <span class="attr">rt=CPULimitedHost&#123;'sched':</span> 'rt'&#125; <span class="attr">proc=Host</span></span><br><span class="line">                        <span class="attr">cfs=CPULimitedHost&#123;'sched':</span> 'cfs'&#125;</span><br><span class="line">  <span class="attr">--controller=CONTROLLER</span></span><br><span class="line">                        default|none|nox|ovsc|ref|remote|ryu[,<span class="attr">param=value...]</span></span><br><span class="line">                        <span class="attr">ovsc=OVSController</span> <span class="attr">none=NullController</span></span><br><span class="line">                        <span class="attr">remote=RemoteController</span> <span class="attr">default=DefaultController</span></span><br><span class="line">                        <span class="attr">nox=NOX</span> <span class="attr">ryu=Ryu</span> <span class="attr">ref=Controller</span></span><br><span class="line">  <span class="attr">--link=LINK</span>           default|ovs|tc|tcu[,<span class="attr">param=value...]</span> <span class="attr">default=Link</span></span><br><span class="line">                        <span class="attr">ovs=OVSLink</span> <span class="attr">tcu=TCULink</span> <span class="attr">tc=TCLink</span></span><br><span class="line">  <span class="attr">--topo=TOPO</span>           linear|minimal|reversed|single|torus|tree[,<span class="attr">param=value</span></span><br><span class="line">                        ...] <span class="attr">linear=LinearTopo</span> <span class="attr">torus=TorusTopo</span> <span class="attr">tree=TreeTopo</span></span><br><span class="line">                        <span class="attr">single=SingleSwitchTopo</span></span><br><span class="line">                        <span class="attr">reversed=SingleSwitchReversedTopo</span> <span class="attr">minimal=MinimalTopo</span></span><br><span class="line">  -c, --clean           clean <span class="literal">and</span> exit</span><br><span class="line">  <span class="attr">--custom=CUSTOM</span>       read custom classes <span class="literal">or</span> params from .py file(s)</span><br><span class="line">  <span class="attr">--test=TEST</span>           none|build|all|iperf|pingpair|iperfudp|pingall</span><br><span class="line">  -x, --xterms          spawn xterms for each node</span><br><span class="line">  -i IPBASE, <span class="attr">--ipbase=IPBASE</span></span><br><span class="line">                        base IP address for hosts</span><br><span class="line">  --mac                 automatically set host MACs</span><br><span class="line">  --arp                 set all-pairs ARP entries</span><br><span class="line">  -v VERBOSITY, <span class="attr">--verbosity=VERBOSITY</span></span><br><span class="line">                        info|warning|critical|error|debug|output</span><br><span class="line">  --innamespace         sw <span class="literal">and</span> ctrl <span class="keyword">in</span> namespace?</span><br><span class="line">  <span class="attr">--listenport=LISTENPORT</span></span><br><span class="line">                        base port for passive switch listening</span><br><span class="line">  --nolistenport        don't use passive listening port</span><br><span class="line">  <span class="attr">--pre=PRE</span>             CLI script to run before tests</span><br><span class="line">  <span class="attr">--post=POST</span>           CLI script to run after tests</span><br><span class="line">  --pin                 pin hosts to CPU cores (requires --host cfs <span class="literal">or</span> --host</span><br><span class="line">                        rt)</span><br><span class="line">  --nat                 [<span class="attr">option=val...]</span> adds a NAT to the topology that</span><br><span class="line">                        connects Mininet hosts to the physical network.</span><br><span class="line">                        Warning: This may route any traffic on the machine</span><br><span class="line">                        that uses Mininet's IP subnet into the Mininet</span><br><span class="line">                        network. If you need to change Mininet's IP subnet,</span><br><span class="line">                        see the --ipbase option.</span><br><span class="line">  --version             prints the version <span class="literal">and</span> exits</span><br><span class="line">  <span class="attr">--cluster=server1,server2...</span></span><br><span class="line">                        run on multiple servers (experimental!)</span><br><span class="line">  <span class="attr">--placement=block|random</span></span><br><span class="line">                        node placement for --cluster (experimental!)</span><br></pre></td></tr></table></figure>
+<div class="note info">
+            <ul><li>一个大选项的参数 (param) 和 值 (value)对<strong>用空格分开</strong>，即每一个 <code>--</code> 符号前面应该有一个空格。</li><li>一个大选项后面如果有多个参数值对，每个参数值对间使用<strong>无空格的英文逗号 <code>,</code> 分开</strong>。即：<code>[,param=value...]</code></li></ul>
+          </div>
+<h4 id="交换机-switch-SWITCH"><a href="#交换机-switch-SWITCH" class="headerlink" title="交换机 --switch=SWITCH"></a>交换机 <code>--switch=SWITCH</code></h4><p><strong>指明建立网络所需交换机类型</strong>。可选参数有：<code>default|ivs|lxbr|ovs|ovsbr|ovsk|user</code>，其中主要使用，同时也是默认使用的是 OVSSwitch。</p>
+<h4 id="主机-host-HOST"><a href="#主机-host-HOST" class="headerlink" title="主机 --host=HOST"></a>主机 <code>--host=HOST</code></h4><p><strong>指明建立网络主机类型</strong>。一般不使用。</p>
+<h4 id="控制器-controller-CONTROLLER"><a href="#控制器-controller-CONTROLLER" class="headerlink" title="控制器 --controller=CONTROLLER"></a>控制器 <code>--controller=CONTROLLER</code></h4><p><strong>指明建立网络的控制器类型</strong>。 可选参数有：<code>default|none|nox|ovsc|ref|remote|ryu</code>，具体值见上述帮助，简单测试使用 <strong>ref</strong> 控制器即可。</p>
+<p>特别的，如果是使用 <strong>remote</strong> 控制器，<strong>需要同时指明 IP 地址和端口号</strong>。例如，使用 floodlight 控制器时，参数应为：<code>--controller=remote,ip=127.0.0.1,port=6653</code>。</p>
+<h4 id="链路-link-LINK"><a href="#链路-link-LINK" class="headerlink" title="链路 --link=LINK"></a>链路 <code>--link=LINK</code></h4><p><strong>指明链路参数</strong>。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ sudo mn --link tc,bw=10,delay=10ms</span><br><span class="line"> mininet&gt; iperf</span><br><span class="line"> ...</span><br><span class="line"> mininet&gt; h1 ping -c10 h2</span><br></pre></td></tr></table></figure></p>
+<p>如果每条链路的时延是 10ms，那么默认拓扑下，h1 和 h2 之间的 RTT 为 40ms。</p>
+<div class="note info">
+            <p>可以通过 Mininet 的 Python API 自定义每条链路的参数。</p>
+          </div>
+<h4 id="拓扑-topo-TOPO"><a href="#拓扑-topo-TOPO" class="headerlink" title="拓扑 --topo=TOPO"></a>拓扑 <code>--topo=TOPO</code></h4><p><strong>指明网络拓扑类型</strong>。默认拓扑是<strong>一个交换机连接两个主机</strong>，可以使用 <code>--topo=TOPO</code> 参数更改拓扑类型。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo mn --<span class="built_in">test</span> pingall --topo single,3  <span class="comment"># 一个交换机连接三台主机</span></span><br><span class="line">$ sudo mn --<span class="built_in">test</span> pingall --topo linear,4  <span class="comment"># 交换机连成一条线，每个交换机连接一台主机。</span></span><br></pre></td></tr></table></figure>
+<div class="note info">
+            <p>同 链路参数一样，除了默认拓扑，也可以可以通过 Mininet 的 Python API 自定义拓扑。</p>
+          </div>
+<h4 id="测试-test-TEST"><a href="#测试-test-TEST" class="headerlink" title="测试 --test=TEST"></a>测试 <code>--test=TEST</code></h4><p><strong>测试命令</strong>。执行 test 命令后，会自动停止网络并返回 Linux 系统 shell 环境，这主要是为了不进入 CLI 也可以进行测试。可选参数有：<code>none|build|all|iperf|pingpair|iperfudp|pingall</code>。</p>
+<p>常常使用 <code>pingall</code> 测试网络连接性，使用 <code>iperf</code> 测试网络性能。</p>
+<h4 id="自定义-custom-CUSTOM"><a href="#自定义-custom-CUSTOM" class="headerlink" title="自定义 --custom=CUSTOM"></a>自定义 <code>--custom=CUSTOM</code></h4><p><strong>自定义可以说是 mininet 最强有力的工具了，用户可以通过 mininet 的 Python API 自定义 Python 脚本，并从中读取类或参数用来自定义网络</strong>。可以自定义的参数包括网络拓扑，交换机，主机，控制器，或者链路参数，也可以自定义系统测试，甚至为 CLI 添加新的命令。</p>
+<blockquote><ul>
+<li>This allows you to use mn to invoke your own custom topology, switch, host, controller, or link classes. </li>
+<li>You can also define and invoke your own <strong>system tests</strong>, and add new Mininet CLI commands.</li>
+</ul>
+</blockquote>
+<p>自定义的方式如下：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>option</th>
+<th>dict name</th>
+<th>key: value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--topo</code></td>
+<td><code>topos</code></td>
+<td>‘short name’: <code>Topo</code> constructor</td>
+</tr>
+<tr>
+<td><code>--switch</code></td>
+<td><code>switches</code></td>
+<td>‘short name’: <code>Switch</code> constructor</td>
+</tr>
+<tr>
+<td><code>--host</code></td>
+<td><code>hosts</code></td>
+<td>‘short name’: <code>Host</code> constructor</td>
+</tr>
+<tr>
+<td><code>--controller</code></td>
+<td><code>controllers</code></td>
+<td>‘short name’: <code>Controller</code> constructor</td>
+</tr>
+<tr>
+<td><code>--link</code></td>
+<td><code>links</code></td>
+<td>‘short name’: <code>Link</code> constructor</td>
+</tr>
+<tr>
+<td><code>--test</code></td>
+<td><code>tests</code></td>
+<td>‘short name’: test function to call with Mininet object</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>例如，我们想使用 custom 文件夹中的 <code>topo-2sw-2host.py</code> 自定义拓扑并使用 floodlight 作为控制器，<strong>需要先指明自定义文件的地址，然后使用其中的类或参数</strong>：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo mn --custom custom/topo-2sw-2host.py --topo=mytopo --controller=remote,ip=127.0.0.1,port=6653 --switch ovsk,protocols=OpenFlow13</span><br></pre></td></tr></table></figure></p>
+<h4 id="自动-MAC-mac"><a href="#自动-MAC-mac" class="headerlink" title="自动 MAC --mac"></a>自动 MAC <code>--mac</code></h4><p>默认情况下，hosts 随机分配 MAC 地址，这会增加调试的困难度，毕竟每次创建网络都是不一样的 MAC 地址，因此，可以使用 <code>--mac</code> 参数分配一个小，独一无二，且易读的 ID。例如：默认为 <code>HWaddr f6:9d:5a:7f:41:42</code>，使用 <code>--mac</code> 参数后变为 <code>HWaddr 00:00:00:00:00:01</code>。</p>
+<h4 id="可选的输出-v-VERBOSITY-verbosity-VERBOSITY"><a href="#可选的输出-v-VERBOSITY-verbosity-VERBOSITY" class="headerlink" title="可选的输出 -v VERBOSITY, --verbosity=VERBOSITY"></a>可选的输出 <code>-v VERBOSITY, --verbosity=VERBOSITY</code></h4><p>在进入 mininet 中有一些交互信息会列出，默认的详细度为 <code>info</code>，只会打印出启动和退出网络时 mininet 在做什么事情。可以通过 <code>-v</code> 参数指定交互信息的详细度，有 <code>info|warning|critical|error|debug|output</code> 几种等级可选。</p>
+<p><code>debug</code> 选项会打印大量的信息，而 <code>output</code> 什么都没有。</p>
+<h4 id="命名空间-innamespace-只用于-user-switch"><a href="#命名空间-innamespace-只用于-user-switch" class="headerlink" title="命名空间 --innamespace (只用于 user switch)"></a>命名空间 <code>--innamespace</code> (只用于 user switch)</h4><p>默认情况下：<strong>hosts 有各自独立的命名空间，switches 和 controller 都在 root 命名空间中</strong>。如果要交换机使用独自的命名空间，可以使用 <code>--innamespace</code> 参数。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sudo mn --innamespace --switch user</span><br></pre></td></tr></table></figure>
+<p>虽然这个参数不太实用，但至少提供了一种隔离命名空间的方案。</p>
+<h4 id="清除-c-clean"><a href="#清除-c-clean" class="headerlink" title="清除 -c, --clean"></a>清除 <code>-c, --clean</code></h4><p>若 Mininet 崩溃，可以通过以下命令清除。<br><figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$ </span>sudo mn -c <span class="comment"># 或者 sudo mn --clean</span></span><br></pre></td></tr></table></figure></p>
+<h3 id="Mininet-CLI-命令-Command-Line-Interface-Commands"><a href="#Mininet-CLI-命令-Command-Line-Interface-Commands" class="headerlink" title="Mininet CLI 命令 (Command-Line Interface Commands)"></a>Mininet CLI 命令 (Command-Line Interface Commands)</h3><p>通过上一节的学习，我们可以创建一个网络，甚至利用 mininet 的 Python API，我们可以随心所欲的自定义自己的网络。在这一节，我们继续学习创建网络之后的事情，在创建网络之后，会进入一个称为命令行接口的环境中，mininet 等待用户键入命令…</p>
+<h4 id="CLI-环境"><a href="#CLI-环境" class="headerlink" title="CLI 环境"></a>CLI 环境</h4><p>使用最小拓扑创建一个网络，并开始 CLI：<br><figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$ </span>sudo mn</span><br></pre></td></tr></table></figure><br>默认拓扑是 <code>minimum</code> 拓扑，由四个实体组成，包括两个主机进程，一个交换机进程，一个基本控制器。同时，在 Wireshark 中，可以看到交换机连接到了控制器。</p>
+<p>在 CLI 中，有<strong>全局命令和节点命令</strong>之分：</p>
+<ul>
+<li>通过 <code>mininet&gt; command {args}</code> 运行全局命令。</li>
+<li>通过 <code>mininet&gt; &lt;node&gt; command {args}</code> 允许在某个 node 中使用命令，例如 <code>h1 ifconfig -a</code>。</li>
+<li>某些面向字符的交互式命令需要 <code>noecho</code>，例如：<code>mininet&gt; noecho h2 vi foo.py</code>。当然，开启一个新的模拟终端程序是更好的选择，例如：<code>xterm h2</code>。</li>
+</ul>
+<div class="note info">
+            <p>如果第一个字符串指定了 Mininet <strong>主机</strong>，<strong>交换机</strong>或<strong>控制器</strong>的名字，那么命令将会在那个节点的进程中执行。不仅如此，<strong>任何可用的 Linux 命令或者程序都可以在虚拟主机上运行</strong>，只需要在开头指明主机名即可。</p>
+          </div> 
+<h4 id="常用全局命令"><a href="#常用全局命令" class="headerlink" title="常用全局命令"></a>常用全局命令</h4><p>下表列出了常用的全局命令：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>help {command}</code></td>
+<td>显示所有 Mininet CLI 命令或某个命令的用法</td>
+</tr>
+<tr>
+<td><code>quit</code>, <code>exit</code> or <code>EOF(Ctl+D)</code></td>
+<td>退出 Mininet</td>
+</tr>
+<tr>
+<td><code>nodes</code></td>
+<td>显示所有网络节点</td>
+</tr>
+<tr>
+<td><code>net</code></td>
+<td>显示连接</td>
+</tr>
+<tr>
+<td><code>dump</code></td>
+<td>展示所有节点全部信息</td>
+</tr>
+<tr>
+<td><code>py</code></td>
+<td>执行一句 Python 表达式</td>
+</tr>
+<tr>
+<td><code>px</code></td>
+<td>执行一句 Python 语句</td>
+</tr>
+<tr>
+<td><code>link</code></td>
+<td>Link Up/Down</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="常用节点命令"><a href="#常用节点命令" class="headerlink" title="常用节点命令"></a>常用节点命令</h4><figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">mininet&gt; h1 ifconfig -a</span><br><span class="line">h1-eth0: flags=<span class="number">4163</span>&lt;<span class="meta">UP</span>,BROADCAST,RUNNING,MULTICAST&gt;  mtu <span class="number">1500</span></span><br><span class="line">        inet <span class="number">10.0</span><span class="meta">.0</span><span class="meta">.1</span>  netmask <span class="number">255.0</span><span class="meta">.0</span><span class="meta">.0</span>  broadcast <span class="number">10.255</span><span class="meta">.255</span><span class="meta">.255</span></span><br><span class="line">        inet6 fe80::908c:b0ff:feae:dc45  prefixlen <span class="number">64</span>  scopeid <span class="number">0x20</span>&lt;link&gt;</span><br><span class="line">        ...</span><br><span class="line"><span class="symbol">lo:</span> flags=<span class="number">73</span>&lt;<span class="meta">UP</span>,LOOPBACK,RUNNING&gt;  mtu <span class="number">65536</span></span><br><span class="line">        inet <span class="number">127.0</span><span class="meta">.0</span><span class="meta">.1</span>  netmask <span class="number">255.0</span><span class="meta">.0</span><span class="meta">.0</span></span><br><span class="line">        inet6 ::<span class="number">1</span>  prefixlen <span class="number">128</span>  scopeid <span class="number">0x10</span>&lt;host&gt;</span><br><span class="line">        ...</span><br></pre></td></tr></table></figure>
+<p>当我们的主系统执行 <code>ifconfig</code> 命令时，<code>h1-eth0</code> 接口名称不会显示，因为它是 host 进程的网络命名空间特有的。</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">mininet&gt; s1 ifconfig -a</span><br><span class="line">enp4s0: <span class="attribute">flags</span>=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500 <span class="built_in">..</span>.</span><br><span class="line">lo: <span class="attribute">flags</span>=73&lt;UP,LOOPBACK,RUNNING&gt;  mtu 65536 <span class="built_in">..</span>.</span><br><span class="line">ovs-system: <span class="attribute">flags</span>=4098&lt;BROADCAST,MULTICAST&gt;  mtu 1500 <span class="built_in">..</span>.  </span><br><span class="line">s1: <span class="attribute">flags</span>=4098&lt;BROADCAST,MULTICAST&gt;  mtu 1500 <span class="built_in">..</span>.    </span><br><span class="line">s1-eth1: <span class="attribute">flags</span>=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500 <span class="built_in">..</span>. </span><br><span class="line">s1-eth2: <span class="attribute">flags</span>=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500 <span class="built_in">..</span>.</span><br><span class="line">wlp5s0: <span class="attribute">flags</span>=4099&lt;UP,BROADCAST,MULTICAST&gt;  mtu 1500 <span class="built_in">..</span>.</span><br></pre></td></tr></table></figure>
+<p>然而，switch 默认使用 root 网络命名空间，这将会显示交换机的网络接口加上主系统的网络接口。其他例子也可以证明 host 拥有独立的网络状态，可以在 <code>h1</code> 和 <code>s1</code> 上分别执行 <code>arp</code> 和 <code>route</code> 命令验证。</p>
+<div class="note info">
+            <ul><li>可以让每个 host，switch，controller 都拥有独立的命名空间。但没必要这么做，除非是搭建多控制器网络。Mininet 不支持此特性，参见 <code>--innamespace</code> 选项。</li><li>只有网络是虚拟的，每个 host 进程其实可以看到所有的进程与目录。例如 <code>h1 ps -a</code> 与在 root 命名空间的 <code>s1 ps -a</code>一样，可以看到全部进程，比如我们在主系统中运行的 chrome 等进程。</li><li>通过 Linux 容器可以实现隔离的进程空间，但 Mininet 没有这么做，因为将所有进程运行在 root 的进程空间中方便调试。</li></ul>
+          </div>
+<h4 id="测试主机连接"><a href="#测试主机连接" class="headerlink" title="测试主机连接"></a>测试主机连接</h4><p>为了测试连接性，我们 从 host1 ping host2。<br><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mininet&gt; h1<span class="built_in"> ping </span>-c 1 h2 # 执行<span class="built_in"> ping </span>命令 1 次</span><br><span class="line">PING 10.0.0.2 (10.0.0.2) 56(84) bytes of data.</span><br><span class="line">64 bytes <span class="keyword">from</span> 10.0.0.2: <span class="attribute">icmp_seq</span>=1 <span class="attribute">ttl</span>=64 <span class="attribute">time</span>=9.68 ms</span><br><span class="line"></span><br><span class="line">--- 10.0.0.2<span class="built_in"> ping </span>statistics ---</span><br><span class="line">1 packets transmitted, 1 received, 0% packet loss, time 0ms</span><br><span class="line">rtt min/avg/max/mdev = 9.689/9.689/9.689/0.000 ms</span><br></pre></td></tr></table></figure></p>
+<p>执行以上命令，你将会看到 OpenFlow 控制流量：</p>
+<ol>
+<li>主机1请求主机2的 MAC 地址，主机1 向 控制器发送 <code>package_in</code> 数据包。</li>
+<li>控制器发送 <code>package_out</code> 消息已将广播数据包泛洪到交换机其他接口。（这里就只有另一个接口了，即 <code>s1-eth2</code>）</li>
+<li>主机2 看到 ARP 请求，并发送一个回复。</li>
+<li>请求到达控制器，控制器将其发送到主机1 并下发 flow entry</li>
+<li>主机1 知道了主机2 的 MAC 地址，发送 ICMP Echo Request。该请求包括主机2 的回复均到达控制器，并导致 flow entry 下发。</li>
+</ol>
+<p>重复运行上一条 <code>ping</code> 命令<br><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mininet&gt; h1<span class="built_in"> ping </span>-c 1 h2</span><br><span class="line">PING 10.0.0.2 (10.0.0.2) 56(84) bytes of data.</span><br><span class="line">64 bytes <span class="keyword">from</span> 10.0.0.2: <span class="attribute">icmp_seq</span>=1 <span class="attribute">ttl</span>=64 <span class="attribute">time</span>=0.262 ms</span><br><span class="line"></span><br><span class="line">--- 10.0.0.2<span class="built_in"> ping </span>statistics ---</span><br><span class="line">1 packets transmitted, 1 received, 0% packet loss, time 0ms</span><br><span class="line">rtt min/avg/max/mdev = 0.262/0.262/0.262/0.000 ms</span><br></pre></td></tr></table></figure><br>我们发现，此时 <code>ping</code> 时间远远减小，因为 ICMP 的 flow entry 已经在交换机中存在，因此没有产生控制流量，ICMP 数据包立刻通过了交换机。</p>
+<p>一个简单的方法是使用 Mininet 内置的 <code>pingall</code> 命令，这将会在所有节点上两两逐对运行 <code>ping</code> 命令。</p>
+<h4 id="运行一个简单的-Web-服务器和客户端"><a href="#运行一个简单的-Web-服务器和客户端" class="headerlink" title="运行一个简单的 Web 服务器和客户端"></a>运行一个简单的 Web 服务器和客户端</h4><p>这部分比较简单，工作流程中已经展示，不再赘述。</p>
+<h3 id="其他工具和命令"><a href="#其他工具和命令" class="headerlink" title="其他工具和命令"></a>其他工具和命令</h3><h4 id="开启-Wireshark"><a href="#开启-Wireshark" class="headerlink" title="开启 Wireshark"></a>开启 Wireshark</h4><figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$ </span>sudo wireshark &amp; <span class="comment"># 在后台开启 wireshark，用来查看网络流量。</span></span><br></pre></td></tr></table></figure>
+<p>在 Wireshark 分析中，选择 <code>lo</code> 接口进行分析，便可以看到 OpenFlow 数据包。</p>
+<h3 id="Python-API-示例"><a href="#Python-API-示例" class="headerlink" title="Python API 示例"></a>Python API 示例</h3><p>在 mininet 的源码 <a href="https://github.com/mininet/mininet/tree/master/examples" target="_blank" rel="noopener">examples directory</a> 中提供了一些没有加入主代码，但却十分有用的 Python 脚本示例，展示了如何使用 Python API。</p>
+<p>更多的 API 教程可以参考 <a href="https://github.com/mininet/mininet/wiki/Introduction-to-Mininet" target="_blank" rel="noopener">Introduction to Mininet</a>。</p>
+<h2 id="推荐阅读"><a href="#推荐阅读" class="headerlink" title="推荐阅读"></a>推荐阅读</h2><p>除了上述提到的官方资料，以下几个是比较有参考价值的，其中所有的官方参考资料都可以在 Documentation 中找到。</p>
+<ul>
+<li><a href="https://github.com/mininet/mininet/wiki/Documentation" target="_blank" rel="noopener">Mininet Documentation</a></li>
+<li><a href="http://mininet.org/api/annotated.html" target="_blank" rel="noopener">Mininet Python API Reference Manual</a></li>
+<li><a href="https://github.com/mininet/openflow-tutorial/wiki" target="_blank" rel="noopener">OpenFlow Tutorial</a></li>
+</ul>
+<h2 id="FAQ"><a href="#FAQ" class="headerlink" title="FAQ"></a>FAQ</h2><ol>
+<li>Q：Mininet 连接控制器造成控制器频繁握手断开。</li>
+</ol>
+<ul>
+<li>A：检查 sw 使用的 OpenFlow 协议版本，最好使用 1.3 版本。</li>
+</ul>
+<h2 id="参考-References"><a href="#参考-References" class="headerlink" title="参考 (References)"></a>参考 (References)</h2><ul>
+<li><a href="http://sdnhub.org/tutorials/openflow-1-3/" target="_blank" rel="noopener">http://sdnhub.org/tutorials/openflow-1-3/</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/wechatpay.png" alt="Yanjiu Li 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/alipay.jpeg" alt="Yanjiu Li 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/SDN/" rel="tag"><i class="fa fa-tag"></i> SDN</a>
+              <a href="/tags/Mininet/" rel="tag"><i class="fa fa-tag"></i> Mininet</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/10/26/linux-data-archiving-and-compression/" rel="prev" title="Data Archiving and Compression">
+      <i class="fa fa-chevron-left"></i> Data Archiving and Compression
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/11/17/linux-users-and-groups/" rel="next" title="Users and Groups">
+      Users and Groups <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80MTAzMS8xNzU1Ng=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#下载安装-Download"><span class="nav-number">1.</span> <span class="nav-text">下载安装 (Download)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#工作流程-Sample-Workflow"><span class="nav-number">2.</span> <span class="nav-text">工作流程 (Sample Workflow)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#创建网络"><span class="nav-number">2.1.</span> <span class="nav-text">创建网络</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#网络交互"><span class="nav-number">2.2.</span> <span class="nav-text">网络交互</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#自定义网络"><span class="nav-number">2.3.</span> <span class="nav-text">自定义网络</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分享网络"><span class="nav-number">2.4.</span> <span class="nav-text">分享网络</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#硬件部署"><span class="nav-number">2.5.</span> <span class="nav-text">硬件部署</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#官方攻略-Mininet-Walkthrough"><span class="nav-number">3.</span> <span class="nav-text">官方攻略 (Mininet Walkthrough)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Mininet-启动选项参数-Startup-Options"><span class="nav-number">3.1.</span> <span class="nav-text">Mininet 启动选项参数 (Startup Options)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#显示启动选项"><span class="nav-number">3.1.1.</span> <span class="nav-text">显示启动选项</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#交换机-switch-SWITCH"><span class="nav-number">3.1.2.</span> <span class="nav-text">交换机 --switch=SWITCH</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#主机-host-HOST"><span class="nav-number">3.1.3.</span> <span class="nav-text">主机 --host=HOST</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#控制器-controller-CONTROLLER"><span class="nav-number">3.1.4.</span> <span class="nav-text">控制器 --controller=CONTROLLER</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#链路-link-LINK"><span class="nav-number">3.1.5.</span> <span class="nav-text">链路 --link=LINK</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#拓扑-topo-TOPO"><span class="nav-number">3.1.6.</span> <span class="nav-text">拓扑 --topo=TOPO</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#测试-test-TEST"><span class="nav-number">3.1.7.</span> <span class="nav-text">测试 --test=TEST</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#自定义-custom-CUSTOM"><span class="nav-number">3.1.8.</span> <span class="nav-text">自定义 --custom=CUSTOM</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#自动-MAC-mac"><span class="nav-number">3.1.9.</span> <span class="nav-text">自动 MAC --mac</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#可选的输出-v-VERBOSITY-verbosity-VERBOSITY"><span class="nav-number">3.1.10.</span> <span class="nav-text">可选的输出 -v VERBOSITY, --verbosity=VERBOSITY</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#命名空间-innamespace-只用于-user-switch"><span class="nav-number">3.1.11.</span> <span class="nav-text">命名空间 --innamespace (只用于 user switch)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#清除-c-clean"><span class="nav-number">3.1.12.</span> <span class="nav-text">清除 -c, --clean</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Mininet-CLI-命令-Command-Line-Interface-Commands"><span class="nav-number">3.2.</span> <span class="nav-text">Mininet CLI 命令 (Command-Line Interface Commands)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#CLI-环境"><span class="nav-number">3.2.1.</span> <span class="nav-text">CLI 环境</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#常用全局命令"><span class="nav-number">3.2.2.</span> <span class="nav-text">常用全局命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#常用节点命令"><span class="nav-number">3.2.3.</span> <span class="nav-text">常用节点命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#测试主机连接"><span class="nav-number">3.2.4.</span> <span class="nav-text">测试主机连接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#运行一个简单的-Web-服务器和客户端"><span class="nav-number">3.2.5.</span> <span class="nav-text">运行一个简单的 Web 服务器和客户端</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他工具和命令"><span class="nav-number">3.3.</span> <span class="nav-text">其他工具和命令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#开启-Wireshark"><span class="nav-number">3.3.1.</span> <span class="nav-text">开启 Wireshark</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Python-API-示例"><span class="nav-number">3.4.</span> <span class="nav-text">Python API 示例</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#推荐阅读"><span class="nav-number">4.</span> <span class="nav-text">推荐阅读</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FAQ"><span class="nav-number">5.</span> <span class="nav-text">FAQ</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考-References"><span class="nav-number">6.</span> <span class="nav-text">参考 (References)</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yanjiu Li"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Yanjiu Li</p>
+  <div class="site-description" itemprop="description">演绎一场技术溯源的盛宴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">99</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yanjiulab" title="GitHub → https://github.com/yanjiulab" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:liyanjiu@outlook.com" title="E-Mail → mailto:liyanjiu@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Worth Reading
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP" title="http://pages.cs.wisc.edu/~remzi/OSTEP" rel="noopener" target="_blank">OSTEP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" title="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" rel="noopener" target="_blank">OSTEP-Chinese</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.apuebook.com/about3e.html" title="http://www.apuebook.com/about3e.html" rel="noopener" target="_blank">APUE</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" title="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" rel="noopener" target="_blank">UNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" title="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" rel="noopener" target="_blank">IUNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.yinwang.org/" title="http://www.yinwang.org/" rel="noopener" target="_blank">当然我在扯淡</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yanjiu Li</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">217k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:17</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

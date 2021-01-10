@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yjlab.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="OpenFlow 是 SDN 中使用最广泛的协议，本文记录了笔者对于 OpenFlow 通信流程的理解，绝大部分内容参考 OpenFlow 协议规格书，例如 OpenFlow Switch Specification Version 1.5.1 ( Protocol version 0x06 )。">
+<meta name="keywords" content="SDN,OpenFlow">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenFlow Specification">
+<meta property="og:url" content="http://yjlab.xyz/2019/02/23/sdn-openflow/index.html">
+<meta property="og:site_name" content="Yanjiu Lab">
+<meta property="og:description" content="OpenFlow 是 SDN 中使用最广泛的协议，本文记录了笔者对于 OpenFlow 通信流程的理解，绝大部分内容参考 OpenFlow 协议规格书，例如 OpenFlow Switch Specification Version 1.5.1 ( Protocol version 0x06 )。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yjlab.xyz/2019/02/23/sdn-openflow/OFPT_FEATURES_REQUEST.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/02/23/sdn-openflow/OFPT_FEATURES_REPLY.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/02/23/sdn-openflow/OFPT_GET_CONFIG_REQUEST.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/02/23/sdn-openflow/OFPT_GET_CONFIG_REPLY.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/02/23/sdn-openflow/OFPT_ECHO_REQUEST.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/02/23/sdn-openflow/OFPT_ECHO_REPLY.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/02/23/sdn-openflow/switch-components.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/02/23/sdn-openflow/packet-flow.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/02/23/sdn-openflow/flow-table-structure.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/02/23/sdn-openflow/packet-flow-detail.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/02/23/sdn-openflow/OFPT_FEATURES_REQUEST.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/02/23/sdn-openflow/OFPT_FEATURES_REPLY.png">
+<meta property="og:updated_time" content="2021-01-10T08:08:36.048Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="OpenFlow Specification">
+<meta name="twitter:description" content="OpenFlow 是 SDN 中使用最广泛的协议，本文记录了笔者对于 OpenFlow 通信流程的理解，绝大部分内容参考 OpenFlow 协议规格书，例如 OpenFlow Switch Specification Version 1.5.1 ( Protocol version 0x06 )。">
+<meta name="twitter:image" content="http://yjlab.xyz/2019/02/23/sdn-openflow/OFPT_FEATURES_REQUEST.png">
+
+<link rel="canonical" href="http://yjlab.xyz/2019/02/23/sdn-openflow/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>OpenFlow Specification | Yanjiu Lab</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yanjiu Lab</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Learning then grokking</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        
+            
+  <li class="menu-item menu-item-notes">
+
+    <a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记</a>
+
+  </li>
+
+
+      
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yjlab.xyz/2019/02/23/sdn-openflow/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Yanjiu Li">
+      <meta itemprop="description" content="演绎一场技术溯源的盛宴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yanjiu Lab">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          OpenFlow Specification
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-02-23 21:58:38" itemprop="dateCreated datePublished" datetime="2019-02-23T21:58:38+08:00">2019-02-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-01-10 16:08:36" itemprop="dateModified" datetime="2021-01-10T16:08:36+08:00">2021-01-10</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Networking/" itemprop="url" rel="index"><span itemprop="name">Networking</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Networking/SDN/" itemprop="url" rel="index"><span itemprop="name">SDN</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>8.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>8 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>OpenFlow 是 SDN 中使用最广泛的协议，本文记录了笔者对于 OpenFlow 通信流程的理解，绝大部分内容参考 OpenFlow 协议规格书，例如 <a href="https://www.opennetworking.org/wp-content/uploads/2014/10/openflow-switch-v1.5.1.pdf" target="_blank" rel="noopener">OpenFlow Switch Specification Version 1.5.1 ( Protocol version 0x06 )</a>。</p>
+<a id="more"></a>
+<h1 id="OpenFlow-通信流程"><a href="#OpenFlow-通信流程" class="headerlink" title="OpenFlow 通信流程"></a>OpenFlow 通信流程</h1><h2 id="建立-TCP-连接"><a href="#建立-TCP-连接" class="headerlink" title="建立 TCP 连接"></a>建立 TCP 连接</h2><p>SDN 控制器和交换机进行常规 TCP 三次握手，建立连接。TCP 是 OpenFlow 底层的通信协议，是整一套系统的基础设施。</p>
+<h2 id="互相问好-OFPT-HELLO"><a href="#互相问好-OFPT-HELLO" class="headerlink" title="互相问好 - OFPT_HELLO"></a>互相问好 - OFPT_HELLO</h2><p>创建 TCP 连接之后：</p>
+<ul>
+<li>交换机首先向控制器发送 OFPT_HELLO 数据包。</li>
+<li>随后控制器也会回复 OFPT_HELLO 数据包给交换机。</li>
+</ul>
+<p>Hello 过程中：</p>
+<ul>
+<li>目的：协议协商。</li>
+<li>内容：本方支持的最高版本的协议。</li>
+<li>成果：使用双方都支持的最低版本协议。</li>
+<li>成功：建立连接。</li>
+<li>失败：OFPT_ERROR (TYPE:OFPT_HELLO_FAILED,CODE =0),终止连接。</li>
+</ul>
+<h2 id="交换机信息交互-OFPT-FEATURES"><a href="#交换机信息交互-OFPT-FEATURES" class="headerlink" title="交换机信息交互 - OFPT_FEATURES"></a>交换机信息交互 - OFPT_FEATURES</h2><p>完成 Hello 包交互之后：</p>
+<ul>
+<li>控制器向交换机发送 OFPT_FEATURES_REQUEST <strong>请求交换机信息</strong>。</li>
+<li>交换机向控制器回复 OFPT_FEATURES_REPLY <strong>告知控制器信息</strong>。</li>
+</ul>
+<p>OFPT_FEATURES_REQUEST 包<strong>没有数据内容</strong>，如下图所示：</p>
+<p><img src="OFPT_FEATURES_REQUEST.png" alt="OFPT_FEATURES_REQUEST"></p>
+<p>OFPT_FEATURES_REPLY 包含了交换机自己的 features，回复给控制器之后，控制器就对交换机有了一个全面的了解，从而为后面的控制提供的控制信息。其中最主要的是 <strong>Datapath ID</strong>，即交换机的编号。</p>
+<p><img src="OFPT_FEATURES_REPLY.png" alt="OFPT_FEATURES_REPLY"></p>
+<ul>
+<li>datapath id 数据通道标识符，用来表示交换机的身份。在每一个控制器中独一无二。</li>
+<li>n_buffers 一次最多缓存的数据包数量，即交换机自己的缓存能力。</li>
+<li>n_tables 表示交换机支持的流表数量。</li>
+<li>capabilities 交换机端口所支持的功能.</li>
+</ul>
+<div class="note info">
+            <p>OpenFlow 1.0 的 OFPT_FEATURES 包含了交换机和端口的信息，由于在 1.3 及其以后，端口消息移到了 Multipart 中，因此无法看到端口信息。</p>
+          </div>
+<h2 id="端口信息交互-OFPT-MULTIPART"><a href="#端口信息交互-OFPT-MULTIPART" class="headerlink" title="端口信息交互 - OFPT_MULTIPART"></a>端口信息交互 - OFPT_MULTIPART</h2><p>OpenFlow 1.3协议将 stats 框架更名为 multipart 框架，并且将端口描述移植到 OFPT_MULTIPART 消息中。</p>
+<p>当控制器获取到交换机的信息之后，开始获取端口信息：</p>
+<ul>
+<li>控制器通过 OFPT_MULTIPART_REQUEST 消息查询交换机的端口信息，消息体为：OFPMP_PORT_DESC</li>
+<li>交换机通过 OFPT_MULTIPART_REPLY 回复控制器的查询，回复的内容包括交换机端口的性能，特性等。</li>
+</ul>
+<h2 id="控制器下发配置-OFPT-SET-CONFIG"><a href="#控制器下发配置-OFPT-SET-CONFIG" class="headerlink" title="控制器下发配置 - OFPT_SET_CONFIG"></a>控制器下发配置 - OFPT_SET_CONFIG</h2><p>控制器通过 OFPT_SET_CONFIG 消息下发配置，并且通过 OFPT_GET_CONFIG_REQUEST 获取交换机的配置，用来确保下发成功了。</p>
+<p>现在有一个问题，我们默认数据下发的顺序不会在传输中发生变化，也就是交换机依次收到了两个消息，交换机先进行设置，然后构造 OFPT_GET_CONFIG_REPLY 来回复，假设此时交换机在还没有完成设置的情况下，便回复了 OFPT_GET_CONFIG_REPLY 消息，那么可能造成配置上报的不正确。</p>
+<p>因此，当控制器要确保某消息的依赖操作已经在交换机完成，或要接收有关完成操作的通知时，它可以使用 OFPT_BARRIER_REQUEST 消息。该消息没有内容，交换机收到 OFPT_BARRIER_REQUEST 消息后，必须完成所有在 OFPT_BARRIER_REQUEST 之前接受到的消息的处理过程（包括发送相应的答复或错误消息），才能执行后续消息处理。</p>
+<p>如下图所示，控制器直接下发了三条连续的 OpenFlow 消息，</p>
+<p><img src="OFPT_GET_CONFIG_REQUEST.png" alt="OFPT_GET_CONFIG_REQUEST"></p>
+<p>交换机在回复屏障消息之后，再回复查询配置消息。</p>
+<p><img src="OFPT_GET_CONFIG_REPLY.png" alt="OFPT_GET_CONFIG_REPLY"></p>
+<h2 id="保持连接状态-OFPT-ECHO"><a href="#保持连接状态-OFPT-ECHO" class="headerlink" title="保持连接状态 - OFPT_ECHO"></a>保持连接状态 - OFPT_ECHO</h2><p>当没有其他的数据包进行交换时，为了确保通信通畅，控制器需要查询连接状态。</p>
+<ul>
+<li>控制器会定期循环给交换机发送 OFPT_ECHO_REQUEST。</li>
+<li>交换机收到后回复 OFPT_ECHO_REPLY。</li>
+</ul>
+<p>如下图所示：</p>
+<p><img src="OFPT_ECHO_REQUEST.png" alt="OFPT_ECHO_REQUEST"></p>
+<p><img src="OFPT_ECHO_REPLY.png" alt="OFPT_ECHO_REPLY"></p>
+<h1 id="数据包结构"><a href="#数据包结构" class="headerlink" title="数据包结构"></a>数据包结构</h1><h2 id="OpenFlow-包头-Header"><a href="#OpenFlow-包头-Header" class="headerlink" title="OpenFlow 包头 (Header)"></a>OpenFlow 包头 (Header)</h2><p>每个 OpenFlow 包/消息都以 OpenFlow Header 开始。<br><figure class="highlight c"><figcaption><span>OpenFlow Header</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Header on all OpenFlow packets. */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ofp_header</span> &#123;</span></span><br><span class="line">    <span class="keyword">uint8_t</span> version; <span class="comment">/* OFP_VERSION. */</span></span><br><span class="line">    <span class="keyword">uint8_t</span> type; <span class="comment">/* One of the OFPT_ constants. */</span></span><br><span class="line">    <span class="keyword">uint16_t</span> length; <span class="comment">/* Length including this ofp_header. */</span></span><br><span class="line">    <span class="keyword">uint32_t</span> xid; <span class="comment">/* Transaction id associated with this packet. </span></span><br><span class="line"><span class="comment">                  Replies use the same id as was in the request to facilitate pairing. */</span></span><br><span class="line">&#125;;</span><br><span class="line">OFP_ASSERT(<span class="keyword">sizeof</span>(struct ofp_header) == <span class="number">8</span>);</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>version：OpenFlow 协议版本 </li>
+<li>type：表示该包/消息的类型，OpenFlow 协议中的消息按照通信的方式可以分为 <strong>Controller to Switch 消息，Asynchronous 消息，symmetric 消息</strong>三种。</li>
+<li>length：数据包的总长度 (包含头部)，由于 header 最少为 8 字节，因此 length 最少为 8。</li>
+<li>transaction id (xid)：事务 ID 其实就是数据包编号，<strong>请求包和回复包的事务 ID 是相同的，表示两者共同完成了一件事</strong>。</li>
+</ul>
+<p>头部中类型字段的值如下：</p>
+<ul>
+<li><strong>控制器/交换机消息由控制器发送</strong>，可能需要也可能不需要交换机的响应。</li>
+<li><strong>异步消息无需征得控制器同意便可以由交换机发送</strong>，交换机将异步消息发送给控制器，表示数据包到达、交换机状态更改或错误。</li>
+<li><strong>对称消息无需征得对方同意便可以双向发送</strong>，可以是交换机先发送，也可以是控制器先发送。</li>
+</ul>
+<figure class="highlight c"><figcaption><span>OpenFlow Message Type</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> ofp_type &#123;</span><br><span class="line">    <span class="comment">/* Immutable messages. */</span></span><br><span class="line">    OFPT_HELLO              = <span class="number">0</span>,  <span class="comment">/* Symmetric message */</span></span><br><span class="line">    OFPT_ERROR              = <span class="number">1</span>,  <span class="comment">/* Symmetric message */</span></span><br><span class="line">    OFPT_ECHO_REQUEST       = <span class="number">2</span>,  <span class="comment">/* Symmetric message */</span></span><br><span class="line">    OFPT_ECHO_REPLY         = <span class="number">3</span>,  <span class="comment">/* Symmetric message */</span></span><br><span class="line">    OFPT_EXPERIMENTER       = <span class="number">4</span>,  <span class="comment">/* Symmetric message */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Switch configuration messages. */</span></span><br><span class="line">    OFPT_FEATURES_REQUEST   = <span class="number">5</span>,  <span class="comment">/* Controller/switch message */</span></span><br><span class="line">    OFPT_FEATURES_REPLY     = <span class="number">6</span>,  <span class="comment">/* Controller/switch message */</span></span><br><span class="line">    OFPT_GET_CONFIG_REQUEST = <span class="number">7</span>,  <span class="comment">/* Controller/switch message */</span></span><br><span class="line">    OFPT_GET_CONFIG_REPLY   = <span class="number">8</span>,  <span class="comment">/* Controller/switch message */</span></span><br><span class="line">    OFPT_SET_CONFIG         = <span class="number">9</span>,  <span class="comment">/* Controller/switch message */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Asynchronous messages. */</span></span><br><span class="line">    OFPT_PACKET_IN          = <span class="number">10</span>, <span class="comment">/* Async message */</span></span><br><span class="line">    OFPT_FLOW_REMOVED       = <span class="number">11</span>, <span class="comment">/* Async message */</span></span><br><span class="line">    OFPT_PORT_STATUS        = <span class="number">12</span>, <span class="comment">/* Async message */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Controller command messages. */</span></span><br><span class="line">    OFPT_PACKET_OUT         = <span class="number">13</span>, <span class="comment">/* Controller/switch message */</span></span><br><span class="line">    OFPT_FLOW_MOD           = <span class="number">14</span>, <span class="comment">/* Controller/switch message */</span></span><br><span class="line">    OFPT_GROUP_MOD          = <span class="number">15</span>, <span class="comment">/* Controller/switch message */</span></span><br><span class="line">    OFPT_PORT_MOD           = <span class="number">16</span>, <span class="comment">/* Controller/switch message */</span></span><br><span class="line">    OFPT_TABLE_MOD          = <span class="number">17</span>, <span class="comment">/* Controller/switch message */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Multipart messages. */</span></span><br><span class="line">    OFPT_MULTIPART_REQUEST      = <span class="number">18</span>, <span class="comment">/* Controller/switch message */</span></span><br><span class="line">    OFPT_MULTIPART_REPLY        = <span class="number">19</span>, <span class="comment">/* Controller/switch message */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Barrier messages. */</span></span><br><span class="line">    OFPT_BARRIER_REQUEST    = <span class="number">20</span>, <span class="comment">/* Controller/switch message */</span></span><br><span class="line">    OFPT_BARRIER_REPLY      = <span class="number">21</span>, <span class="comment">/* Controller/switch message */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Controller role change request messages. */</span></span><br><span class="line">    OFPT_ROLE_REQUEST       = <span class="number">24</span>, <span class="comment">/* Controller/switch message */</span></span><br><span class="line">    OFPT_ROLE_REPLY         = <span class="number">25</span>, <span class="comment">/* Controller/switch message */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Asynchronous message configuration. */</span></span><br><span class="line">    OFPT_GET_ASYNC_REQUEST  = <span class="number">26</span>, <span class="comment">/* Controller/switch message */</span></span><br><span class="line">    OFPT_GET_ASYNC_REPLY    = <span class="number">27</span>, <span class="comment">/* Controller/switch message */</span></span><br><span class="line">    OFPT_SET_ASYNC          = <span class="number">28</span>, <span class="comment">/* Controller/switch message */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Meters and rate limiters configuration messages. */</span></span><br><span class="line">    OFPT_METER_MOD          = <span class="number">29</span>, <span class="comment">/* Controller/switch message */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Controller role change event messages. */</span></span><br><span class="line">    OFPT_ROLE_STATUS        = <span class="number">30</span>, <span class="comment">/* Async message */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Asynchronous messages. */</span></span><br><span class="line">    OFPT_TABLE_STATUS       = <span class="number">31</span>, <span class="comment">/* Async message */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Request forwarding by the switch. */</span></span><br><span class="line">    OFPT_REQUESTFORWARD     = <span class="number">32</span>, <span class="comment">/* Async message */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Bundle operations (multiple messages as a single operation). */</span></span><br><span class="line">    OFPT_BUNDLE_CONTROL     = <span class="number">33</span>, <span class="comment">/* Controller/switch message */</span></span><br><span class="line">    OFPT_BUNDLE_ADD_MESSAGE = <span class="number">34</span>, <span class="comment">/* Controller/switch message */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Controller Status async message. */</span></span><br><span class="line">    OFPT_CONTROLLER_STATUS  = <span class="number">35</span>, <span class="comment">/* Async message */</span></span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>本文描述了 OpenFlow 逻辑交换机的技术特性，包括交换机组成部分，基本功能，以及 OpenFlow 控制器如何通过 OpenFlow switch 协议管理交换机。其他关于 OpenFlow 协议和 SDN 的文档可以在 <a class="btn" href="https://www.opennetworking.org/" target="_blank" rel="noopener">
+            <i class="fa fa-home fa-fw fa-lg"></i>Open Networking Foundation website
+          </a> 找到。</p>
+<p>一个 OpenFlow 交换机的主要组成部分如下图所示：<br><img src="switch-components.png" alt="switch-components"></p>
+<h1 id="Switch-Components"><a href="#Switch-Components" class="headerlink" title="Switch Components"></a>Switch Components</h1><p>一个 OpenFlow 逻辑交换机包括：</p>
+<ul>
+<li>一个或多个流表 (one or more flow tables) 以及一个组表 (a group table)，它们用来实现包的查询，转发。</li>
+<li>一个或多个 OpenFlow 通道 (one or more OpenFlow channels)，用来与外部控制器通信。</li>
+</ul>
+<p>通过 OpenFlow switch 协议，控制器可以主动的或被动的在 flow table 中加入、更新、删除 flow entries，每个 flow entry 都包含 match fields，counters，以及 a set of instructions 用来匹配包。</p>
+<p>匹配从管线 pipline 中的第一个 flow table 开始，并且可能持续匹配多个 flow tables。在每个流表中，</p>
+<h1 id="OpenFlow-Ports"><a href="#OpenFlow-Ports" class="headerlink" title="OpenFlow Ports"></a>OpenFlow Ports</h1><p>OpenFlow 端口 (port) 是传输包的网络接口，如同 Ethernet 端口一样，OpenFlow 交换机之间通过端口相连组成网络。</p>
+<p>网络中的 OpenFlow 包从交换机的 <strong>输入端口 (ingress port)</strong> 进入，经过 pipline 处理，然后从 <strong>输出端口 (output port)</strong> 转发到网络中 (如果需要转发的话)。</p>
+<p>OpenFlow 交换机必须支持三种类型的端口：</p>
+<ol>
+<li>物理端口 (physical ports)</li>
+<li>逻辑端口 (logical ports)</li>
+<li>保留端口 (reserved ports)</li>
+</ol>
+<h2 id="Standard-Ports"><a href="#Standard-Ports" class="headerlink" title="Standard Ports"></a>Standard Ports</h2><p>OpenFlow 标准端口定义为物理端口，逻辑端口以及可选的 LOCAL 保留端口 (不包括其他的保留端口)。标准端口的含义是 OpenFlow-only 交换机所支持的端口。</p>
+<h2 id="Physical-Ports"><a href="#Physical-Ports" class="headerlink" title="Physical Ports"></a>Physical Ports</h2><p>物理端口是由交换机定义的端口，由交换机对应的硬件决定的。例如一个以太网交换机，物理端口和以太网接口是一一对应的。</p>
+<p>在某些部署环境中，OpenFlow 交换机是虚拟于硬件之上的，在这种情况下，物理端口可能表示该交换机对应硬件接口的一个虚拟的切片 (a virtual slice of the corresponding hardware interface of the switch)。</p>
+<h2 id="Logical-Ports"><a href="#Logical-Ports" class="headerlink" title="Logical Ports"></a>Logical Ports</h2><p>OpenFlow 逻辑端口是交换机定义的端口，与交换机的硬件接口不直接对应。逻辑端口是更高级别的抽象，可以由交换机通过非OpenFlow 方法 (例如，链路聚合组、隧道、环回接口) 定义。逻辑端口可以包括包封装，并且可以映射到各种物理端口。</p>
+<p>物理端口和逻辑端口之间的唯一区别是，与逻辑端口关联的数据包可能有一个称为 tunnel-ID 的额外管道字段与其关联，当逻辑端口上接收到的数据包发送到控制器时，其逻辑端口和对应的物理端口都会报告给控制器。</p>
+<h2 id="Reserved-Ports"><a href="#Reserved-Ports" class="headerlink" title="Reserved Ports"></a>Reserved Ports</h2><p>保留端口是由协议所规定的，表示一类端口，用来指定通用的转发操作。一个交换机不需要支持所有的保留端口，以下需要支持的使用 required 标识：</p>
+<ul>
+<li>Required: ALL: 表示交换机可用于转发特定数据包的所有端口。</li>
+<li>Required: CONTROLLER: 表示和控制器相连的控制通道端口。</li>
+<li>Required: TABLE:</li>
+<li>Required: IN_PORT: 表示包进入端口。只能用作输出端口，将包从进入端口转发出去。</li>
+<li>Required: ANY: 用于一些 OpenFlow 请求中当没有指定端口时。</li>
+<li>Required: UNSET:</li>
+<li>Optional: LOCAL:</li>
+<li>Optional: NORMAL:</li>
+<li>Optional: FLOOD:</li>
+</ul>
+<h1 id="OpenFlow-Tables"><a href="#OpenFlow-Tables" class="headerlink" title="OpenFlow Tables"></a>OpenFlow Tables</h1><p>OpenFlow tables 包括三种表：</p>
+<ol>
+<li>Flow tables:</li>
+<li>Group tables:</li>
+<li>Meter tables:</li>
+</ol>
+<h2 id="Pipeline-Processing"><a href="#Pipeline-Processing" class="headerlink" title="Pipeline Processing"></a>Pipeline Processing</h2><p><img src="packet-flow.png" alt="packet-flow"></p>
+<h2 id="Flow-Tables-and-flow-entries"><a href="#Flow-Tables-and-flow-entries" class="headerlink" title="Flow Tables and flow entries"></a>Flow Tables and flow entries</h2><p><img src="flow-table-structure.png" alt="flow-table-structure"></p>
+<h2 id="Matching"><a href="#Matching" class="headerlink" title="Matching"></a>Matching</h2><p><img src="packet-flow-detail.png" alt="packet-flow-detail"></p>
+<h2 id="Table-miss"><a href="#Table-miss" class="headerlink" title="Table-miss"></a>Table-miss</h2><h2 id="Group-Table"><a href="#Group-Table" class="headerlink" title="Group Table"></a>Group Table</h2><h2 id="Meter-Table"><a href="#Meter-Table" class="headerlink" title="Meter Table"></a>Meter Table</h2><h1 id="OpenFlow-Channel-and-Control-Channel"><a href="#OpenFlow-Channel-and-Control-Channel" class="headerlink" title="OpenFlow Channel and Control Channel"></a>OpenFlow Channel and Control Channel</h1><h1 id="The-OpenFlow-Switch-Protocol"><a href="#The-OpenFlow-Switch-Protocol" class="headerlink" title="The OpenFlow Switch Protocol"></a>The OpenFlow Switch Protocol</h1><p>The heart of the OpenFlow switch specification is the set of structures used for OpenFlow Switch Protocol messages.</p>
+<h2 id="Protocol-Basic-Format"><a href="#Protocol-Basic-Format" class="headerlink" title="Protocol Basic Format"></a>Protocol Basic Format</h2><h3 id="Header"><a href="#Header" class="headerlink" title="Header"></a>Header</h3><h3 id="Padding"><a href="#Padding" class="headerlink" title="Padding"></a>Padding</h3><h3 id="Reserved-and-unsupported-values-and-bit-positions"><a href="#Reserved-and-unsupported-values-and-bit-positions" class="headerlink" title="Reserved and unsupported values and bit positions"></a>Reserved and unsupported values and bit positions</h3><h2 id="Common-Structure"><a href="#Common-Structure" class="headerlink" title="Common Structure"></a>Common Structure</h2><h3 id="Port-Structures"><a href="#Port-Structures" class="headerlink" title="Port Structures"></a>Port Structures</h3><h2 id="Controller-to-Switch-Messages"><a href="#Controller-to-Switch-Messages" class="headerlink" title="Controller-to-Switch Messages"></a>Controller-to-Switch Messages</h2><h3 id="Handshake"><a href="#Handshake" class="headerlink" title="Handshake"></a>Handshake</h3><p><img src="OFPT_FEATURES_REQUEST.png" alt="OFPT_FEATURES_REQUEST"><br><img src="OFPT_FEATURES_REPLY.png" alt="OFPT_FEATURES_REPLY"></p>
+<h3 id="Switch-Configuration"><a href="#Switch-Configuration" class="headerlink" title="Switch Configuration"></a>Switch Configuration</h3><h2 id="Asynchronous-Message"><a href="#Asynchronous-Message" class="headerlink" title="Asynchronous Message"></a>Asynchronous Message</h2><h2 id="Symmetric-Message"><a href="#Symmetric-Message" class="headerlink" title="Symmetric Message"></a>Symmetric Message</h2><h3 id="Hello"><a href="#Hello" class="headerlink" title="Hello"></a>Hello</h3><h3 id="Echo-Request"><a href="#Echo-Request" class="headerlink" title="Echo Request"></a>Echo Request</h3><h1 id="Glossary"><a href="#Glossary" class="headerlink" title="Glossary"></a>Glossary</h1><ul>
+<li><strong>Action</strong></li>
+<li>List of Actions:</li>
+<li><strong>Datapath</strong>: The datapath includes the pipeline of flow tables, the group table and the ports.</li>
+<li><strong>Flow Table</strong>: a stage of the pipeline. It contains flow entries.</li>
+<li><strong>Flow Entry</strong>: an element in a flow table used to match and process packets.</li>
+<li><strong>Forwarding</strong>: Deciding the output port or set of output ports for a packet, and transfering that packet to those output ports.</li>
+<li>Group:</li>
+<li><strong>Header</strong>: control information embedded in a packet used by a switch to identify the packet and to inform the switch on how to process and forward the packet. The header typically includes various header fields to identify the source and destination of the packet, and how to interpret other headers and the payload.</li>
+</ul>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a href></a></li>
+<li><a href="https://www.cnblogs.com/goldsunshine/p/7262484.html" target="_blank" rel="noopener">OpenFlow协议1.0及1.3版本分析</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/wechatpay.png" alt="Yanjiu Li 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/alipay.jpeg" alt="Yanjiu Li 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/SDN/" rel="tag"><i class="fa fa-tag"></i> SDN</a>
+              <a href="/tags/OpenFlow/" rel="tag"><i class="fa fa-tag"></i> OpenFlow</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/01/01/network-addressing/" rel="prev" title="TCP/IP 网络寻址技术">
+      <i class="fa fa-chevron-left"></i> TCP/IP 网络寻址技术
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/03/27/python-parse-args/" rel="next" title="Python 解析命令行参数">
+      Python 解析命令行参数 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80MTAzMS8xNzU1Ng=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#OpenFlow-通信流程"><span class="nav-number">1.</span> <span class="nav-text">OpenFlow 通信流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#建立-TCP-连接"><span class="nav-number">1.1.</span> <span class="nav-text">建立 TCP 连接</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#互相问好-OFPT-HELLO"><span class="nav-number">1.2.</span> <span class="nav-text">互相问好 - OFPT_HELLO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#交换机信息交互-OFPT-FEATURES"><span class="nav-number">1.3.</span> <span class="nav-text">交换机信息交互 - OFPT_FEATURES</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#端口信息交互-OFPT-MULTIPART"><span class="nav-number">1.4.</span> <span class="nav-text">端口信息交互 - OFPT_MULTIPART</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#控制器下发配置-OFPT-SET-CONFIG"><span class="nav-number">1.5.</span> <span class="nav-text">控制器下发配置 - OFPT_SET_CONFIG</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#保持连接状态-OFPT-ECHO"><span class="nav-number">1.6.</span> <span class="nav-text">保持连接状态 - OFPT_ECHO</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#数据包结构"><span class="nav-number">2.</span> <span class="nav-text">数据包结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#OpenFlow-包头-Header"><span class="nav-number">2.1.</span> <span class="nav-text">OpenFlow 包头 (Header)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Introduction"><span class="nav-number">3.</span> <span class="nav-text">Introduction</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Switch-Components"><span class="nav-number">4.</span> <span class="nav-text">Switch Components</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#OpenFlow-Ports"><span class="nav-number">5.</span> <span class="nav-text">OpenFlow Ports</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Standard-Ports"><span class="nav-number">5.1.</span> <span class="nav-text">Standard Ports</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Physical-Ports"><span class="nav-number">5.2.</span> <span class="nav-text">Physical Ports</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Logical-Ports"><span class="nav-number">5.3.</span> <span class="nav-text">Logical Ports</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reserved-Ports"><span class="nav-number">5.4.</span> <span class="nav-text">Reserved Ports</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#OpenFlow-Tables"><span class="nav-number">6.</span> <span class="nav-text">OpenFlow Tables</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Pipeline-Processing"><span class="nav-number">6.1.</span> <span class="nav-text">Pipeline Processing</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Flow-Tables-and-flow-entries"><span class="nav-number">6.2.</span> <span class="nav-text">Flow Tables and flow entries</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Matching"><span class="nav-number">6.3.</span> <span class="nav-text">Matching</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Table-miss"><span class="nav-number">6.4.</span> <span class="nav-text">Table-miss</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Group-Table"><span class="nav-number">6.5.</span> <span class="nav-text">Group Table</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Meter-Table"><span class="nav-number">6.6.</span> <span class="nav-text">Meter Table</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#OpenFlow-Channel-and-Control-Channel"><span class="nav-number">7.</span> <span class="nav-text">OpenFlow Channel and Control Channel</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#The-OpenFlow-Switch-Protocol"><span class="nav-number">8.</span> <span class="nav-text">The OpenFlow Switch Protocol</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Protocol-Basic-Format"><span class="nav-number">8.1.</span> <span class="nav-text">Protocol Basic Format</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Header"><span class="nav-number">8.1.1.</span> <span class="nav-text">Header</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Padding"><span class="nav-number">8.1.2.</span> <span class="nav-text">Padding</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reserved-and-unsupported-values-and-bit-positions"><span class="nav-number">8.1.3.</span> <span class="nav-text">Reserved and unsupported values and bit positions</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Common-Structure"><span class="nav-number">8.2.</span> <span class="nav-text">Common Structure</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Port-Structures"><span class="nav-number">8.2.1.</span> <span class="nav-text">Port Structures</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Controller-to-Switch-Messages"><span class="nav-number">8.3.</span> <span class="nav-text">Controller-to-Switch Messages</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Handshake"><span class="nav-number">8.3.1.</span> <span class="nav-text">Handshake</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Switch-Configuration"><span class="nav-number">8.3.2.</span> <span class="nav-text">Switch Configuration</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Asynchronous-Message"><span class="nav-number">8.4.</span> <span class="nav-text">Asynchronous Message</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Symmetric-Message"><span class="nav-number">8.5.</span> <span class="nav-text">Symmetric Message</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Hello"><span class="nav-number">8.5.1.</span> <span class="nav-text">Hello</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Echo-Request"><span class="nav-number">8.5.2.</span> <span class="nav-text">Echo Request</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Glossary"><span class="nav-number">9.</span> <span class="nav-text">Glossary</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">10.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yanjiu Li"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Yanjiu Li</p>
+  <div class="site-description" itemprop="description">演绎一场技术溯源的盛宴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">99</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yanjiulab" title="GitHub → https://github.com/yanjiulab" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:liyanjiu@outlook.com" title="E-Mail → mailto:liyanjiu@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Worth Reading
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP" title="http://pages.cs.wisc.edu/~remzi/OSTEP" rel="noopener" target="_blank">OSTEP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" title="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" rel="noopener" target="_blank">OSTEP-Chinese</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.apuebook.com/about3e.html" title="http://www.apuebook.com/about3e.html" rel="noopener" target="_blank">APUE</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" title="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" rel="noopener" target="_blank">UNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" title="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" rel="noopener" target="_blank">IUNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.yinwang.org/" title="http://www.yinwang.org/" rel="noopener" target="_blank">当然我在扯淡</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yanjiu Li</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">217k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:17</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

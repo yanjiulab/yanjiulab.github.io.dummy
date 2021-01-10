@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yjlab.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Java Basics对于 C/C++ 的使用者来说，             Java Basics            是很容易的，他们拥有相同的祖先，拥有近似的语法。相比较 C++ 而言，Java 删去了指针和内存管理等容易出错的特性，因而被戏称为 C++--，这带来了相当的好处，但也做了一些牺牲。对于有 C++ 基础的程序员，经常对比思考 C++ 和 Java 对某种方式的实现差异，或许">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Java">
+<meta property="og:url" content="http://yjlab.xyz/notes/programming/java/index.html">
+<meta property="og:site_name" content="Yanjiu Lab">
+<meta property="og:description" content="Java Basics对于 C/C++ 的使用者来说，             Java Basics            是很容易的，他们拥有相同的祖先，拥有近似的语法。相比较 C++ 而言，Java 删去了指针和内存管理等容易出错的特性，因而被戏称为 C++--，这带来了相当的好处，但也做了一些牺牲。对于有 C++ 基础的程序员，经常对比思考 C++ 和 Java 对某种方式的实现差异，或许">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-10-21T03:34:31.765Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java">
+<meta name="twitter:description" content="Java Basics对于 C/C++ 的使用者来说，             Java Basics            是很容易的，他们拥有相同的祖先，拥有近似的语法。相比较 C++ 而言，Java 删去了指针和内存管理等容易出错的特性，因而被戏称为 C++--，这带来了相当的好处，但也做了一些牺牲。对于有 C++ 基础的程序员，经常对比思考 C++ 和 Java 对某种方式的实现差异，或许">
+
+<link rel="canonical" href="http://yjlab.xyz/notes/programming/java/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : false,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Java | Yanjiu Lab
+</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yanjiu Lab</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Learning then grokking</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        
+            
+  <li class="menu-item menu-item-notes">
+
+    <a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记</a>
+
+  </li>
+
+
+      
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+  
+
+      
+
+        
+        <ul id="sub-menu" class="sub-menu menu">
+          
+            
+          
+          
+            
+                
+  <li class="menu-item menu-item-algorithm">
+
+    <a href="/notes/algorithm/" rel="section"><i class="fa fa-rocket fa-fw"></i>Algorithm</a>
+
+  </li>
+
+
+          
+            
+                
+  <li class="menu-item menu-item-programming">
+
+    <a href="/notes/programming/" rel="section"><i class="fa fa-star fa-fw"></i>Programming</a>
+
+  </li>
+
+
+          
+              
+  <li class="menu-item menu-item-networking">
+
+    <a href="/notes/networking/" rel="section"><i class="fa fa-cloud fa-fw"></i>Networking</a>
+
+  </li>
+
+
+          
+          
+            
+                
+  <li class="menu-item menu-item-operating-system">
+
+    <a href="/notes/os/" rel="section"><i class="fab fa-linux fa-fw"></i>Operating System</a>
+
+  </li>
+
+
+          
+              
+  <li class="menu-item menu-item-database">
+
+    <a href="/notes/database/" rel="section"><i class="fa fa-database fa-fw"></i>Database</a>
+
+  </li>
+
+
+          
+          
+              
+  <li class="menu-item menu-item-cloud-computing">
+
+    <a href="/notes/cloud/" rel="section"><i class="fab fa-mixcloud fa-fw"></i>Cloud Computing</a>
+
+  </li>
+
+
+          
+          
+            
+                
+  <li class="menu-item menu-item-tools">
+
+    <a href="/notes/tools/" rel="section"><i class="fa fa-tools fa-fw"></i>Tools</a>
+
+  </li>
+
+
+        </ul>
+        
+
+        
+
+                
+                
+
+                
+
+                    
+                    <ul id="sub-menu-2" class="sub-menu menu">
+                      
+                        
+  <li class="menu-item menu-item-c">
+
+    <a href="/notes/programming/c/" rel="section"><i class="fab fa-cuttlefish fa-fw"></i>C</a>
+
+  </li>
+
+
+                        
+  <li class="menu-item menu-item-java">
+
+    <a href="/notes/programming/java/" rel="section"><i class="fa fa-coffee fa-fw"></i>Java</a>
+
+  </li>
+
+
+                        
+  <li class="menu-item menu-item-python">
+
+    <a href="/notes/programming/python/" rel="section"><i class="fab fa-python fa-fw"></i>Python</a>
+
+  </li>
+
+
+                        
+  <li class="menu-item menu-item-oop-&-design-patterns">
+
+    <a href="/notes/programming/design-patterns/" rel="section"><i class="fa fa-object-group fa-fw"></i>OOP & Design Patterns</a>
+
+  </li>
+
+
+                    </ul>
+                    
+                
+
+                
+                
+
+                
+                
+        
+      
+  
+
+          <div class="content page posts-expand">
+            
+
+    
+    
+    
+    <div class="post-block" lang="zh-CN">
+      <header class="post-header">
+
+<h1 class="post-title" itemprop="name headline">Java
+</h1>
+
+<div class="post-meta">
+  
+  <ul class="breadcrumb">
+          
+            <li><a href="/notes/">NOTES</a></li>
+            <li><a href="/notes/programming/">PROGRAMMING</a></li>
+          <li>JAVA</li>
+        
+  </ul>
+
+</div>
+
+</header>
+
+      
+      
+      
+      <div class="post-body">
+          <h2 id="Java-Basics"><a href="#Java-Basics" class="headerlink" title="Java Basics"></a>Java Basics</h2><p>对于 C/C++ 的使用者来说，<a class="btn" href="/2019/11/21/java-basics/">
+            <i class="fa-fw fa-lg"></i>Java Basics
+          </a> 是很容易的，他们拥有相同的祖先，拥有近似的语法。相比较 C++ 而言，Java 删去了指针和内存管理等容易出错的特性，因而被戏称为 <code>C++--</code>，这带来了相当的好处，但也做了一些牺牲。<strong>对于有 C++ 基础的程序员，经常对比思考 C++ 和 Java 对某种方式的实现差异，或许能带来对该技术更深层次的理解。</strong>。</p>
+<h2 id="Java-Object-Oriented-Programming-OOP"><a href="#Java-Object-Oriented-Programming-OOP" class="headerlink" title="Java Object Oriented Programming (OOP)"></a>Java Object Oriented Programming (OOP)</h2><p>如果说 Java Basics 里面描述了一门编程语言应该有的样子，那么 <a class="btn" href="/2019/11/27/java-oop/">
+            <i class="fa-fw fa-lg"></i>Java OOP
+          </a> 无疑才是 Java 的亮点。 <strong>相比于 C++，Java 是一种更纯粹的面向对象程序设计语言。我们应当能体会到：在 Java 中 (几乎) 一切都是对象。</strong></p>
+<div class="note info">
+            <p>尽管 C++ 和 Java 都是混合型语言。C++ 允许多种编程风格主要是因为它需要兼容过程型的 C 语言，但 Java 语言的设计者假设我们只进行面向对象程序设计。也就是说，我们在进行 Java 编程设计之前，最好将思维转换到面向对象的世界来。否则，你可能只是想逃避 C/C++ 程序编写的复杂，如果是这样的话，我推荐你使用 Python，因为确实 OOP 和 Java 不是每个人都需要的。</p>
+          </div>
+<h2 id="Java-Containers-in-Depth"><a href="#Java-Containers-in-Depth" class="headerlink" title="Java Containers in Depth"></a>Java Containers in Depth</h2><p>容器的作用就是持有对象 (holding object)。几乎所有的 Java 大型程序，都需要与容器打交道，因为我们总是需要持有我们的对象。除了数组这种“固定大小的容器”，<strong>Java 提供了一套相当完整的数据类来让我们组织我们的数据结构。</strong> 学习熟悉这些类库的使用固然重要，但更重要的是挖掘容器背后深层的思想。通过阅读 Java 的源码，我们惊讶的发现，原来 <a class="btn" href="/2019/11/27/java-containers/">
+            <i class="fa-fw fa-lg"></i>Java Containers
+          </a> 背后是由复杂、优美而高效的数据结构来支撑的。</p>
+<h2 id="Java-I-O"><a href="#Java-I-O" class="headerlink" title="Java I/O"></a>Java I/O</h2><p>对 IO 进行简单的编程是非常容易的，只需要几个类和方法就可以完成输入输出操作，但<strong>高效、可移植的 IO 编程</strong>非常困难，尤其是还需要处理很多不同的字符集，因此也导致了实际应用中 <a class="btn" href="/2019/10/10/java-io/">
+            <i class="fa-fw fa-lg"></i>Java I/O
+          </a> 成为了一个相当复杂的编程对象。</p>
+<h2 id="Java-Concurrency-in-Practice"><a href="#Java-Concurrency-in-Practice" class="headerlink" title="Java Concurrency in Practice"></a>Java Concurrency in Practice</h2><a class="btn" href="/2019/10/21/java-concurrency/">
+            <i class="fa-fw fa-lg"></i>Java Concurrency
+          </a>
+<h2 id="Java-Virtual-Machine-JVM"><a href="#Java-Virtual-Machine-JVM" class="headerlink" title="Java Virtual Machine (JVM)"></a>Java Virtual Machine (JVM)</h2><a class="btn" href="/2019/11/28/java-virtual-machine/">
+            <i class="fa-fw fa-lg"></i>JVM
+          </a>
+<h2 id="Networking-in-Java"><a href="#Networking-in-Java" class="headerlink" title="Networking in Java"></a>Networking in Java</h2><p>如果说 Java I/O 和 Java Concurrency 令你头疼的话，那么现在 <a class="btn" href="/2019/10/22/java-networking/">
+            <i class="fa-fw fa-lg"></i>Java Networking
+          </a> 将会同时涉及这两种技术，不仅如此，Java 的网络编程还将涉及更多概念，包括网络协议，操作系统等等。但也别太沮丧，<strong>Java 的网络编程仅涉及传输层及其以上层</strong>，Java 将 C 语言实现的底层网络功能做了进一步<strong>限制与封装</strong>，提供了简单易用的 API。对于大部分场景，我们使用 UDP 或 TCP 协议 (或者基于 UDP 或 TCP 的协议) 已经足够，甚至我们可以使用成熟的网络框架 <a class="btn" href="/2019/11/18/netty/">
+            <i class="fa-fw fa-lg"></i>Netty
+          </a> 来进一步优化我们的工作。</p>
+<div class="note info">
+            <p>Java 的跨平台特性使得其不可能深入底层，对于网络套接字的限制我认为是一种明智的做法。如果程序员需要定制 Ping，实现网络嗅探等功能，那么直接使用 C 语言是更好的选择。反而，大多数情况我们都是在传输层以上工作，提供这些类库和框架已然足够。由于 Java 的网络库只是一种高级的封装，因此若想学好网络编程，请务必从操作系统和 C 语言开始。</p>
+          </div>
+<h2 id="Java-Related"><a href="#Java-Related" class="headerlink" title="Java Related"></a>Java Related</h2><p>A curated list of awesome Java frameworks, libraries and software.</p>
+<h3 id="IDE"><a href="#IDE" class="headerlink" title="IDE"></a>IDE</h3><a class="btn" href="https://www.jetbrains.com/help/idea/getting-started.html" target="_blank" rel="noopener">
+            <i class="fa fa-home fa-fw fa-lg"></i>IntelliJ IDEA
+          </a>
+<h3 id="Build"><a href="#Build" class="headerlink" title="Build"></a>Build</h3><a class="btn" href="https://maven.apache.org/guides/index.html" target="_blank" rel="noopener">
+            <i class="fa fa-home fa-fw fa-lg"></i>Maven
+          </a>
+<a class="btn" href="https://docs.gradle.org/current/userguide/userguide.html" target="_blank" rel="noopener">
+            <i class="fa fa-home fa-fw fa-lg"></i>Gradle
+          </a>
+<ul>
+<li><a href="https://search.maven.org/" target="_blank" rel="noopener">Central Repository</a></li>
+</ul>
+<h3 id="JDK-Tools"><a href="#JDK-Tools" class="headerlink" title="JDK Tools"></a>JDK Tools</h3><a class="btn" href="https://docs.oracle.com/javase/8/docs/technotes/tools/" target="_blank" rel="noopener">
+            <i class="fa fa-home fa-fw fa-lg"></i>JDK 8 Tools and Utilities
+          </a>
+<a class="btn" href="https://docs.oracle.com/en/java/javase/11/tools/" target="_blank" rel="noopener">
+            <i class="fa fa-home fa-fw fa-lg"></i>JDK 11 Tools Reference
+          </a>
+<h3 id="Logging"><a href="#Logging" class="headerlink" title="Logging"></a>Logging</h3><p>Logging Shims</p>
+<ul>
+<li>Apache Commons Logging</li>
+<li>SLF4J (Recommended) </li>
+</ul>
+<p>Logging Frameworks</p>
+<ul>
+<li>Java Util Logging</li>
+<li>Apache Log4J (Not Recommended)</li>
+<li>Logback</li>
+<li>Apache Log4J2</li>
+</ul>
+<h3 id="Messaging"><a href="#Messaging" class="headerlink" title="Messaging"></a>Messaging</h3><h3 id="Networking"><a href="#Networking" class="headerlink" title="Networking"></a>Networking</h3><p>Libraries for building network servers.<br>Dubbo - High-performance RPC framework.<br>Netty - Framework for building high-performance network applications.</p>
+<h3 id="ORM"><a href="#ORM" class="headerlink" title="ORM"></a>ORM</h3><p>APIs that handle the persistence of objects.</p>
+<h3 id="Server"><a href="#Server" class="headerlink" title="Server"></a>Server</h3><p>Servers specifically used to deploy applications.</p>
+<ul>
+<li>Apache Tomcat - Robust, all-round server for Servlet and JSP.</li>
+<li>Jetty - Provides a Web server and javax.servlet container, plus support for HTTP/2, WebSocket, OSGi, JMX, JNDI, JAAS and many other integrations.</li>
+</ul>
+<h3 id="Search"><a href="#Search" class="headerlink" title="Search"></a>Search</h3><p>Engines that index documents for search and analysis.</p>
+<ul>
+<li>Elasticsearch - Distributed, multitenant-capable, full-text search engine with a RESTful web interface and schema-free JSON documents.</li>
+</ul>
+<h3 id="Security"><a href="#Security" class="headerlink" title="Security"></a>Security</h3><p>Libraries that handle security, authentication, authorization or session management.</p>
+<ul>
+<li>Apache Shiro - Performs authentication, authorization, cryptography and session management.</li>
+</ul>
+<h2 id="Resources"><a href="#Resources" class="headerlink" title="Resources"></a>Resources</h2><h3 id="Awesome-Lists"><a href="#Awesome-Lists" class="headerlink" title="Awesome Lists"></a>Awesome Lists</h3><ul>
+<li><a href="https://github.com/akullpp/awesome-java" target="_blank" rel="noopener">Awesome Java</a></li>
+</ul>
+<h3 id="Influential-Books"><a href="#Influential-Books" class="headerlink" title="Influential Books"></a>Influential Books</h3><p>Books that made a big impact and are still worth reading.</p>
+<ul>
+<li>Core Java Volume I — Fundamentals</li>
+<li>Core Java, Volume II — Advanced Features</li>
+<li>Effective Java (3rd Edition)</li>
+<li>Java Concurrency in Practice</li>
+<li>Thinking in Java</li>
+</ul>
+<h3 id="Websites"><a href="#Websites" class="headerlink" title="Websites"></a>Websites</h3><ul>
+<li><a href="https://java-design-patterns.com/" target="_blank" rel="noopener">Design patterns implemented in Java</a></li>
+</ul>
+<h3 id="官方"><a href="#官方" class="headerlink" title="官方"></a>官方</h3><ul>
+<li>JSR 133</li>
+<li><a href="http://www.cs.umd.edu/~pugh/java/memoryModel/" target="_blank" rel="noopener">The Java Memory Model</a></li>
+</ul>
+<h3 id="面经"><a href="#面经" class="headerlink" title="面经"></a>面经</h3><ul>
+<li><a href="https://zhuanlan.zhihu.com/p/83978358" target="_blank" rel="noopener">投行 Java 面试必问的多线程和并发问题</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/84106079" target="_blank" rel="noopener">Java 面试</a></li>
+</ul>
+
+      </div>
+      
+      
+      
+    </div>
+    
+  <ul class="breadcrumb">
+          
+            <li><a href="/notes/">NOTES</a></li>
+            <li><a href="/notes/programming/">PROGRAMMING</a></li>
+          <li>JAVA</li>
+        
+  </ul>
+
+    
+    
+    
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-Basics"><span class="nav-number">1.</span> <span class="nav-text">Java Basics</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-Object-Oriented-Programming-OOP"><span class="nav-number">2.</span> <span class="nav-text">Java Object Oriented Programming (OOP)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-Containers-in-Depth"><span class="nav-number">3.</span> <span class="nav-text">Java Containers in Depth</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-I-O"><span class="nav-number">4.</span> <span class="nav-text">Java I/O</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-Concurrency-in-Practice"><span class="nav-number">5.</span> <span class="nav-text">Java Concurrency in Practice</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-Virtual-Machine-JVM"><span class="nav-number">6.</span> <span class="nav-text">Java Virtual Machine (JVM)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Networking-in-Java"><span class="nav-number">7.</span> <span class="nav-text">Networking in Java</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-Related"><span class="nav-number">8.</span> <span class="nav-text">Java Related</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#IDE"><span class="nav-number">8.1.</span> <span class="nav-text">IDE</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Build"><span class="nav-number">8.2.</span> <span class="nav-text">Build</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JDK-Tools"><span class="nav-number">8.3.</span> <span class="nav-text">JDK Tools</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Logging"><span class="nav-number">8.4.</span> <span class="nav-text">Logging</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Messaging"><span class="nav-number">8.5.</span> <span class="nav-text">Messaging</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Networking"><span class="nav-number">8.6.</span> <span class="nav-text">Networking</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ORM"><span class="nav-number">8.7.</span> <span class="nav-text">ORM</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Server"><span class="nav-number">8.8.</span> <span class="nav-text">Server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Search"><span class="nav-number">8.9.</span> <span class="nav-text">Search</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Security"><span class="nav-number">8.10.</span> <span class="nav-text">Security</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Resources"><span class="nav-number">9.</span> <span class="nav-text">Resources</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Awesome-Lists"><span class="nav-number">9.1.</span> <span class="nav-text">Awesome Lists</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Influential-Books"><span class="nav-number">9.2.</span> <span class="nav-text">Influential Books</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Websites"><span class="nav-number">9.3.</span> <span class="nav-text">Websites</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#官方"><span class="nav-number">9.4.</span> <span class="nav-text">官方</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#面经"><span class="nav-number">9.5.</span> <span class="nav-text">面经</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yanjiu Li"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Yanjiu Li</p>
+  <div class="site-description" itemprop="description">演绎一场技术溯源的盛宴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">99</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yanjiulab" title="GitHub → https://github.com/yanjiulab" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:liyanjiu@outlook.com" title="E-Mail → mailto:liyanjiu@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Worth Reading
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP" title="http://pages.cs.wisc.edu/~remzi/OSTEP" rel="noopener" target="_blank">OSTEP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" title="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" rel="noopener" target="_blank">OSTEP-Chinese</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.apuebook.com/about3e.html" title="http://www.apuebook.com/about3e.html" rel="noopener" target="_blank">APUE</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" title="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" rel="noopener" target="_blank">UNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" title="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" rel="noopener" target="_blank">IUNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.yinwang.org/" title="http://www.yinwang.org/" rel="noopener" target="_blank">当然我在扯淡</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yanjiu Li</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">217k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:17</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

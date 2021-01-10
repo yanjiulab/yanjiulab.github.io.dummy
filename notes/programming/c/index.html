@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yjlab.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="数据类型C 语言标准层面没有明确定义基本数据类型的大小，只能确定 sizeof(char) &amp;lt;= sizeof(short) &amp;lt;= sizeof(int) &amp;lt;= sizeof(long) &amp;lt;= sizeof(long long)。 具体某种类型的大小与编译器和系统有关，具体来说和实现采用的数据模型有关，   LLP64: Microsoft Windows (x86-64">
+<meta property="og:type" content="website">
+<meta property="og:title" content="C">
+<meta property="og:url" content="http://yjlab.xyz/notes/programming/c/index.html">
+<meta property="og:site_name" content="Yanjiu Lab">
+<meta property="og:description" content="数据类型C 语言标准层面没有明确定义基本数据类型的大小，只能确定 sizeof(char) &amp;lt;= sizeof(short) &amp;lt;= sizeof(int) &amp;lt;= sizeof(long) &amp;lt;= sizeof(long long)。 具体某种类型的大小与编译器和系统有关，具体来说和实现采用的数据模型有关，   LLP64: Microsoft Windows (x86-64">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yjlab.xyz/notes/programming/c/primitive-type-bits.svg">
+<meta property="og:updated_time" content="2020-11-08T08:10:17.866Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="C">
+<meta name="twitter:description" content="数据类型C 语言标准层面没有明确定义基本数据类型的大小，只能确定 sizeof(char) &amp;lt;= sizeof(short) &amp;lt;= sizeof(int) &amp;lt;= sizeof(long) &amp;lt;= sizeof(long long)。 具体某种类型的大小与编译器和系统有关，具体来说和实现采用的数据模型有关，   LLP64: Microsoft Windows (x86-64">
+<meta name="twitter:image" content="http://yjlab.xyz/notes/programming/c/primitive-type-bits.svg">
+
+<link rel="canonical" href="http://yjlab.xyz/notes/programming/c/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : false,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>C | Yanjiu Lab
+</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yanjiu Lab</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Learning then grokking</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        
+            
+  <li class="menu-item menu-item-notes">
+
+    <a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记</a>
+
+  </li>
+
+
+      
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+  
+
+      
+
+        
+        <ul id="sub-menu" class="sub-menu menu">
+          
+            
+          
+          
+            
+                
+  <li class="menu-item menu-item-algorithm">
+
+    <a href="/notes/algorithm/" rel="section"><i class="fa fa-rocket fa-fw"></i>Algorithm</a>
+
+  </li>
+
+
+          
+            
+                
+  <li class="menu-item menu-item-programming">
+
+    <a href="/notes/programming/" rel="section"><i class="fa fa-star fa-fw"></i>Programming</a>
+
+  </li>
+
+
+          
+              
+  <li class="menu-item menu-item-networking">
+
+    <a href="/notes/networking/" rel="section"><i class="fa fa-cloud fa-fw"></i>Networking</a>
+
+  </li>
+
+
+          
+          
+            
+                
+  <li class="menu-item menu-item-operating-system">
+
+    <a href="/notes/os/" rel="section"><i class="fab fa-linux fa-fw"></i>Operating System</a>
+
+  </li>
+
+
+          
+              
+  <li class="menu-item menu-item-database">
+
+    <a href="/notes/database/" rel="section"><i class="fa fa-database fa-fw"></i>Database</a>
+
+  </li>
+
+
+          
+          
+              
+  <li class="menu-item menu-item-cloud-computing">
+
+    <a href="/notes/cloud/" rel="section"><i class="fab fa-mixcloud fa-fw"></i>Cloud Computing</a>
+
+  </li>
+
+
+          
+          
+            
+                
+  <li class="menu-item menu-item-tools">
+
+    <a href="/notes/tools/" rel="section"><i class="fa fa-tools fa-fw"></i>Tools</a>
+
+  </li>
+
+
+        </ul>
+        
+
+        
+
+                
+                
+
+                
+
+                    
+                    <ul id="sub-menu-2" class="sub-menu menu">
+                      
+                        
+  <li class="menu-item menu-item-c">
+
+    <a href="/notes/programming/c/" rel="section"><i class="fab fa-cuttlefish fa-fw"></i>C</a>
+
+  </li>
+
+
+                        
+  <li class="menu-item menu-item-java">
+
+    <a href="/notes/programming/java/" rel="section"><i class="fa fa-coffee fa-fw"></i>Java</a>
+
+  </li>
+
+
+                        
+  <li class="menu-item menu-item-python">
+
+    <a href="/notes/programming/python/" rel="section"><i class="fab fa-python fa-fw"></i>Python</a>
+
+  </li>
+
+
+                        
+  <li class="menu-item menu-item-oop-&-design-patterns">
+
+    <a href="/notes/programming/design-patterns/" rel="section"><i class="fa fa-object-group fa-fw"></i>OOP & Design Patterns</a>
+
+  </li>
+
+
+                    </ul>
+                    
+                
+
+                
+                
+
+                
+                
+        
+      
+  
+
+          <div class="content page posts-expand">
+            
+
+    
+    
+    
+    <div class="post-block" lang="zh-CN">
+      <header class="post-header">
+
+<h1 class="post-title" itemprop="name headline">C
+</h1>
+
+<div class="post-meta">
+  
+  <ul class="breadcrumb">
+          
+            <li><a href="/notes/">NOTES</a></li>
+            <li><a href="/notes/programming/">PROGRAMMING</a></li>
+          <li>C</li>
+        
+  </ul>
+
+</div>
+
+</header>
+
+      
+      
+      
+      <div class="post-body">
+          <h1 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h1><p>C 语言标准层面没有明确定义基本数据类型的大小，只能确定 sizeof(char) &lt;= sizeof(short) &lt;= sizeof(int) &lt;= sizeof(long) &lt;= sizeof(long long)。</p>
+<p>具体某种类型的大小与编译器和系统有关，具体来说和实现采用的<strong>数据模型</strong>有关，</p>
+<p><img src="primitive-type-bits.svg" alt="primitive-type-bits"></p>
+<ul>
+<li>LLP64: Microsoft Windows (x86-64 and IA-64) using Visual C++; and MinGW</li>
+<li>LP64: Most Unix and Unix-like systems, e.g., Solaris, Linux, BSD, macOS. Windows when using Cygwin; z/OS</li>
+</ul>
+<div class="note info">
+            <p>当数据类型的位数重要时：</p><ul><li>请使用 stdint.h 中定义的 fixed-size types，例如 int8_t、uint32_t 等。</li><li>或使用 sizeof() 计算位数。</li></ul>
+          </div>
+<h1 id="指针"><a href="#指针" class="headerlink" title="指针"></a>指针</h1><p>我们知道，每个变量代表一个存储位置，并且每个存储位置都有一个可以使用 <code>＆</code> 运算符进行访问的内存地址，该地址表示内存中的地址。</p>
+<p>指针就是一个变量，该变量存储的值为另一个变量的地址。也就是说，指针就是一个内存地址。</p>
+<p>关于指针：</p>
+<ul>
+<li><strong>总是将指针初始化为 NULL 是一个好习惯</strong>！</li>
+<li>指针可以进行加减运算（<code>++</code>、<code>--</code>、<code>+</code>、<code>-</code>），其加减的<strong>单位为指向数据类型的大小</strong>。</li>
+<li>指针与普通类型一样也可以存储在数组中，成为指针数组。</li>
+<li>指针与普通类型一样也可以被另一个指针指向，构成<strong>多级指针</strong>。</li>
+<li>指针可以作为参数传给函数，可以在调用函数时改变该参数的值。</li>
+<li>指针可以作为函数返回值，<strong>一般用于动态内存分配</strong>时返回该堆指针，需要注意若该指针指向局部变量，则在函数退出时，该变量也不复存在。</li>
+</ul>
+<h1 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h1><h2 id="数组初始化"><a href="#数组初始化" class="headerlink" title="数组初始化"></a>数组初始化</h2><ol>
+<li>局部数组未初始化时，其值为随机值。</li>
+<li>全局或静态数组未初始化时，其值 NUL 或 0。</li>
+</ol>
+<div class="note info">
+            <p>当数组初始化之后，会将未初始化的位置设置为 NUL 或 0，应当养成每次都初始化数组的好习惯。</p>
+          </div>
+<figure class="highlight c"><figcaption><span>init.c</span><a href="/downloads/code/c/array/init.c">view raw</a></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">dump_int</span><span class="params">(<span class="keyword">int</span>* str)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">dump_char</span><span class="params">(<span class="keyword">char</span>* str)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> arr_g[<span class="number">5</span>];</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>{</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">int</span> arr_s[<span class="number">5</span>];</span><br><span class="line">    <span class="keyword">int</span> arr1[<span class="number">5</span>];</span><br><span class="line">    <span class="keyword">int</span> arr2[<span class="number">5</span>] = { <span class="number">0</span> };</span><br><span class="line">    <span class="keyword">char</span> arr3[<span class="number">5</span>];</span><br><span class="line">    <span class="keyword">char</span> arr4[<span class="number">5</span>] = <span class="string">"abc"</span>;</span><br><span class="line"></span><br><span class="line">    dump_int(arr_g); <span class="comment">//(int) 0 0 0 0 0</span></span><br><span class="line">    dump_int(arr_s); <span class="comment">//(int) 0 0 0 0 0</span></span><br><span class="line">    dump_int(arr1); <span class="comment">// (int)  0 0 1346658496 21995 407207840</span></span><br><span class="line">    dump_int(arr2); <span class="comment">// (int)  0 0 0 0 0</span></span><br><span class="line">    dump_char(arr3); <span class="comment">// (char)  NUL NUL -32 -124 t</span></span><br><span class="line">    dump_char(arr4); <span class="comment">// (char) a b c NUL NUL</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">dump_int</span><span class="params">(<span class="keyword">int</span>* str)</span></span></span><br><span class="line"><span class="function"></span>{</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"(int) "</span>);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> n = <span class="number">0</span>; n &lt; <span class="number">5</span>; ++n) {</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%d "</span>, *(str + n));</span><br><span class="line">    }</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"\n"</span>);</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">dump_char</span><span class="params">(<span class="keyword">char</span>* str)</span></span></span><br><span class="line"><span class="function"></span>{</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"(char) "</span>);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> n = <span class="number">0</span>; n &lt; <span class="number">5</span>; ++n) {</span><br><span class="line">        <span class="keyword">if</span> (str[n] &lt; <span class="number">0</span> || str[n] &gt; <span class="number">127</span>) {</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">"%d "</span>, str[n]);</span><br><span class="line">        } <span class="keyword">else</span> <span class="keyword">if</span> (str[n] == <span class="number">0</span>) {</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">"NUL "</span>);</span><br><span class="line">        } <span class="keyword">else</span> {</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">"%c "</span>, str[n]);</span><br><span class="line">        }</span><br><span class="line">    }</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"\n"</span>);</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<h1 id="字符串"><a href="#字符串" class="headerlink" title="字符串"></a>字符串</h1><h2 id="表示方式"><a href="#表示方式" class="headerlink" title="表示方式"></a>表示方式</h2><p>C 语言使用<strong>字符数组</strong>来表示字符串，字符数组和字符串之间的区别在于<strong>字符串以特殊字符 <code>\0</code> 结尾</strong>。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> <span class="built_in">array</span>[<span class="number">5</span>] = &#123;<span class="string">'h'</span>, <span class="string">'e'</span>, <span class="string">'l'</span>, <span class="string">'l'</span>, <span class="string">'o'</span>&#125;;</span><br><span class="line"><span class="keyword">char</span> str[<span class="number">6</span>] = <span class="string">"hello"</span>;</span><br><span class="line"><span class="keyword">char</span> str1[<span class="number">6</span>] = &#123;<span class="string">'h'</span>, <span class="string">'e'</span>, <span class="string">'l'</span>, <span class="string">'l'</span>, <span class="string">'o'</span>, <span class="string">'\0'</span>&#125;; <span class="comment">// equivalent to str</span></span><br></pre></td></tr></table></figure></p>
+<p><strong>字符指针</strong>在某种程度上也可以表示字符串，这并不惊讶，因为字符数组名本身就是一个常指针。</p>
+<p>char* str1 和 char str2[] 都可以表示字符串，然而两者具有很大区别：</p>
+<ul>
+<li>str1 是一个指向 char 变量的指针变量，指向一个字符串常量（其位于常量区），指针变量的值可以改变，而字符串常量的值不能改变。</li>
+<li>str2 是一个指针常量，指向一个字符数组，指针常量值不可改变，但数组内容可以改变。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">char</span>* str1 = <span class="string">"hello"</span>;</span><br><span class="line">    <span class="keyword">char</span> str2[<span class="number">10</span>] = <span class="string">"world"</span>;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"str1: %s\n"</span>, str1); <span class="comment">// hello</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"str2: %s\n"</span>, str2); <span class="comment">// world</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//str1[0] = 'W'; // Segment Fault</span></span><br><span class="line">    str2[<span class="number">0</span>] = <span class="string">'W'</span>; <span class="comment">// OK</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"str2: %s\n"</span>, str2); <span class="comment">// World</span></span><br><span class="line"></span><br><span class="line">    str1 = <span class="string">"hello c language"</span>; <span class="comment">// OK</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"str1: %s\n"</span>, str1); <span class="comment">// hello c language</span></span><br><span class="line">    str1 = str2; <span class="comment">// OK</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"str1: %s\n"</span>, str1); <span class="comment">// World</span></span><br><span class="line">    <span class="comment">//str2 = "hello"; // Error，expression must be a modifiable lvalue</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>同样，str1 和 str2 位于不同的内存区。显然，str2 位于栈，而 str1 同全局变量、堆内存一样位于堆中。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> str[<span class="number">10</span>] = <span class="string">"C"</span>; <span class="comment">// address: 0x55a607eb1010</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">char</span>* str1 = <span class="string">"hello"</span>;   <span class="comment">// address: 0x55a607eaf004</span></span><br><span class="line">    <span class="keyword">char</span> str2[<span class="number">10</span>] = <span class="string">"world"</span>;  <span class="comment">// address: 0x7ffc2940e042</span></span><br><span class="line">    <span class="keyword">char</span>* str3 = (<span class="keyword">char</span>*) <span class="built_in">malloc</span>(<span class="number">10</span>); <span class="comment">// address: 0x55a609b752a0</span></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="string-h-头文件"><a href="#string-h-头文件" class="headerlink" title="string.h 头文件"></a>string.h 头文件</h2><p>通常字符串函数都位于 <code>string.h</code> 头文件中。该头文件引入了以下内容：</p>
+<ul>
+<li>一个变量：<code>size_t</code> 表示无符号整数</li>
+<li>一个宏：<code>NULL</code> 表示空字符串常量</li>
+<li>若干函数：主要可以分为两类：<ol>
+<li>以 <code>mem</code> 开头的操作内存字节的函数</li>
+<li>以 <code>str</code> 开头的操作字符的函数</li>
+</ol>
+</li>
+</ul>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>strlen(str)</td>
+<td>计算 str 长度，不包括 NUL 字符。</td>
+</tr>
+<tr>
+<td>strcat(dst, src)</td>
+<td>将 src 加到 dst 后面。</td>
+</tr>
+<tr>
+<td>strcmp(fir, sec)</td>
+<td>相同为 0，否则返回第一个不匹配字符的 ASCII 值的差，即 fir - sec。</td>
+</tr>
+<tr>
+<td>strcpy(dst, src)</td>
+<td>将 src 拷贝到 dst，遇到 NUL 字符停止。</td>
+</tr>
+<tr>
+<td>strncpy(dst, src, n)</td>
+<td>将 src 的 n 字节拷贝到 dst。<br>如果 src 的前 n 字节不包括 NUL 字符，则 dst 将不会有 NUL 结束符！<br>如果 src 不足 n 字节，则剩余空间使用 NUL 字符补齐。</td>
+</tr>
+<tr>
+<td>memcpy(dst, src, n)</td>
+<td>将 src 的 n 字节拷贝到 dst。</td>
+</tr>
+<tr>
+<td>memset(s, c, n)</td>
+<td>将 s 的 n 字节设为 c。</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>具有相同后缀的两种函数功能相似，但稍有不同。其中 <code>mem</code> 系列函数将字符序列视为字节操作，而 <code>str</code> 系列函数将字符序列视为字符串操作。逻辑上而言 <code>mem</code> 系列表达的语义更加底层。</p>
+<h2 id="字符串拷贝"><a href="#字符串拷贝" class="headerlink" title="字符串拷贝"></a>字符串拷贝</h2><p>以 <code>memcpy</code> vs <code>strcpy</code> 作为例子。</p>
+<figure class="highlight c"><figcaption><span>str_mem_cpy.c</span><a href="/downloads/code/c/string/str_mem_cpy.c">view raw</a></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">dump</span><span class="params">(<span class="keyword">char</span>* str)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>{</span><br><span class="line">    <span class="keyword">char</span> s[<span class="number">5</span>] = { <span class="string">'s'</span>, <span class="string">'a'</span>, <span class="string">'\0'</span>, <span class="string">'c'</span>, <span class="string">'h'</span> };</span><br><span class="line"></span><br><span class="line">    <span class="keyword">char</span> membuff[<span class="number">5</span>] = { <span class="number">0</span> };</span><br><span class="line">    <span class="keyword">char</span> strbuff[<span class="number">5</span>] = { <span class="number">0</span> };</span><br><span class="line"></span><br><span class="line">    <span class="built_in">strcpy</span>(strbuff, s);</span><br><span class="line">    <span class="built_in">memcpy</span>(membuff, s, <span class="number">5</span>);</span><br><span class="line"></span><br><span class="line">    dump(membuff); <span class="comment">// 73 61 00 63 68  sa ch</span></span><br><span class="line">    dump(strbuff); <span class="comment">// 73 61 00 00 00  sa</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">dump</span><span class="params">(<span class="keyword">char</span>* str)</span></span></span><br><span class="line"><span class="function"></span>{</span><br><span class="line">    <span class="keyword">char</span>* p = str;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> n = <span class="number">0</span>; n &lt; <span class="number">5</span>; ++n) {</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%2.2x "</span>, *p);</span><br><span class="line">        ++p;</span><br><span class="line">    }</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"\t"</span>);</span><br><span class="line">    p = str;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> n = <span class="number">0</span>; n &lt; <span class="number">5</span>; ++n) {</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%c"</span>, *p ? *p : <span class="string">' '</span>);</span><br><span class="line">        ++p;</span><br><span class="line">    }</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"\n"</span>);</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>在网络编程时，应当使用 memcpy 拷贝数据。</p>
+<h2 id="字符串格式化"><a href="#字符串格式化" class="headerlink" title="字符串格式化"></a>字符串格式化</h2><p>除了 <code>memcpy</code> 和 <code>strcpy</code> 以及其系列函数外，<code>sprintf</code> 函数也常用于字符串拷贝，但该函数操作的源对象不限于字符串，源对象可以是字符串、也可以是任意基本类型的数据。因此 <code>sprintf</code> 主要是实现将其他数据类型转换为字符串功能。同时，由于该函数属于 printf 家族函数，因此也可以完成字符串拼接效果。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> path[<span class="number">100</span>];</span><br><span class="line"><span class="built_in">sprintf</span>(path, <span class="string">"/proc/%d/uid_map"</span>, pid);</span><br></pre></td></tr></table></figure>
+<h1 id="结构体"><a href="#结构体" class="headerlink" title="结构体"></a>结构体</h1><h2 id="内存布局与字节对齐"><a href="#内存布局与字节对齐" class="headerlink" title="内存布局与字节对齐"></a>内存布局与字节对齐</h2><p>结构体字节对齐的细节和具体的编译器实现相关，但一般来说遵循 3 个准则：</p>
+<ul>
+<li>结构体变量的首地址能够被其最宽基本类型成员的大小(sizeof)所整除。</li>
+<li>结构体每个成员相对结构体首地址的偏移量 offset 都是成员大小的整数倍，如有需要编译器会在成员之间加上填充字节。</li>
+<li>结构体的总大小 sizeof 为结构体最宽基本成员大小的整数倍，如有需要编译器会在最末一个成员之后加上填充字节。</li>
+</ul>
+<p>直接使用 <code>pragma pack</code> 预处理宏可以改变结构体的字节对齐方式：</p>
+<ul>
+<li><code>#pragma pack(n)</code>：结构体将按照 n 个字节对齐，其取值为 1、2、4、8、16，默认是 8。</li>
+<li><code>#pragma pack(1)</code>：结构体没有填充字节，实现空间“无缝存储”，这对跨平台传输数据来说是友好和兼容的。</li>
+</ul>
+<p>如果只想改变个别结构体的字节对齐方式，可以使用 GCC 编译器指定结构体<strong>类型属性 (Type Attribute)</strong> 为 packed，即： <code>__attribute__((__packed__))</code>。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">padding</span> &#123;</span></span><br><span class="line">    <span class="keyword">char</span> c; <span class="comment">//1</span></span><br><span class="line">    <span class="keyword">short</span> s; <span class="comment">//2</span></span><br><span class="line">    <span class="keyword">int</span> i; <span class="comment">//4</span></span><br><span class="line">    <span class="keyword">double</span> d; <span class="comment">//8</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">// sizeof() is 16</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">nopadding</span> &#123;</span></span><br><span class="line">    <span class="keyword">char</span> c; <span class="comment">//1</span></span><br><span class="line">    <span class="keyword">short</span> s; <span class="comment">//2</span></span><br><span class="line">    <span class="keyword">int</span> i; <span class="comment">//4</span></span><br><span class="line">    <span class="keyword">double</span> d; <span class="comment">//8</span></span><br><span class="line">&#125; __attribute__((__packed__));</span><br><span class="line"><span class="comment">// sizeof() is 15</span></span><br></pre></td></tr></table></figure>
+<div class="note info">
+            <p><code>__attribute__</code> 必须紧挨着 struct 关键字或者结构体 <code>}</code> 之后，否则将会报错或不起作用。 </p>
+          </div>
+<h1 id="存储级别关键字"><a href="#存储级别关键字" class="headerlink" title="存储级别关键字"></a>存储级别关键字</h1><h2 id="static-关键字"><a href="#static-关键字" class="headerlink" title="static 关键字"></a>static 关键字</h2><ul>
+<li><strong>静态局部变量</strong>使用 static 修饰符定义，即使在声明时未赋初值，编译器也会把它初始化为 0，且静态局部变量存储于进程的全局数据区，即使函数返回，它的值也会保持不变。</li>
+<li><strong>静态全局变量</strong>仅对当前文件可见，其他文件不可访问，其他文件可以定义与其同名的变量，两者互不影响。</li>
+<li><strong>静态函数</strong>只能在声明它的文件中可见，其他文件不能引用该函数</li>
+</ul>
+<div class="note info">
+            <p>static 关键字标识该变量/函数作用域为本“模块”，C 语言以文件的方式来组织模块。</p><p>C++ 和 Java 的类成员变量/函数被 static 修饰时则为类共享，因为此时程序以类的方式组织模块。</p>
+          </div>
+<h2 id="const-关键字"><a href="#const-关键字" class="headerlink" title="const 关键字"></a>const 关键字</h2><p>指定变量不可被当前线程/进程改变（但有可能被系统或其他线程/进程改变）。</p>
+<h2 id="volatile-关键字"><a href="#volatile-关键字" class="headerlink" title="volatile 关键字"></a>volatile 关键字</h2><p>指定变量的值有可能会被系统或其他进程/线程改变，强制编译器每次从内存中取得该变量的值。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a href="https://gcc.gnu.org/onlinedocs/gcc/index.html#SEC_Contents" target="_blank" rel="noopener">GNU Compiler Collection</a></li>
+<li><a href="https://en.m.wikipedia.org/wiki/64-bit_computing#64-bit_data_models" target="_blank" rel="noopener">64 位数据模型</a></li>
+</ul>
+
+      </div>
+      
+      
+      
+    </div>
+    
+  <ul class="breadcrumb">
+          
+            <li><a href="/notes/">NOTES</a></li>
+            <li><a href="/notes/programming/">PROGRAMMING</a></li>
+          <li>C</li>
+        
+  </ul>
+
+    
+    
+    
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80MTAzMS8xNzU1Ng=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#数据类型"><span class="nav-number">1.</span> <span class="nav-text">数据类型</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#指针"><span class="nav-number">2.</span> <span class="nav-text">指针</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#数组"><span class="nav-number">3.</span> <span class="nav-text">数组</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#数组初始化"><span class="nav-number">3.1.</span> <span class="nav-text">数组初始化</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#字符串"><span class="nav-number">4.</span> <span class="nav-text">字符串</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#表示方式"><span class="nav-number">4.1.</span> <span class="nav-text">表示方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#string-h-头文件"><span class="nav-number">4.2.</span> <span class="nav-text">string.h 头文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字符串拷贝"><span class="nav-number">4.3.</span> <span class="nav-text">字符串拷贝</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字符串格式化"><span class="nav-number">4.4.</span> <span class="nav-text">字符串格式化</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#结构体"><span class="nav-number">5.</span> <span class="nav-text">结构体</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#内存布局与字节对齐"><span class="nav-number">5.1.</span> <span class="nav-text">内存布局与字节对齐</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#存储级别关键字"><span class="nav-number">6.</span> <span class="nav-text">存储级别关键字</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#static-关键字"><span class="nav-number">6.1.</span> <span class="nav-text">static 关键字</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#const-关键字"><span class="nav-number">6.2.</span> <span class="nav-text">const 关键字</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#volatile-关键字"><span class="nav-number">6.3.</span> <span class="nav-text">volatile 关键字</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">7.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yanjiu Li"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Yanjiu Li</p>
+  <div class="site-description" itemprop="description">演绎一场技术溯源的盛宴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">99</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yanjiulab" title="GitHub → https://github.com/yanjiulab" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:liyanjiu@outlook.com" title="E-Mail → mailto:liyanjiu@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Worth Reading
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP" title="http://pages.cs.wisc.edu/~remzi/OSTEP" rel="noopener" target="_blank">OSTEP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" title="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" rel="noopener" target="_blank">OSTEP-Chinese</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.apuebook.com/about3e.html" title="http://www.apuebook.com/about3e.html" rel="noopener" target="_blank">APUE</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" title="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" rel="noopener" target="_blank">UNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" title="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" rel="noopener" target="_blank">IUNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.yinwang.org/" title="http://www.yinwang.org/" rel="noopener" target="_blank">当然我在扯淡</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yanjiu Li</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">217k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:17</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yjlab.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="在操作系统的实际学习中，其与计算机组成原理以及计算机体系架构有着很强的关联。因此，本部分内容以操作系统为主，且辅以计算机系统和计算机架构等相关的知识。正如              Computer Systems: A Programmer&apos;s Perspective            这本书所展示的，只有对操作系统、计算机系统，甚至硬件具有相当的了解，才能写出更好的代码。 从程序员的角度来">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Operating System">
+<meta property="og:url" content="http://yjlab.xyz/notes/os/index.html">
+<meta property="og:site_name" content="Yanjiu Lab">
+<meta property="og:description" content="在操作系统的实际学习中，其与计算机组成原理以及计算机体系架构有着很强的关联。因此，本部分内容以操作系统为主，且辅以计算机系统和计算机架构等相关的知识。正如              Computer Systems: A Programmer&apos;s Perspective            这本书所展示的，只有对操作系统、计算机系统，甚至硬件具有相当的了解，才能写出更好的代码。 从程序员的角度来">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yjlab.xyz/notes/os/device.png">
+<meta property="og:updated_time" content="2020-10-22T09:24:16.167Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Operating System">
+<meta name="twitter:description" content="在操作系统的实际学习中，其与计算机组成原理以及计算机体系架构有着很强的关联。因此，本部分内容以操作系统为主，且辅以计算机系统和计算机架构等相关的知识。正如              Computer Systems: A Programmer&apos;s Perspective            这本书所展示的，只有对操作系统、计算机系统，甚至硬件具有相当的了解，才能写出更好的代码。 从程序员的角度来">
+<meta name="twitter:image" content="http://yjlab.xyz/notes/os/device.png">
+
+<link rel="canonical" href="http://yjlab.xyz/notes/os/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : false,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Operating System | Yanjiu Lab
+</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yanjiu Lab</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Learning then grokking</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        
+            
+  <li class="menu-item menu-item-notes">
+
+    <a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记</a>
+
+  </li>
+
+
+      
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+  
+
+      
+
+        
+        <ul id="sub-menu" class="sub-menu menu">
+          
+            
+          
+          
+            
+                
+  <li class="menu-item menu-item-algorithm">
+
+    <a href="/notes/algorithm/" rel="section"><i class="fa fa-rocket fa-fw"></i>Algorithm</a>
+
+  </li>
+
+
+          
+            
+                
+  <li class="menu-item menu-item-programming">
+
+    <a href="/notes/programming/" rel="section"><i class="fa fa-star fa-fw"></i>Programming</a>
+
+  </li>
+
+
+          
+              
+  <li class="menu-item menu-item-networking">
+
+    <a href="/notes/networking/" rel="section"><i class="fa fa-cloud fa-fw"></i>Networking</a>
+
+  </li>
+
+
+          
+          
+            
+                
+  <li class="menu-item menu-item-operating-system">
+
+    <a href="/notes/os/" rel="section"><i class="fab fa-linux fa-fw"></i>Operating System</a>
+
+  </li>
+
+
+          
+              
+  <li class="menu-item menu-item-database">
+
+    <a href="/notes/database/" rel="section"><i class="fa fa-database fa-fw"></i>Database</a>
+
+  </li>
+
+
+          
+          
+              
+  <li class="menu-item menu-item-cloud-computing">
+
+    <a href="/notes/cloud/" rel="section"><i class="fab fa-mixcloud fa-fw"></i>Cloud Computing</a>
+
+  </li>
+
+
+          
+          
+            
+                
+  <li class="menu-item menu-item-tools">
+
+    <a href="/notes/tools/" rel="section"><i class="fa fa-tools fa-fw"></i>Tools</a>
+
+  </li>
+
+
+        </ul>
+        
+
+        
+
+                
+                
+
+                
+                
+
+                
+
+                    
+                    <ul id="sub-menu-2" class="sub-menu menu">
+                      
+                        
+  <li class="menu-item menu-item-commands">
+
+    <a href="/notes/os/commands/" rel="section"><i class="fas fa-terminal fa-fw"></i>Commands</a>
+
+  </li>
+
+
+                        
+  <li class="menu-item menu-item-linux">
+
+    <a href="/notes/os/linux/" rel="section"><i class="fab fa-linux fa-fw"></i>Linux</a>
+
+  </li>
+
+
+                    </ul>
+                    
+                
+
+                
+                
+        
+      
+  
+
+          <div class="content page posts-expand">
+            
+
+    
+    
+    
+    <div class="post-block" lang="zh-CN">
+      <header class="post-header">
+
+<h1 class="post-title" itemprop="name headline">Operating System
+</h1>
+
+<div class="post-meta">
+  
+  <ul class="breadcrumb">
+          
+            <li><a href="/notes/">NOTES</a></li>
+          <li>OS</li>
+        
+  </ul>
+
+</div>
+
+</header>
+
+      
+      
+      
+      <div class="post-body">
+          <p>在操作系统的实际学习中，其与计算机组成原理以及计算机体系架构有着很强的关联。因此，本部分内容以操作系统为主，且辅以计算机系统和计算机架构等相关的知识。正如 <a class="btn" href="http://csapp.cs.cmu.edu/3e/home.html" title="home fa-fw fa-lg" target="_blank" rel="noopener">
+            <i class="fa fa-3/E (CS:APP3e)"></i>Computer Systems: A Programmer's Perspective
+          </a> 这本书所展示的，只有对操作系统、计算机系统，甚至硬件具有相当的了解，才能写出更好的代码。</p>
+<p>从程序员的角度来看，操作系统的学习包括两方面：</p>
+<ol>
+<li>操作系统的概念：为何要有某种机制？以及 OS 如何实现这种机制？</li>
+<li>操作系统的应用：OS 为软件提供了哪些功能？程序员如何使用这些功能？</li>
+</ol>
+<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><ul>
+<li><a href="/2020/08/03/os-intro/">操作系统介绍</a></li>
+<li><a href="/2020/10/21/os-unix/">Unix/Linux 介绍</a></li>
+</ul>
+<h1 id="进程"><a href="#进程" class="headerlink" title="进程"></a>进程</h1><ul>
+<li>[完成 90%+] <a href="/2020/08/02/os-process/">进程</a></li>
+<li>[0%] [进程间通信]</li>
+</ul>
+<h1 id="虚拟内存"><a href="#虚拟内存" class="headerlink" title="虚拟内存"></a>虚拟内存</h1><ul>
+<li><a href="/2020/08/03/os-vm">虚拟内存</a></li>
+<li><a href>超越物理内存</a></li>
+</ul>
+<h1 id="并发"><a href="#并发" class="headerlink" title="并发"></a>并发</h1><h2 id="线程并发"><a href="#线程并发" class="headerlink" title="线程并发"></a>线程并发</h2><ul>
+<li><a href="/2020/10/21/os-thread/">线程及其 API</a> —- 并发梦开始的地方</li>
+<li><a href="/2020/07/31/os-lock/">锁</a> —- 线程并发的基石</li>
+<li>基于锁的并发数据结构 —- 锁在不同场景下的性能</li>
+<li><a href="/2020/08/01/os-cv/">条件变量</a> —- 另一种并发的原语</li>
+<li>信号量 —- 作为同步的唯一原语统一锁和条件变量</li>
+<li>线程并发的问题 —- 原子性缺陷、顺序性缺陷、可见性缺陷、死锁</li>
+</ul>
+<h2 id="事件并发"><a href="#事件并发" class="headerlink" title="事件并发"></a>事件并发</h2><h1 id="文件系统实现"><a href="#文件系统实现" class="headerlink" title="文件系统实现"></a>文件系统实现</h1><h1 id="杂"><a href="#杂" class="headerlink" title="杂"></a>杂</h1><h2 id="Unix-I-O-模型"><a href="#Unix-I-O-模型" class="headerlink" title="Unix I/O 模型"></a>Unix I/O 模型</h2><p>对于一次 IO 访问 (以 read 举例) ，数据会先被拷贝到操作系统内核的缓冲区中，然后才会从操作系统内核的缓冲区拷贝到应用程序的地址空间。所以说，当一个 read 操作发生时，它会经历两个阶段：</p>
+<ol>
+<li>等待数据准备完毕 (Waiting for the data to be ready)</li>
+<li>将数据从内核拷贝到进程中 (Copying the data from the kernel to the process)</li>
+</ol>
+<p>Unix 下有五种基本的 I/O 模型：</p>
+<ul>
+<li>阻塞 I/O (blocking I/O) </li>
+<li>非阻塞 I/O (nonblocking I/O) </li>
+<li>I/O 多路复用 (IO multiplexing) </li>
+<li>信号驱动 I/O (signal driven IO) </li>
+<li>异步 I/O (asynchronous IO) </li>
+</ul>
+<h1 id="I-O-设备"><a href="#I-O-设备" class="headerlink" title="I/O 设备"></a>I/O 设备</h1><h2 id="系统架构"><a href="#系统架构" class="headerlink" title="系统架构"></a>系统架构</h2><p>分层架构？物理布局和造价成本</p>
+<ul>
+<li>越快越短</li>
+<li>越快越贵</li>
+</ul>
+<p><a href="prototypical-system-architecture.png">prototypical-system-architecture</a></p>
+<h2 id="标准设备"><a href="#标准设备" class="headerlink" title="标准设备"></a>标准设备</h2><ul>
+<li>interface</li>
+<li>internal</li>
+</ul>
+<p><img src="device.png" alt="device"></p>
+<h2 id="标准协议"><a href="#标准协议" class="headerlink" title="标准协议"></a>标准协议</h2><h3 id="轮询-polling"><a href="#轮询-polling" class="headerlink" title="轮询 (polling)"></a>轮询 (polling)</h3><h3 id="中断-interrupt"><a href="#中断-interrupt" class="headerlink" title="中断 (interrupt)"></a>中断 (interrupt)</h3><p>合并 (coalescing)</p>
+<h3 id="DMA"><a href="#DMA" class="headerlink" title="DMA"></a>DMA</h3><h2 id="操作系统与设备"><a href="#操作系统与设备" class="headerlink" title="操作系统与设备"></a>操作系统与设备</h2><h3 id="设备交互"><a href="#设备交互" class="headerlink" title="设备交互"></a>设备交互</h3><ul>
+<li>明确的 I/O 指令</li>
+<li>内存映射 I/O</li>
+</ul>
+<h3 id="设备驱动程序"><a href="#设备驱动程序" class="headerlink" title="设备驱动程序"></a>设备驱动程序</h3><h2 id="典型-I-O-设备"><a href="#典型-I-O-设备" class="headerlink" title="典型 I/O 设备"></a>典型 I/O 设备</h2><h3 id="Hard-Disk-Driver"><a href="#Hard-Disk-Driver" class="headerlink" title="Hard Disk Driver"></a>Hard Disk Driver</h3><h3 id="RAID-Redundant-Array-of-Inexpensive-Disk"><a href="#RAID-Redundant-Array-of-Inexpensive-Disk" class="headerlink" title="RAID (Redundant Array of Inexpensive Disk)"></a>RAID (Redundant Array of Inexpensive Disk)</h3><p>评估 RAID：</p>
+<ul>
+<li>容量</li>
+<li>可靠性</li>
+<li>性能</li>
+</ul>
+<p>Raid</p>
+<ul>
+<li>RAID 0：无冗余</li>
+<li>RAID 1：镜像<ul>
+<li>RAID 10</li>
+<li>RAID 01</li>
+</ul>
+</li>
+<li>RAID 4：奇偶校验</li>
+<li>RAID 5：旋转奇偶校验</li>
+</ul>
+<h1 id="文件和目录"><a href="#文件和目录" class="headerlink" title="文件和目录"></a>文件和目录</h1><h2 id="文件和目录-1"><a href="#文件和目录-1" class="headerlink" title="文件和目录"></a>文件和目录</h2><h2 id="文件系统接口"><a href="#文件系统接口" class="headerlink" title="文件系统接口"></a>文件系统接口</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>接口</th>
+<th>系统调用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>创建文件</td>
+<td>open()</td>
+<td></td>
+</tr>
+<tr>
+<td>读取文件</td>
+<td>read()</td>
+<td></td>
+</tr>
+<tr>
+<td>写入文件</td>
+<td>write()</td>
+<td></td>
+</tr>
+<tr>
+<td>文件偏移</td>
+<td>lseek()</td>
+<td></td>
+</tr>
+<tr>
+<td>立即写入</td>
+<td>fsync()</td>
+<td></td>
+</tr>
+<tr>
+<td>文件重命名</td>
+<td>rename()</td>
+<td>mv</td>
+</tr>
+<tr>
+<td>获取文件信息</td>
+<td>stat()/fstat()</td>
+<td>stat</td>
+</tr>
+<tr>
+<td>删除文件</td>
+<td>unlink()</td>
+<td>rm</td>
+</tr>
+<tr>
+<td>创建目录</td>
+<td>mkdir()</td>
+<td>mkdir</td>
+</tr>
+<tr>
+<td>读取目录</td>
+<td>opendir(), readdir(), closedir()</td>
+<td>ls</td>
+</tr>
+<tr>
+<td>删除目录</td>
+<td>rmdir()</td>
+<td>rmdir</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="note info">
+            <ul><li>文件描述符</li><li>strace 跟踪系统调用</li></ul>
+          </div>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><h2 id="书籍"><a href="#书籍" class="headerlink" title="书籍"></a>书籍</h2><ul>
+<li><a href="http://pages.cs.wisc.edu/~remzi/OSTEP/" target="_blank" rel="noopener">Operating Systems: Three Easy Pieces</a></li>
+<li><a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/01.pdf" target="_blank" rel="noopener">操作系统导论</a></li>
+<li><a href="http://www.apuebook.com/about3e.html" target="_blank" rel="noopener">Advanced Programming in the UNIX® Environment, Third Edition</a></li>
+<li><a href="http://www.unpbook.com/" target="_blank" rel="noopener">UNIX Network Programming - Volume 1 Socket Programming, Third Edition</a></li>
+<li>UNIX Network Programming - volume 2 IPC, Second Edition</li>
+</ul>
+<h2 id="文章"><a href="#文章" class="headerlink" title="文章"></a>文章</h2><ul>
+<li><a href="https://en.wikipedia.org/wiki/Process_state" target="_blank" rel="noopener">Process state</a></li>
+<li><a href="https://www.geeksforgeeks.org/cpu-scheduling-in-operating-systems/" target="_blank" rel="noopener">CPU Scheduling in Operating Systems</a></li>
+</ul>
+<h2 id="问答"><a href="#问答" class="headerlink" title="问答"></a>问答</h2><ul>
+<li><a href="https://stackoverflow.com/questions/2445242/what-does-the-kernel-virtual-memory-of-each-process-contain" target="_blank" rel="noopener">What does the Kernel Virtual Memory of each process contain?</a></li>
+</ul>
+
+      </div>
+      
+      
+      
+    </div>
+    
+  <ul class="breadcrumb">
+          
+            <li><a href="/notes/">NOTES</a></li>
+          <li>OS</li>
+        
+  </ul>
+
+    
+    
+    
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#介绍"><span class="nav-number">1.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#进程"><span class="nav-number">2.</span> <span class="nav-text">进程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#虚拟内存"><span class="nav-number">3.</span> <span class="nav-text">虚拟内存</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#并发"><span class="nav-number">4.</span> <span class="nav-text">并发</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#线程并发"><span class="nav-number">4.1.</span> <span class="nav-text">线程并发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#事件并发"><span class="nav-number">4.2.</span> <span class="nav-text">事件并发</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#文件系统实现"><span class="nav-number">5.</span> <span class="nav-text">文件系统实现</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#杂"><span class="nav-number">6.</span> <span class="nav-text">杂</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Unix-I-O-模型"><span class="nav-number">6.1.</span> <span class="nav-text">Unix I/O 模型</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#I-O-设备"><span class="nav-number">7.</span> <span class="nav-text">I/O 设备</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#系统架构"><span class="nav-number">7.1.</span> <span class="nav-text">系统架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#标准设备"><span class="nav-number">7.2.</span> <span class="nav-text">标准设备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#标准协议"><span class="nav-number">7.3.</span> <span class="nav-text">标准协议</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#轮询-polling"><span class="nav-number">7.3.1.</span> <span class="nav-text">轮询 (polling)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#中断-interrupt"><span class="nav-number">7.3.2.</span> <span class="nav-text">中断 (interrupt)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DMA"><span class="nav-number">7.3.3.</span> <span class="nav-text">DMA</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#操作系统与设备"><span class="nav-number">7.4.</span> <span class="nav-text">操作系统与设备</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#设备交互"><span class="nav-number">7.4.1.</span> <span class="nav-text">设备交互</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#设备驱动程序"><span class="nav-number">7.4.2.</span> <span class="nav-text">设备驱动程序</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#典型-I-O-设备"><span class="nav-number">7.5.</span> <span class="nav-text">典型 I/O 设备</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Hard-Disk-Driver"><span class="nav-number">7.5.1.</span> <span class="nav-text">Hard Disk Driver</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RAID-Redundant-Array-of-Inexpensive-Disk"><span class="nav-number">7.5.2.</span> <span class="nav-text">RAID (Redundant Array of Inexpensive Disk)</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#文件和目录"><span class="nav-number">8.</span> <span class="nav-text">文件和目录</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#文件和目录-1"><span class="nav-number">8.1.</span> <span class="nav-text">文件和目录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#文件系统接口"><span class="nav-number">8.2.</span> <span class="nav-text">文件系统接口</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">9.</span> <span class="nav-text">参考</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#书籍"><span class="nav-number">9.1.</span> <span class="nav-text">书籍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#文章"><span class="nav-number">9.2.</span> <span class="nav-text">文章</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#问答"><span class="nav-number">9.3.</span> <span class="nav-text">问答</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yanjiu Li"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Yanjiu Li</p>
+  <div class="site-description" itemprop="description">演绎一场技术溯源的盛宴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">99</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yanjiulab" title="GitHub → https://github.com/yanjiulab" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:liyanjiu@outlook.com" title="E-Mail → mailto:liyanjiu@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Worth Reading
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP" title="http://pages.cs.wisc.edu/~remzi/OSTEP" rel="noopener" target="_blank">OSTEP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" title="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" rel="noopener" target="_blank">OSTEP-Chinese</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.apuebook.com/about3e.html" title="http://www.apuebook.com/about3e.html" rel="noopener" target="_blank">APUE</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" title="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" rel="noopener" target="_blank">UNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" title="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" rel="noopener" target="_blank">IUNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.yinwang.org/" title="http://www.yinwang.org/" rel="noopener" target="_blank">当然我在扯淡</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yanjiu Li</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">217k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:17</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

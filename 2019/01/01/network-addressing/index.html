@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yjlab.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="在 TCP/IP 网络中，为什么有各种各样的地址？为什么有了 MAC 地址，还需要 IP 地址？既然 有了 IP 地址，为什么还需要域名？他们之间有什么关系？其实，这些问题都可以总结为 TCP/IP 网络中的寻址 (addressing) 技术。">
+<meta name="keywords" content="MAC,IP,DNS,ARP,DHCP">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP&#x2F;IP 网络寻址技术">
+<meta property="og:url" content="http://yjlab.xyz/2019/01/01/network-addressing/index.html">
+<meta property="og:site_name" content="Yanjiu Lab">
+<meta property="og:description" content="在 TCP/IP 网络中，为什么有各种各样的地址？为什么有了 MAC 地址，还需要 IP 地址？既然 有了 IP 地址，为什么还需要域名？他们之间有什么关系？其实，这些问题都可以总结为 TCP/IP 网络中的寻址 (addressing) 技术。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/tcpip-addresses.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/napt.jpg">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/arppacket.jpg">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/arp-request.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/arp-reply.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/traditional-arp-process.gif">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/gratuitous-arp-shared-ip.gif">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/arp-probe-announcement.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/arp-probe.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/arp-announcement.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/arp-media-proxy-arp-topology.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/proxy-arp-process.gif">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/arp-media-proxy-arp-nat-topology.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/proxy-arp-nat.gif">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/arp-spoofing.svg">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/dns-resolve.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/dns-cache.svg">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/dns-poisoning.png">
+<meta property="og:image" content="http://yjlab.xyz/2019/01/01/network-addressing/dhcp-diag.jpg">
+<meta property="og:updated_time" content="2020-10-21T03:34:31.873Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="TCP&#x2F;IP 网络寻址技术">
+<meta name="twitter:description" content="在 TCP/IP 网络中，为什么有各种各样的地址？为什么有了 MAC 地址，还需要 IP 地址？既然 有了 IP 地址，为什么还需要域名？他们之间有什么关系？其实，这些问题都可以总结为 TCP/IP 网络中的寻址 (addressing) 技术。">
+<meta name="twitter:image" content="http://yjlab.xyz/2019/01/01/network-addressing/tcpip-addresses.png">
+
+<link rel="canonical" href="http://yjlab.xyz/2019/01/01/network-addressing/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>TCP/IP 网络寻址技术 | Yanjiu Lab</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yanjiu Lab</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Learning then grokking</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        
+            
+  <li class="menu-item menu-item-notes">
+
+    <a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记</a>
+
+  </li>
+
+
+      
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yjlab.xyz/2019/01/01/network-addressing/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Yanjiu Li">
+      <meta itemprop="description" content="演绎一场技术溯源的盛宴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yanjiu Lab">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          TCP/IP 网络寻址技术
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-01-01 22:59:29" itemprop="dateCreated datePublished" datetime="2019-01-01T22:59:29+08:00">2019-01-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-10-21 11:34:31" itemprop="dateModified" datetime="2020-10-21T11:34:31+08:00">2020-10-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Networking/" itemprop="url" rel="index"><span itemprop="name">Networking</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>14k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>13 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在 TCP/IP 网络中，为什么有各种各样的地址？为什么有了 MAC 地址，还需要 IP 地址？既然 有了 IP 地址，为什么还需要域名？他们之间有什么关系？其实，这些问题都可以总结为 <strong>TCP/IP 网络中的寻址 (addressing) 技术</strong>。<br><a id="more"></a></p>
+<h1 id="从社交看地址多样化"><a href="#从社交看地址多样化" class="headerlink" title="从社交看地址多样化"></a>从社交看地址多样化</h1><p>当你向你的国内朋友描述自己的位置的时候，你告诉他：“我的地址是北京邮电大学”，他会立刻知道你在哪里，这在你的大学生圈子里很常用，你在北邮，他在华科，大学的名字就是一种本地地址，在国内的你们很容易就知道对方的地址了。</p>
+<p>当你向一个外国友人描述你的地址时，你和他说：“我的地址是北京邮电大学”，他肯定一脸懵逼。这时候，聪明的你立刻想到了经纬度，你自信的告诉他：“我的地址是 (39.96°N, 116.35°E)” 这是国际上都懂的位置表达方式，只要精度足够精确，那么一定能够准确的描述你的位置。相信我，如果你真的这么说了，恐怕外国小哥得费劲的查一查才能知道你在哪里。</p>
+<p>经纬度是给机器用的，它足够精确但又非常不直观。相比于告诉外国小哥你的经纬度坐标，更好的方法就是告诉他你的地址是：“10 Xitucheng Rd, Beitaipingzhuang, Haidian District, Beijing, China.” 即使他不能准确的一下说出你的确切位置，但立刻就能对你的地址有一个感性的认知——你在中国北京海淀区的某个地方。事实上，这样的树形的层级表达方式正是今天人类社会普遍采用的寻址方式。</p>
+<p>如果将国内社交比作局域网通信，将国际社交比作互联网通信，那么这些地址就有如下对应关系</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>社交地址</th>
+<th>TCP/IP 地址</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>大学名</td>
+<td>MAC 地址</td>
+<td>在国内圈子里可以使用</td>
+</tr>
+<tr>
+<td>经纬度</td>
+<td>IP 地址</td>
+<td>国际通用寻址规则，对人类不友好，适合机器使用。</td>
+</tr>
+<tr>
+<td>层级地址</td>
+<td>域名地址</td>
+<td>国际通用寻址规则，对人类友好。</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>这就是为什么 TCP/IP 网络中有这么多地址的原因！在感性的认识了地址之后，在后文笔者将会从专业的角度来阐述 TCP/IP 网络中的寻址技术。</p>
+<h1 id="寻址的目的"><a href="#寻址的目的" class="headerlink" title="寻址的目的"></a>寻址的目的</h1><p>TCP/IP 寻址技术旨在解决以下问题：</p>
+<ul>
+<li><strong>协调使用不同类型地址</strong>：无论二层使用了什么局域网技术，只要都通过 TCP/IP 网络接入，那么就可以互相通信。</li>
+<li><strong>确保地址唯一性</strong>：TCP/IP 网络中的任意一个通信结点，其地址应该具有全局唯一性。</li>
+<li><strong>配置网络接口和网络应用程序</strong>：这意味着上层应用程序可以根据基于该地址配置软件，与其他节点进行通信。</li>
+</ul>
+<h1 id="地址的类型"><a href="#地址的类型" class="headerlink" title="地址的类型"></a>地址的类型</h1><p>为了区分不同的网络接口，TCP/IP 网络使用以下三种地址：</p>
+<ul>
+<li>本地地址/硬件地址 (local/hardware addresses) </li>
+<li>网络地址/IP 地址 (netwrok/IP addresses)</li>
+<li>符号地址/域名 (DNS names)</li>
+</ul>
+<h2 id="本地地址"><a href="#本地地址" class="headerlink" title="本地地址"></a>本地地址</h2><p>大多数 LAN 技术，如<strong>以太网、FDDI以及令牌环</strong>使用 <strong>MAC 地址 (MAC addresses)</strong> 定义接口，但也有一些其他的技术使用不同的寻址机制，如 X.25、ATM和帧中继。这些寻址机制在相关技术组建的网络中使用<strong>唯一地址</strong>，<strong>这种自治的网络中使用排他的寻址系统来实现内部目标的唯一标识，以保证节点的连接性。</strong></p>
+<p>然而，当这样的网络连接到其他不同网络时，这些地址就不能通用了。在 TCP/IP 中，这些地址成为上层网间技术的元素，它们所扮演的角色应该是相同的，所以无论是 MAC 地址或者是其他什么地址，都统一称为<strong>本地 (硬件) 地址 (local/hardware addresses)</strong>。</p>
+<div class="note info">
+            <p>“本地”这一术语意味着<strong>该地址在组成网络而非整个互联网中有效</strong>。需要注意的是，组成网络可以同时建立在 WAN 技术 (X.25、帧中继等) 和 LAN 技术 (以太网、令牌环等) 上，术语“本地”也被用于 LAN 中，但这里有着一定的区别，这里代表着<strong>将网络局限在小范围内的技术特征</strong>。</p><p>“硬件”这一术语意味着<strong>通常本地地址是固化在硬件中的</strong>。例如 MAC 地址，一般不可以改变。</p>
+          </div>
+<h2 id="IP-网络地址"><a href="#IP-网络地址" class="headerlink" title="IP 网络地址"></a>IP 网络地址</h2><p>为了完成网络互联的任务，TCP/IP 需要有自己的<strong>全局寻址系统</strong>，并且这个寻址系统不依赖于组成网络中的节点寻址方法。该寻址系统必须提供统一的方法来唯一的标识互联网上的每个接口。</p>
+<p>很自然的一种方法是：唯一标识所有的网络，再唯一标识网路中的节点。这样<strong>网络地址由网络号和主机号组成</strong>。这正是 IPX/SPX 网络的编址思路，这看似是很高明的设计，因为本地地址在那个子网中天然就有唯一性，然而这却使得网络地址与本地地址紧耦合，使得网络地址依赖于本地技术，限制了适用领域。这也是 IPX/SPX 没有风靡的原因，不过，IPX/SPX 本来就是被设计成在某种特定的互联网中使用的。</p>
+<p>在 TCP/IP 网络中，节点号使用<strong>与本地技术无关，但能唯一标识子网中该节点的数字串</strong>。这通用的多，也正是 TCP/IP 网络的特征。</p>
+<h2 id="域名-Domain-names"><a href="#域名-Domain-names" class="headerlink" title="域名 (Domain names)"></a>域名 (Domain names)</h2><p>TCP/IP 网络的硬件和软件根据 IP 地址识别计算机，但人类还是更倾向使用<strong>可读性更好的符号来识别计算机</strong>。因此，TCP/IP 网络必须有为主机提供符合名称以及将其映射为 IP 地址的机制。</p>
+<p><strong>互联网的接口符号标示符依据层次建立</strong>。各个部分由小数点隔开，如<code>个人主机名称.主机组 (组织) 的名称.更大的组织名称.更高的域.[...].最高域</code>。是不是很像人类在邮政系统中使用的树形层级表达方式呢？</p>
+<p>由于 IP 地址和符号间不存在依赖关系，因此，符号映射到 IP 的唯一方法就是<strong>使用表格</strong>。TCP/IP 使用特殊的分布式服务 —— 域名系统 (DNS) 来实现。网络管理员建立一张映射表实现 IP 地址到符合地址的映射。</p>
+<h1 id="地址的联系"><a href="#地址的联系" class="headerlink" title="地址的联系"></a>地址的联系</h1><p>北京邮电大学、(39.96°N, 116.35°E)、”10 Xitucheng Rd, Beitaipingzhuang, Haidian District, Beijing, China.” 其实表示的都是一个地址，三者可以通过某种方式互相转换，只是这种转换方式很难具体的表示出来。</p>
+<p>类似的，MAC 地址、IP 地址、域名之间也有一个对应的转换关系，这种转换关系以标准<strong>网络协议</strong>的形式呈现，在 TCP/IP 网络中，主要涉及到以下两种协议：</p>
+<ul>
+<li>地址解析协议 (Address Resolution Protocol, ARP)：负责 MAC 和 IP 地址的互相转换。</li>
+<li>域名系统 (Domain Name System, DNS)：负责 IP 地址到与域名的互相转化。</li>
+</ul>
+<p><img src="tcpip-addresses.png" alt="tcpip-addresses"></p>
+<div class="note info">
+            <p>MAC 地址是二层地址，IP 地址是三层地址，而域名是七层地址，<strong>通常转换方向是自上而下</strong>的：即根据域名得到 IP 地址，根据 IP 地址得到 MAC 地址。</p>
+          </div>
+<h1 id="IP-地址"><a href="#IP-地址" class="headerlink" title="IP 地址"></a>IP 地址</h1><p>我们已经知道，在 TCP/IP 网络中，节点 IP 地址使用与本地技术无关但能<strong>唯一标识该节点的数字串</strong>表示。这本应该是一个十分简单的定义过程，然而由于历史原因，却成为一个复杂而又丑陋的问题，其直接结果就是如今的 TCP/IP 网络中使用了两种 IP 地址：</p>
+<ul>
+<li>IPv4 (Internet Protocol version 4)</li>
+<li>IPv6 (Internet Protocol version 6)</li>
+</ul>
+<p>1981 年，IETF 定义了 32 位 IP 地址的 IPv4，因为 IP 地址是唯一的，所以 32 位的 IPv4 地址最多可以表示 $2^{128}$ 个地址，约为 42.9 亿。这对于当时的互联网来说真是个天文数字，然而随着互联网的快速成长，IPv4 的 42 亿个地址最终于 2011 年 2 月 3 日用尽，用尽指的是 ICANN 将所有地址段分配给各个 ISP，但由于早期编码和分配上的问题，很多区域的编码实际上被空出或不能使用。</p>
+<p>IPv6 是 IP 的最新版本，用作互联网的网络层协议。用它来取代 IPv4 主要是为了解决 IPv4 地址枯竭问题，同时它也在其他方面对于 IPv4 有许多改进。128 位的 IPv6 的 IP 地址数量最高可达 $2^{128}$，约为 $3.4 × 10^{38}$ 个，届时每个人家居中的每件电器，每件对象，甚至地球上每一粒沙子都可以拥有自己的 IP 地址。</p>
+<div class="note info">
+            <p>IPv6 的设计目的是取代 IPv4，然而长期以来 IPv4 在互联网流量中仍占据主要地位。这是因为<strong>网络地址转换</strong>及<strong>无类别域间路由</strong>等技术可延缓了网络地址匮乏的现象，我们将在后文讨论这些技术是如何影响 IP 协议发展的，在本节我们首先关心的是基本的 IP 地址。</p>
+          </div>
+<h2 id="IPv4-地址"><a href="#IPv4-地址" class="headerlink" title="IPv4 地址"></a>IPv4 地址</h2><p>IPv4 地址（以下简称 IP 地址）用 32 位二进制数表示，为便于使用，常以 <code>XXX.XXX.XXX.XXX</code> 形式表现，<code>XXX</code> 为一个十进制数字，其范围为 <code>[0, 255]</code>，该表示方法称为<strong>点分十进制</strong>。</p>
+<p><a href="http://www.ipamworldwide.com/ipam/ipv4-rfcs.html" target="_blank" rel="noopener">Key IPv4 Addressing RFCs</a></p>
+<ul>
+<li><a href="https://tools.ietf.org/html/rfc791" target="_blank" rel="noopener">RFC 791 - INTERNET PROTOCOL</a></li>
+</ul>
+<h2 id="IPv6-地址"><a href="#IPv6-地址" class="headerlink" title="IPv6 地址"></a>IPv6 地址</h2><p>详细内容查看 <a href="https://tools.ietf.org/html/rfc2373" target="_blank" rel="noopener">RFC 2373 - IP Version 6 Addressing Architecture</a></p>
+<h1 id="网络地址转换-NAT"><a href="#网络地址转换-NAT" class="headerlink" title="网络地址转换 - NAT"></a>网络地址转换 - NAT</h1><p>网络地址转换 (Network address translation, NAT) 是一种在数据包经过流量路由设备传输时，通过修改数据包 IP 报头中的网络地址信息，将 IP 地址空间<strong>重新映射</strong>到另一个地址的方法。最初使用该技术是为了避免在网络移动或更换 ISP 时为每个主机分配一个新地址。后来面对 IPv4 地址耗尽的问题时，它成为一个节省公网地址的流行工具，NAT 网关的一个公网 IP 可以用于整个专用网络。 </p>
+<h2 id="基本-NAT-One-to-one-NAT"><a href="#基本-NAT-One-to-one-NAT" class="headerlink" title="基本 NAT (One-to-one NAT)"></a>基本 NAT (One-to-one NAT)</h2><p>In this type of NAT, only the IP addresses, IP header checksum and any higher level checksums that include the IP address are changed.</p>
+<p>最简单的 NAT 类型提供 IP 地址的<strong>一对一转换</strong>。 <a href="https://tools.ietf.org/html/rfc2663" target="_blank" rel="noopener">RFC 2663 - IP Network Address Translator (NAT)</a> 将此类型的 NAT 称为基本 NAT，也成为一对一 NAT。</p>
+<p>在这种类型的 NAT 中，仅 IP 地址、IP 头校验和以及包括该 IP 地址的所有更高级别的校验和更改。基本 NAT 可用于互连地址不兼容的两个 IP 网络。</p>
+<p>以下是一个基本 NAT 转换的例子，NAT 设备中维护了一个NAT 映射表 (NAT Translation Table) 用来在转换时查询。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">内网 IP</th>
+<th style="text-align:center">外网 IP </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">192.168.1.55</td>
+<td style="text-align:center">219.152.168.222</td>
+</tr>
+<tr>
+<td style="text-align:center">192.168.1.59</td>
+<td style="text-align:center">219.152.168.223</td>
+</tr>
+<tr>
+<td style="text-align:center">192.168.1.155</td>
+<td style="text-align:center">219.152.168.224</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="动态-NAT"><a href="#动态-NAT" class="headerlink" title="动态 NAT"></a>动态 NAT</h2><p>动态 NAT 和静态 NAT 一样，在较小的网络中并不常见，但在具有复杂网络的大型公司中可以找到。动态 NAT 与静态 NAT 的不同之处在于，静态 NAT 提供内网到公网静态 IP 地址的一对一映射，而动态 NAT 通常使用一组可用的公共 IP 地址。</p>
+<h2 id="NAPT-One-to-many-NAT"><a href="#NAPT-One-to-many-NAT" class="headerlink" title="NAPT (One-to-many NAT)"></a>NAPT (One-to-many NAT)</h2><p>由于公网 IP 比较宝贵，大多数 NAT 将多个私网 IP 主机映射到一个公网 IP 地址。多个私网 IP 的主机流量在发出时源地址都会转换成公网 IP，然而为了能弄清楚回来的流量到底属于原来的哪个主机，需要更改更多的地方。由于大部分网络流量使用 TCP 协议和 UDP 协议，因此通过更改端口号来消除歧义，从而确定某个返回数据包属于私网中哪台主机的回复，由于更改了 IP 和端口号，这种类型的 NAT 称为 NAPT (Network Addresss and Port Translation)，其他的名字包括 PAT、IP 伪装、 多对一 NAT 等。事实上，由于使用的广泛性 NAPT 也逐渐成为了 NAT 的代名词。</p>
+<p><img src="napt.jpg" alt="NAPT"></p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">内网 IP &amp; Port</th>
+<th style="text-align:center">外网 IP &amp; Port</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">192.168.100.3:3855</td>
+<td style="text-align:center">145.12.131.7:6282</td>
+</tr>
+<tr>
+<td style="text-align:center">192.168.100.4:80</td>
+<td style="text-align:center">145.12.131.7:9201</td>
+</tr>
+<tr>
+<td style="text-align:center">192.168.100.5:4465</td>
+<td style="text-align:center">145.12.131.7:9202</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="note info">
+            <p>IP 伪装 (IP masquerading) 是一种将整个 IP 地址空间（通常由私有 IP 地址组成）隐藏在一个公共地址空间的单个 IP 地址后面的技术，隐藏的地址被更改为单个（公共）IP 地址，作为传出 IP 数据包的源地址，因此它们看起来不是源自隐藏的主机，而是源自路由设备本身。现在 IP 伪装和 NAT 基本成为同义词。</p>
+          </div>
+<div class="note info">
+            <p>一对多 NAT 是 IPv4 地址耗尽的实用解决方案，甚至大型网络也可以使用单个公共 IP 地址连接到 Internet。同时也正是由于这个原因，如今互联网上绝大多数服务器都静静的躺在 NAT 后面，大大节省了 IPv4 地址，因此使得 IPv6 的推广受到了巨大的阻碍。</p>
+          </div>
+<h2 id="SNAT-amp-DNAT"><a href="#SNAT-amp-DNAT" class="headerlink" title="SNAT &amp; DNAT"></a>SNAT &amp; DNAT</h2><h3 id="SNAT"><a href="#SNAT" class="headerlink" title="SNAT"></a>SNAT</h3><p><strong>源网络地址转换 (Source NAT)</strong> 用于解决内网主机<strong>主动</strong>发起连接访问公网上的服务时的问题。NAT 将内部 IP <strong>源地址</strong>转换成公有 IP，并发送给公网上的服务；当公网上的服务返回时，NAT 会将回复数据包中的目的地址从公网 IP 转换为私网 IP，再发给发起连接的内网主机。 </p>
+<p>SNAT 与我们日常生活息息相关，是 NAT 的基本功能。</p>
+<h3 id="DNAT"><a href="#DNAT" class="headerlink" title="DNAT"></a>DNAT</h3><p><strong>目的网络地址转换 (Destination NAT)</strong> 用于解决公网主机<strong>主动</strong>发起连接访问私网上的服务时的问题。由于私网地址是不可路由的地址，因此公网主机只能请求路由器/网关的 IP 地址，如果该路由器配置了 DNAT，则 DNAT 将公网 IP <strong>目的地址</strong> 转换为私有 IP 并发给私网上的服务器，当私网服务器回复时，NAT 会将回复数据包的目的地址从私网 IP 转换为公网 IP，再发给发起连接的公网主机。</p>
+<p>DNAT 通常用于在公共可访问 IP 地址上发布位于专用网络中的服务，也称为<strong>端口转发</strong>。当在整个服务器上使用 DNAT 时，该服务器将暴露于 WAN，也被称为 DMZ。</p>
+<div class="note info">
+            <p>主动发起的公网主机可能是真正的公网主机，也可能是经过 NAT 之后拥有公网地址的私网主机，这两者是不可区分的。因此，从某种程度上来看，DNAT 的端口转发解决了<strong>公对私</strong>和<strong>私对私</strong>两种问题，下文中我们通过 NAT 穿透技术将会了解到更多解决私对私问题的方案。</p>
+          </div>
+<h2 id="NAT-穿透-NAT-Traversal"><a href="#NAT-穿透-NAT-Traversal" class="headerlink" title="NAT 穿透 (NAT Traversal)"></a>NAT 穿透 (NAT Traversal)</h2><p>当位于不同 NAT 之后的两个对等方尝试进行通信时，会出现 NAT 穿透问题，解决此问题的一种方法是使用<strong>端口转发</strong>，另一种方法是使用各种 <strong>NAT 打孔技术 (NAT hole punching)</strong>。关于穿透技术请查看 <a href="https://en.wikipedia.org/wiki/NAT_traversal#Network_address_translation" target="_blank" rel="noopener">NAT Traversal</a>。</p>
+<h2 id="NAT-in-IPv6"><a href="#NAT-in-IPv6" class="headerlink" title="NAT in IPv6"></a>NAT in IPv6</h2><p>网络地址转换在 IPv6 中并不常用，因为 IPv6 的设计目标之一是恢复端到端网络连接，尽管仍然可行，但 IPv6 的大型寻址空间消除了私有地址的需要，并且可以为每个设备分配一个唯一的全局可路由地址，也就是说，结合使用唯一的本地地址和网络前缀转换可以达到类似 NAT 的结果。</p>
+<h1 id="地址解析协议-ARP"><a href="#地址解析协议-ARP" class="headerlink" title="地址解析协议 - ARP"></a>地址解析协议 - ARP</h1><p>地址解析协议 (Address Resolution Protocol, ARP) 是一个通过解析网络层地址来找寻数据链路层地址的网络传输协议，它在 IPv4 中极其重要，其 RFC 文档为 <a href="https://tools.ietf.org/html/rfc826" target="_blank" rel="noopener">RFC 826 -  An Ethernet Address Resolution Protocol</a>。ARP 是通过网络地址来定位 MAC 地址，在很多网路层和数据链接层之间得以实现，但最常用的还是将 IPv4 地址转换为 MAC 地址。</p>
+<div class="note info">
+            <p>在 IPv6 中邻居发现协议（NDP）用于代替地址解析协议（ARP）。</p>
+          </div>
+<h2 id="基本功能"><a href="#基本功能" class="headerlink" title="基本功能"></a>基本功能</h2><p>在以太网协议中规定，<strong>同一局域网</strong>中的一台主机要和另一台主机进行直接通信，必须要知道目标主机的 MAC 地址。而在 TCP/IP 协议中，网络层和传输层只关心目标主机的 IP 地址。这就导致在以太网中使用 IP 协议时，数据链路层的以太网协议接收到上层 IP 协议提供的数据中，只包含目的主机的 IP 地址。于是需要一种方法，根据目的主机的 IP 地址，获得其 MAC 地址。这就是 ARP 协议要做的事情。所谓<strong>地址解析就是主机在发送帧前将目标 IP 地址转换成目标 MAC 地址的过程</strong>。</p>
+<p>当发送主机和目的主机<strong>不在同一个局域网</strong>中时，即便知道对方的 MAC 地址，两者也不能直接通信，必须经过<strong>路由转发</strong>才可以。所以此时，发送主机通过 ARP 协议获得的将不是目的主机的真实 MAC 地址，而是一台可以通往局域网外的路由器的 MAC 地址。于是此后发送主机发往目的主机的所有帧，都将发往该路由器，通过它向外发送。这种情况称为<strong>委托 ARP</strong> 或 <strong>ARP 代理 (ARP Proxy)</strong>。</p>
+<h2 id="数据包结构"><a href="#数据包结构" class="headerlink" title="数据包结构"></a>数据包结构</h2><p>地址解析协议的消息格式很简单，仅包含单一的<strong>地址解析请求或响应</strong>。ARP 消息的长度取决于上下两层地址的大小：</p>
+<ul>
+<li>上层地址由所使用的网络协议类型决定（通常是 IPv4 地址）。</li>
+<li>下层地址则由上层协议所使用的硬件或虚拟链路层的类型决定（通常是 MAC 地址）。</li>
+</ul>
+<p>消息的报头中包含了这两层地址的<strong>类型</strong>以及<strong>长度</strong>信息，此外还包含了表示请求（1）和应答（2）的<strong>操作码</strong>。数据包的<strong>有效载荷 (Payload)</strong> 为收发双方的硬件地址、协议地址，总计四个地址。数据包结构如下：</p>
+<p><img src="arppacket.jpg" alt="arppacket"></p>
+<div class="group-picture"><div class="group-picture-container"><div class="group-picture-row"><div class="group-picture-column" style="width: 50%;"><img src="arp-request.png" alt="arp-request"></div><div class="group-picture-column" style="width: 50%;"><img src="arp-reply.png" alt="arp-reply"></div></div></div></div>
+<h2 id="传统-ARP-流程"><a href="#传统-ARP-流程" class="headerlink" title="传统 ARP 流程"></a>传统 ARP 流程</h2><p>ARP 的核心解析流程非常简单，只有两个步骤：</p>
+<ol>
+<li>发送方发送 ARP Request 数据包获取接收方的 MAC 地址。请求数据包类型是<strong>广播</strong>，因此局域网中所有主机都可以收到该请求，但只有真正的接收方才会作出回应。</li>
+<li>接收方回复 ARP Reply 数据包响应发送发。响应数据包类型是<strong>单播</strong>，将会单独回复给发送发。</li>
+</ol>
+<p><img src="traditional-arp-process.gif" alt="traditional-arp-process"></p>
+<p>以下是使用 Wireshark 抓取的同一局域网中一台手机和一台电脑进行 ARP 的过程：<br><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">XiaomiCo_91</span><span class="selector-pseudo">:5e</span><span class="selector-pseudo">:bc</span>       <span class="selector-tag">Broadcast</span>           <span class="selector-tag">Who</span> <span class="selector-tag">has</span> 192<span class="selector-class">.168</span><span class="selector-class">.1</span><span class="selector-class">.101</span>? <span class="selector-tag">Tell</span> 192<span class="selector-class">.168</span><span class="selector-class">.1</span><span class="selector-class">.103</span></span><br><span class="line"><span class="selector-tag">IntelCor_ac</span><span class="selector-pseudo">:a7</span><span class="selector-pseudo">:ab</span>       <span class="selector-tag">XiaomiCo_91</span><span class="selector-pseudo">:5e</span><span class="selector-pseudo">:bc</span>   192<span class="selector-class">.168</span><span class="selector-class">.1</span><span class="selector-class">.101</span> <span class="selector-tag">is</span> <span class="selector-tag">at</span> 0<span class="selector-tag">c</span><span class="selector-pseudo">:7a</span><span class="selector-pseudo">:15</span><span class="selector-pseudo">:ac</span><span class="selector-pseudo">:a7</span><span class="selector-pseudo">:ab</span></span><br></pre></td></tr></table></figure></p>
+<h2 id="ARP-缓存"><a href="#ARP-缓存" class="headerlink" title="ARP 缓存"></a>ARP 缓存</h2><p>每次通信发送方都需要根据接收方 IP 地址将其 MAC 地址填写到发送数据帧中，那么每一次都需要地址解析吗？答案是否定的，在每台安装有 TCP/IP 协议的电脑或路由器里都有一个 <strong>ARP 缓存表</strong>，表里的 IP 地址与 MAC 地址是一对应的，可以通过 <code>arp -a</code> 命令来查看。</p>
+<p>使用 ARP 缓存的好处至少有两个：</p>
+<ul>
+<li>对于本机来说，加快解析 MAC 地址速度。</li>
+<li>对于本网络来说，减少 ARP 广播量，节省网络资源。</li>
+</ul>
+<p>因此，当主机 A 向主机 B 发送数据发送数据时，主机 A 会在自己的 ARP 缓存表中寻找是否有目标 IP 地址，如果找到就直接把目标 MAC 地址写入帧里面发送；如果未找到，就会发起一次对 B 主机的 ARP Request，当收到 B 主机的 ARP Reply 时，便把 IP-MAC 映射写入 ARP 缓存中，以便下次使用。</p>
+<p>ARP 缓存可以包含<strong>动态条目</strong>和<strong>静态条目</strong>。</p>
+<ul>
+<li>动态条目随时间推移自动添加和删除，在一段时间内如果表中的某一行动态条目没有使用，就会被删除，这样可减少缓存表的长度，加快查询速度。</li>
+<li>静态项目一直保留在缓存中，直到重新启动计算机为止。</li>
+</ul>
+<div class="note warning">
+            <p>接收到新的 ARP 应答数据包后，即使尚未过期的 ARP 缓存条目也将被覆盖，ARP 协议中没有任何方法可以使主机对另一方进行身份验证，因此也给 ARP 攻击提供了可乘之机。</p>
+          </div>
+<h2 id="免费-ARP"><a href="#免费-ARP" class="headerlink" title="免费 ARP"></a>免费 ARP</h2><p>免费 ARP (Gratuitous ARP) 是一种<strong>不需要由 ARP 请求触发的 ARP 响应</strong>，免费 ARP 作为<strong>广播</strong>发送，作为节点宣布或更新其 IP-MAC 映射到整个网络的方式。 </p>
+<p>操作码设置为 2，表示响应，尽管该数据包的产生实际上并非是由一个请求引起的，这就是也是免费 ARP 名字的由来。发送 MAC 和发送 IP 包含启动程序正在通告的 ARP 映射，这两个是 ARP 数据包的重要部分。</p>
+<p>目标 MAC 地址为 ffff.ffff.ffff，但实际上，该字段的内容无关紧要，在免费 ARP 中将其忽略，ARP的某些实现将在该字段中使用 0000.0000.0000。</p>
+<p>免费 ARP 通常有三种作用：</p>
+<ul>
+<li>更新 ARP 映射</li>
+<li>宣布节点存在</li>
+<li>用于冗余备份</li>
+</ul>
+<h3 id="更新-ARP-映射"><a href="#更新-ARP-映射" class="headerlink" title="更新 ARP 映射"></a>更新 ARP 映射</h3><p>第一个作用非常简单，如果节点的IP到MAC映射发生更改，则节点可以使用免费ARP更新网络上其他主机的ARP映射。<br>如果用户手动修改其MAC地址-他们保留了相同的IP地址，但是现在有了新的MAC地址，则可能会发生这种情况。<br>因此，必须更新与此用户通信的所有节点的ARP映射。<br>话虽如此，手动更改MAC地址的情况很少见。<br>但是，有时您会在冗余的云或虚拟环境中看到这种情况，在该环境中，特定的虚拟机（VM）会“跳转”到新的物理盒中-相同的VM的IP地址现在由另一台物理机提供。</p>
+<h3 id="宣布节点存在"><a href="#宣布节点存在" class="headerlink" title="宣布节点存在"></a>宣布节点存在</h3><p>免费 ARP 的第二个作用是主机刚加入网络时，它可以使用免费 ARP 向网络宣告它的存在。激发此操作的意图很有用，<strong>这是一种在不要求主机进行传统 ARP 过程的情况下，抢先填充相邻主机的 ARP 缓存的尝试</strong>。</p>
+<p>但是，主机无权缓存每个收到的免费 ARP 中的 ARP 映射，结果使得这种作用几乎变得无用，但是它不会造成重大危害。因此不建议这种行为。</p>
+<div class="note warning">
+            <p>该用例经常与尝试检测可能的重复 IP 地址混淆，但是此过程未使用免费ARP，为了检测 IP 地址冲突，主机将使用 ARP 探针和 ARP 公告，后文会描述这个过程。</p>
+          </div>
+<h3 id="冗余-Redundancy"><a href="#冗余-Redundancy" class="headerlink" title="冗余 (Redundancy)"></a>冗余 (Redundancy)</h3><p>在使用两个设备之间的冗余或故障转移的情况下，免费 ARP 的用例更为重要。</p>
+<p>使用冗余，通常会遇到两种情况：</p>
+<ul>
+<li>两个设备共享一个 IP 地址，但是每个设备都有自己的 MAC 地址。</li>
+<li>两个设备同时共享一个 IP 地址和一个 MAC 地址。</li>
+</ul>
+<p>在这两种情况下，免费 ARP 对于确保 IP 地址在两个冗余设备之间切换时的持续通信能力至关重要。</p>
+<p><img src="gratuitous-arp-shared-ip.gif" alt="gratuitous-arp-shared-ip"></p>
+<h2 id="ARP-探针和-ARP-公告"><a href="#ARP-探针和-ARP-公告" class="headerlink" title="ARP 探针和 ARP 公告"></a>ARP 探针和 ARP 公告</h2><p>这两种方法都在<strong>重复地址检测 (Duplicate Address Detection)</strong> 的过程中使用。这个想法是：如果一台主机获得并使用了恰好在网络上正在使用的 IP 地址，将会导致这两台主机的网络连通性出现问题，因此对于主机来说，首先测试 IP 地址的唯一性是有益的。</p>
+<p>确定是否正在使用 IP 地址的一种方法是使用 <strong>ARP 探针 (ARP Probe)</strong>，该过程非常简单，发送了一些 ARP 探针（通常为 3 个），如果没有人响应，就通过 <strong>ARP 公告 (ARP Announcement)</strong> 正式声明该 IP 地址。</p>
+<p><img src="arp-probe-announcement.png" alt="arp-probe-announcement"></p>
+<h3 id="ARP-探针包结构"><a href="#ARP-探针包结构" class="headerlink" title="ARP 探针包结构"></a>ARP 探针包结构</h3><p>ARP 探针用于轮询网络以<strong>确认 IP 地址尚未使用</strong>。发送时将 Opcode 字段设置为 1，表示 ARP 请求。这个想法是，如果所请求的 IP 地址已经被使用，则 ARP 探针的发起者将期望原始所有者的响应。因此，ARP 探针是一个可能引起响应的请求。</p>
+<p><img src="arp-probe.png" alt="arp-probe"></p>
+<ul>
+<li>发送 MAC 地址设置为发起方的 MAC 地址</li>
+<li>发送 IP 地址设置为 0.0.0.0。</li>
+<li>目标 MAC 地址设置为 0000.0000.0000</li>
+<li>目标 IP 地址设置为要探测的 IP 地址</li>
+</ul>
+<div class="note info">
+            <p><strong>探针数据包中没有提供完整的映射</strong><br>发送 IP 设置为全零，这意味着它无法映射到发送 MAC 地址。目标 MAC 地址全为零，这意味着它无法映射到目标 IP 地址。这是有意的，因为发送 ARP 探针的原因是为了防止 IP 冲突，如果目标 IP 地址已被使用，则网络上的其他主机基于ARP 探针的内容无意中更新其 ARP 缓存将是非常不可取的。</p><p>这也是 ARP 探针和免费 ARP 之间的主要区别。免费 ARP 旨在更新网络上的所有 ARP 缓存，而 ARP 探针则故意阻止更新ARP 缓存以继续保护 IP 地址免遭冲突。</p>
+          </div>
+<h3 id="ARP-公告包结构"><a href="#ARP-公告包结构" class="headerlink" title="ARP 公告包结构"></a>ARP 公告包结构</h3><p>如果 ARP 探针包引起来自该 IP 的 ARP 响应，则发起主机将认为该 IP 地址是唯一的，并将发送 ARP 公告以<strong>正式在该网络中声明其 IP 地址</strong>。</p>
+<p><img src="arp-announcement.png" alt="arp-announcement"></p>
+<p>ARP 公告包结构与上述 ARP 探针包结构相同，<strong>不同之处在于公告包存在完整的映射</strong>。发送 MAC 地址和发送 IP 地址创建了完整的 ARP 映射，网络上的主机可以在其 ARP 表中使用这对映射。像免费 ARP 一样，目标 MAC 地址也被忽略，在此示例中为 0000.0000.0000，在某些实现中使用 ffff.ffff.ffff 代替。</p>
+<p>ARP 公告与免费 ARP 非常相似，但有一个明显的例外就是两者<strong>操作码不同</strong>：ARP 公告中的操作码设置为 1，表示请求，而典型的免费 ARP 会将操作码设置为 2。</p>
+<div class="note info">
+            <p>ARP 公告与免费 ARP 非常相似，唯一的区别是操作码字段，尽管从技术上讲它们是不同的构造，但它们通常都被简单地称为免费 ARP。对于日常网络话题交流来说，这是一个琐碎的错误用语，但是有时有些不准确之处确实可以省去冗长的解释。</p>
+          </div>
+<h2 id="反向地址解析协议"><a href="#反向地址解析协议" class="headerlink" title="反向地址解析协议"></a>反向地址解析协议</h2><p>与 ARP 根据网络层（三层）地址获取 MAC 地址（二层）不同，反向地址解析协议 Inverse ARP (InARP) 执行相反的流程，其用于从数据链路层（第2层）地址获取其他节点的网络层地址（例如IP地址）。</p>
+<p>还有一种反向地址解析协议 Reverse ARP (RARP) 与 InARP 类似，其区别在于：在 InARP 中，请求主机查询<strong>另一个主机</strong>的第三层地址，而 RARP 用于获取<strong>主机本身</strong>的第三层地址，以进行地址配置。</p>
+<p>两种协议都很少被用到，其中 RARP 相关功能如今已被 DHCP 取代。</p>
+<h2 id="ARP-代理"><a href="#ARP-代理" class="headerlink" title="ARP 代理"></a>ARP 代理</h2><p>当发送主机 A 和目的主机B <strong>不在同一个局域网</strong>中时，A 和 B 经过<strong>网关</strong>（一般是 IP 路由器）中转进行通信。所以此时发送主机通过 ARP 协议获得的将不是目的主机的真实 MAC 地址，而是一台可以通往局域网外的路由器的 MAC 地址。于是此后发送主机发往目的主机的所有帧，都将发往该路由器，通过它向外发送，这种情况称为<strong>委托 ARP</strong> 或 <strong>ARP 代理 (ARP Proxy)</strong>。</p>
+<h3 id="经典例子"><a href="#经典例子" class="headerlink" title="经典例子"></a>经典例子</h3><p>假设有一个如下的网络拓扑<br><img src="arp-media-proxy-arp-topology.png" alt="arp-media-proxy-arp-topology"></p>
+<p>当 B 请求 D MAC 地址时，B 的 ARP 请求是完全正常的，但是 B 收到的 ARP 响应却与传统 ARP 响应包不同，其区别为代理 ARP 响应包的<strong>发送 MAC 地址是路由器的 MAC，发送 IP 地址是 D 的 IP 地址</strong>。路由器代理了对于 D 的请求。</p>
+<p><img src="proxy-arp-process.gif" alt="proxy-arp-process"></p>
+<div class="note info">
+            <p>ARP 代理只响应那些在自己的路由表里能找到的网段，而不是用自己的 MAC 地址响应主机所有的 ARP 请求。</p>
+          </div>
+<p>我们大部分的流量不都是通过网关发出去的吗？难道只要是跨局域网通信都会用到代理 ARP 吗？事实上不是这样的，如果用 Wireshark 抓包，你会发现当你 Ping 外网地址的时候，并不会抓到路由器的代理 ARP 响应包，这是因为当<strong>主机配置默认路由</strong>时，该 ARP 请求直接请求的就是网关的 MAC 地址，并不涉及代理 ARP，在配置了网关的设备上是不会出现代理 ARP 问题的。</p>
+<p>那什么情况下会用到 ARP 代理？注意我们的例子中主机 B 上的子网位数的配置，似乎只有在这种“怪异”的场合才会用到代理 ARP，B 和 D 通信，B 以为 D 在自己的子网内，便直接发 ARP 请求，路由器接到这个 ARP 请求，然后发现请求的 IP 地址在自己直连的网段中（在路由表中能找到），这样，就用 0053.ffff.9999 接口响应了这个 ARP 请求，完成了代理 ARP。</p>
+<h3 id="NAT-中的-ARP-代理"><a href="#NAT-中的-ARP-代理" class="headerlink" title="NAT 中的 ARP 代理"></a>NAT 中的 ARP 代理</h3><p>前面我们讨论了代理 ARP 在未正确配置网关主机中的用例，如果主机正确配置了网关，那么几乎不会产生代理 ARP。但是，<strong>代理 ARP 有一个非常合法且必要的用例，它与网络地址转换 (NAT)有关</strong>。</p>
+<p><img src="arp-media-proxy-arp-nat-topology.png" alt="arp-media-proxy-arp-nat-topology"></p>
+<p>我们的防火墙在 72.3.4.0/24 网络中的 IP 地址为 72.3.4.2，同时还配置了静态 NAT，可将 IP 地址 72.3.4.55 转换为 10.3.4.55，这个 IP 地址属于主机 Y，Y 的内网 IP 地址为 10.3.4.55，主机 X 是使用 IP 66.7.8.9 在互联网另一端的某个主机。</p>
+<p>如果主机 X 向主机 Y 发送了一个数据包（源 IP 66.7.8.9，目的 IP 72.3.4.55），该数据包通过 Internet 路由到达路由器 C。路由器 C 向 72.3.4.0/24 网络发起 ARP 请求以确定拥有 IP 地址 72.3.4.55 的 MAC 地址。</p>
+<p>但是，防火墙已配置为将数据包从 72.3.4.55 转换为 10.3.4.55 的 NAT，它知道它必须接收发往 72.3.4.55 的数据包，以便将数据包传递到主机 Y。因此，<strong>防火墙将使用代理 ARP</strong> 代表主机 Y 响应路由器 C 对 IP 地址 72.3.4.55 的 ARP 请求。</p>
+<p><img src="proxy-arp-nat.gif" alt="proxy-arp-nat"></p>
+<div class="note info">
+            <p>在 10.3.4.0/24 网段上，从 NAT 接口 10.3.4.1 到 主机 Y 10.3.4.55 还会发生一次正常的 ARP 过程。</p>
+          </div>
+<h2 id="ARP-欺骗-攻击"><a href="#ARP-欺骗-攻击" class="headerlink" title="ARP 欺骗/攻击"></a>ARP 欺骗/攻击</h2><p>ARP 是一个简单的一问一答式协议，并且是无状态协议，网络主机将自动缓存它们收到的任何 ARP 答复，无论网络主机是否请求它们，接收到新的 ARP 应答数据包后，即使尚未过期的 ARP 条目也将被覆盖。同时由于缺乏任何安全验证措施，也使得坏人可以通过 ARP 欺骗/毒化/攻击  (ARP spoofing/poisoning/attack) 控制你的网络流量。</p>
+<p>如果说 ARP 代理是网关欺骗了 ARP 请求的发送方，冒充了通信的接收方；那么 ARP 欺骗就是坏人欺骗了接收方，冒充了 ARP 请求的发送方，当接收方给发送方发数据时，可以将数据包转给发送方达到偷听效果，或是篡改数据包达到伤害效果，或是什么也不做，达到发送发断网效果。</p>
+<p><img src="arp-spoofing.svg" alt="arp-spoofing"></p>
+<p>攻击者聆听局域网上的 MAC 地址。它只要收到两台主机洪泛的 ARP Request，就可以进行欺骗活动。</p>
+<ul>
+<li>User、Gateway 都洪泛了ARP Request，攻击者现在有了两台主机的 IP、MAC 地址，开始攻击。</li>
+<li>攻击者发送一个ARP Reply 给 Gateway，把此包的 Sender IP 设为 User IP ，Sender MAC 设为攻击者自己的 MAC 地址。</li>
+<li>Gateway 收到 ARP Reply 后，更新它的 ARP 缓存，把缓存条目 (IP_User, MAC_User) 改为 (IP_User, MAC_Malicious)</li>
+<li>当 Gateway 要发送数据包给 User 时，它根据 ARP 缓存来封装数据帧报头，把目的 MAC 地址设为 MAC_Malicious，而非 MAC_User。</li>
+<li>当交换机收到 Gateway 发送给 User 的数据包时，根据此包的目的 MAC 地址 (MAC_Malicious) 而把数据包转发给攻击者。</li>
+<li>攻击者收到数据包后，可以把它存起来后再发送给 User，达到偷听效果。攻击者也可以篡改数据后才发送数据包给 User，造成伤害。</li>
+</ul>
+<h1 id="DNS"><a href="#DNS" class="headerlink" title="DNS"></a>DNS</h1><h2 id="层次符号名称"><a href="#层次符号名称" class="headerlink" title="层次符号名称"></a>层次符号名称</h2><p>最初为 LAN 开发的操作系统 (NetBIOS, Microsoft Windows, IBM OS/2) 采用了<strong>平面符号名称</strong>，因为 LAN 中的计算机通常较少。为了建立符号名称到 MAC 地址的映射，采用了广播请求机制，与 ARP 类似。但对于采用 TCP/IP 栈的大型、地理分布广泛的网络，这样的方法是不行的。</p>
+<p>TCP/IP 栈采用的是 DNS (Domain Name System) 域名系统，它是一种组织成<strong>域层次结构</strong>的计算机和网络服务命名系统。域名的层次与文件系统的文件名层次相类似，名称始于树根，用 <code>.</code> 表示</p>
+<h2 id="基本功能-1"><a href="#基本功能-1" class="headerlink" title="基本功能"></a>基本功能</h2><p>DNS 作为一个分布式数据库，提供<strong>将主机名和域名转换为 IP 地址</strong>的服务，能够使人更方便的访问互联网。DNS 是一个应用层协议，使用 <strong>TCP/UDP 端口 53</strong>。</p>
+<h2 id="DNS-解析"><a href="#DNS-解析" class="headerlink" title="DNS 解析"></a>DNS 解析</h2><p><img src="dns-resolve.png" alt="dns-resolve"></p>
+<h2 id="DNS-缓存"><a href="#DNS-缓存" class="headerlink" title="DNS 缓存"></a>DNS 缓存</h2><p>为了加速查询 IP 地址的过程， DNS 服务器为经过他们的所有响应广泛采用缓存机制，为了使 DNS 服务器及时地处理网络中发生的变化，响应只在短时间内被缓存，通常为几小时到几天。</p>
+<p><img src="dns-cache.svg" alt="dns-cache"></p>
+<h2 id="DNS-over-TLS"><a href="#DNS-over-TLS" class="headerlink" title="DNS over TLS"></a>DNS over TLS</h2><p><img src="dns-poisoning.png" alt="dns-poisoning"></p>
+<p><a href="https://tools.ietf.org/html/rfc7858" target="_blank" rel="noopener">RFC 7858 - DNS over TLS</a> 可以解决这个问题。</p>
+<h1 id="DHCP"><a href="#DHCP" class="headerlink" title="DHCP"></a>DHCP</h1><p>动态主机设置协议 (Dynamic Host Configuration Protocol, DHCP) 是一个用于 IP 网络的网络协议，位于 OSI 模型的应用层，使用 <strong>UDP</strong> 协议工作，主要有两个用途：</p>
+<ul>
+<li>用于内部网或网络服务供应商自动分配 IP 地址给用户</li>
+<li>用于内部网管理员对所有电脑作中央管理</li>
+</ul>
+<p>动态主机设置协议 DHCP 是一种使网络管理员能够集中管理和自动分配 IP 网络地址的通信协议。在 IP 网络中，每个连接 Internet 的设备都需要分配唯一的 IP 地址。DHCP 使网络管理员能从中心结点监控和分配 IP 地址。当某台计算机移到网络中的其它位置时，能自动收到新的 IP 地址。</p>
+<p>DHCP 使用了租约的概念，或称为计算机 IP 地址的有效期。租用时间是不定的，主要取决于用户在某地连接 Internet 需要多久，这对于教育行业和其它用户频繁改变的环境是很实用的。透过较短的租期，DHCP 能够在一个计算机比可用 IP 地址多的环境中动态地重新配置网络。DHCP 支持为计算机分配静态地址，如需要永久性 IP 地址的 Web 服务器。</p>
+<p><img src="dhcp-diag.jpg" alt="dhcp-diag.jpg"></p>
+<p>详细解释参阅 <a href="https://docs.oracle.com/cd/E37838_01/html/E61005/dhcp-overview-3.html" target="_blank" rel="noopener">How DHCP Works</a></p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a href="https://en.wikipedia.org/wiki/Address_Resolution_Protocol#ARP_spoofing_and_Proxy_ARP" target="_blank" rel="noopener">Address Resolution Protocol</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Network_address_translation#DNAT" target="_blank" rel="noopener">Network address translation</a></li>
+<li><a href="https://en.wikipedia.org/wiki/NAT_traversal#Network_address_translation" target="_blank" rel="noopener">NAT Traversal</a></li>
+<li><a href="https://en.wikipedia.org/wiki/ARP_spoofing" target="_blank" rel="noopener">ARP spoofing</a></li>
+<li><a href="https://www.practicalnetworking.net/series/arp/traditional-arp/" target="_blank" rel="noopener">Traditional ARP</a></li>
+<li><a href="https://www.practicalnetworking.net/series/arp/proxy-arp/" target="_blank" rel="noopener">Proxy ARP</a></li>
+<li><a href="https://www.practicalnetworking.net/series/arp/gratuitous-arp/" target="_blank" rel="noopener">Gratuitous ARP</a></li>
+<li><a href="https://www.practicalnetworking.net/series/arp/arp-probe-arp-announcement/" target="_blank" rel="noopener">ARP Probe and ARP Announcement</a></li>
+<li><a href="https://www.erg.abdn.ac.uk/users/gorry/course/inet-pages/arp.html" target="_blank" rel="noopener">ARP Use case</a></li>
+<li><a href="https://aws.amazon.com/cn/route53/what-is-dns/" target="_blank" rel="noopener">DNS 解析流程</a></li>
+<li><a href="https://www.incibe-cert.es/en/blog/protect-your-dns-requests-dns-over-tls" target="_blank" rel="noopener">Protect your DNS requests with DNS over TLS</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Dynamic_Host_Configuration_Protocol" target="_blank" rel="noopener">Dynamic Host Configuration Protocol</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/wechatpay.png" alt="Yanjiu Li 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/uploads/alipay.jpeg" alt="Yanjiu Li 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/MAC/" rel="tag"><i class="fa fa-tag"></i> MAC</a>
+              <a href="/tags/IP/" rel="tag"><i class="fa fa-tag"></i> IP</a>
+              <a href="/tags/DNS/" rel="tag"><i class="fa fa-tag"></i> DNS</a>
+              <a href="/tags/ARP/" rel="tag"><i class="fa fa-tag"></i> ARP</a>
+              <a href="/tags/DHCP/" rel="tag"><i class="fa fa-tag"></i> DHCP</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/12/19/network-architecture-and-standardization/" rel="prev" title="网络体系架构和标准">
+      <i class="fa fa-chevron-left"></i> 网络体系架构和标准
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/02/23/sdn-openflow/" rel="next" title="OpenFlow Specification">
+      OpenFlow Specification <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80MTAzMS8xNzU1Ng=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#从社交看地址多样化"><span class="nav-number">1.</span> <span class="nav-text">从社交看地址多样化</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#寻址的目的"><span class="nav-number">2.</span> <span class="nav-text">寻址的目的</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#地址的类型"><span class="nav-number">3.</span> <span class="nav-text">地址的类型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#本地地址"><span class="nav-number">3.1.</span> <span class="nav-text">本地地址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IP-网络地址"><span class="nav-number">3.2.</span> <span class="nav-text">IP 网络地址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#域名-Domain-names"><span class="nav-number">3.3.</span> <span class="nav-text">域名 (Domain names)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#地址的联系"><span class="nav-number">4.</span> <span class="nav-text">地址的联系</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#IP-地址"><span class="nav-number">5.</span> <span class="nav-text">IP 地址</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#IPv4-地址"><span class="nav-number">5.1.</span> <span class="nav-text">IPv4 地址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IPv6-地址"><span class="nav-number">5.2.</span> <span class="nav-text">IPv6 地址</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#网络地址转换-NAT"><span class="nav-number">6.</span> <span class="nav-text">网络地址转换 - NAT</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#基本-NAT-One-to-one-NAT"><span class="nav-number">6.1.</span> <span class="nav-text">基本 NAT (One-to-one NAT)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#动态-NAT"><span class="nav-number">6.2.</span> <span class="nav-text">动态 NAT</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NAPT-One-to-many-NAT"><span class="nav-number">6.3.</span> <span class="nav-text">NAPT (One-to-many NAT)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SNAT-amp-DNAT"><span class="nav-number">6.4.</span> <span class="nav-text">SNAT &amp; DNAT</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SNAT"><span class="nav-number">6.4.1.</span> <span class="nav-text">SNAT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DNAT"><span class="nav-number">6.4.2.</span> <span class="nav-text">DNAT</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT-穿透-NAT-Traversal"><span class="nav-number">6.5.</span> <span class="nav-text">NAT 穿透 (NAT Traversal)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT-in-IPv6"><span class="nav-number">6.6.</span> <span class="nav-text">NAT in IPv6</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#地址解析协议-ARP"><span class="nav-number">7.</span> <span class="nav-text">地址解析协议 - ARP</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#基本功能"><span class="nav-number">7.1.</span> <span class="nav-text">基本功能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据包结构"><span class="nav-number">7.2.</span> <span class="nav-text">数据包结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#传统-ARP-流程"><span class="nav-number">7.3.</span> <span class="nav-text">传统 ARP 流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ARP-缓存"><span class="nav-number">7.4.</span> <span class="nav-text">ARP 缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#免费-ARP"><span class="nav-number">7.5.</span> <span class="nav-text">免费 ARP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#更新-ARP-映射"><span class="nav-number">7.5.1.</span> <span class="nav-text">更新 ARP 映射</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#宣布节点存在"><span class="nav-number">7.5.2.</span> <span class="nav-text">宣布节点存在</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#冗余-Redundancy"><span class="nav-number">7.5.3.</span> <span class="nav-text">冗余 (Redundancy)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ARP-探针和-ARP-公告"><span class="nav-number">7.6.</span> <span class="nav-text">ARP 探针和 ARP 公告</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ARP-探针包结构"><span class="nav-number">7.6.1.</span> <span class="nav-text">ARP 探针包结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ARP-公告包结构"><span class="nav-number">7.6.2.</span> <span class="nav-text">ARP 公告包结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#反向地址解析协议"><span class="nav-number">7.7.</span> <span class="nav-text">反向地址解析协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ARP-代理"><span class="nav-number">7.8.</span> <span class="nav-text">ARP 代理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#经典例子"><span class="nav-number">7.8.1.</span> <span class="nav-text">经典例子</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NAT-中的-ARP-代理"><span class="nav-number">7.8.2.</span> <span class="nav-text">NAT 中的 ARP 代理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ARP-欺骗-攻击"><span class="nav-number">7.9.</span> <span class="nav-text">ARP 欺骗/攻击</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#DNS"><span class="nav-number">8.</span> <span class="nav-text">DNS</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#层次符号名称"><span class="nav-number">8.1.</span> <span class="nav-text">层次符号名称</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本功能-1"><span class="nav-number">8.2.</span> <span class="nav-text">基本功能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DNS-解析"><span class="nav-number">8.3.</span> <span class="nav-text">DNS 解析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DNS-缓存"><span class="nav-number">8.4.</span> <span class="nav-text">DNS 缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DNS-over-TLS"><span class="nav-number">8.5.</span> <span class="nav-text">DNS over TLS</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#DHCP"><span class="nav-number">9.</span> <span class="nav-text">DHCP</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">10.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yanjiu Li"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Yanjiu Li</p>
+  <div class="site-description" itemprop="description">演绎一场技术溯源的盛宴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">99</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yanjiulab" title="GitHub → https://github.com/yanjiulab" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:liyanjiu@outlook.com" title="E-Mail → mailto:liyanjiu@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Worth Reading
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP" title="http://pages.cs.wisc.edu/~remzi/OSTEP" rel="noopener" target="_blank">OSTEP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" title="http://pages.cs.wisc.edu/~remzi/OSTEP/Chinese/" rel="noopener" target="_blank">OSTEP-Chinese</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.apuebook.com/about3e.html" title="http://www.apuebook.com/about3e.html" rel="noopener" target="_blank">APUE</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" title="https://mathcs.clarku.edu/~jbreecher/cs280/UNIX%20Network%20Programming(Volume1,3rd).pdf" rel="noopener" target="_blank">UNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" title="https://cse.buffalo.edu/~hungngo/classes/TMA-Training/UNP/" rel="noopener" target="_blank">IUNP</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.yinwang.org/" title="http://www.yinwang.org/" rel="noopener" target="_blank">当然我在扯淡</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yanjiu Li</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">217k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:17</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>
